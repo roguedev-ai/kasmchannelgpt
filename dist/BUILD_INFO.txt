@@ -1,0 +1,85 @@
+CustomGPT UI Build Information
+==============================
+Build Date: Thu Jul 31 20:15:12 IST 2025
+Node Version: v18.19.0
+NPM Version: 10.2.3
+
+Build Command: npm run build:all
+Total Build Time: ~30 seconds
+
+Deployment Files:
+-----------------
+1. STANDALONE APP (.next/)
+   - Full Next.js application with SSR
+   - Includes API routes and server components
+   - Size: ~2MB compressed
+   - Use for: Self-hosted full application
+
+2. WIDGET BUNDLE (dist/widget/)
+   - customgpt-widget.js (106 KB) - Main widget with conversation management
+   - customgpt-widget.css (64.5 KB) - Tailwind-based styles
+   - vendors.js (1.17 MB) - React, ReactDOM, and dependencies
+   - index.html - Demo page for testing
+   - Use for: Embedding chat in any website
+
+3. IFRAME BUNDLE (dist/iframe/)
+   - iframe-app.js (100 KB) - Iframe-specific application
+   - iframe-app.css (63.6 KB) - Iframe styles
+   - vendors.js (1.17 MB) - Shared React dependencies
+   - index.html - Iframe container page
+   - Use for: Iframe embedding with isolation
+
+File Sizes After Build:
+----------------------
+Widget Total: ~1.34 MB (gzipped: ~400 KB)
+Iframe Total: ~1.33 MB (gzipped: ~395 KB)
+Standalone: ~2 MB (varies by page)
+
+When to Use Each Build:
+-----------------------
+1. WIDGET: Best for most integrations
+   - Direct DOM embedding
+   - Full API access
+   - Session-based conversations
+   - Custom styling support
+
+2. IFRAME: Use when you need:
+   - Complete style isolation
+   - Cross-domain embedding
+   - Sandbox security
+   - Legacy browser support
+
+3. STANDALONE: Use when you need:
+   - Full control over the application
+   - Custom API endpoints
+   - Server-side rendering
+   - Database integration
+
+CDN URLs (update with your domain):
+-----------------------------------
+<!-- Widget Integration -->
+<script src="https://your-cdn.com/widget/vendors.js"></script>
+<script src="https://your-cdn.com/widget/customgpt-widget.js"></script>
+<link rel="stylesheet" href="https://your-cdn.com/widget/customgpt-widget.css">
+
+<!-- Iframe Integration -->
+<iframe src="https://your-cdn.com/iframe/" width="400" height="600"></iframe>
+
+Integration Examples:
+--------------------
+See /examples/ directory for complete integration examples:
+- vanilla-js-widget.html - Pure JavaScript examples
+- react-widget.jsx - React integration
+- SimplifiedWidget.jsx - React wrapper component
+
+Features Included in All Builds:
+--------------------------------
+✓ Conversation Management (session-based)
+✓ Multi-language Support
+✓ File Upload Support
+✓ Real-time Streaming
+✓ Citation Management
+✓ Mobile Responsive
+✓ Dark/Light Theme Support
+✓ Conversation Persistence
+✓ "Powered by CustomGPT.ai" branding

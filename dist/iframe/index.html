@@ -1,0 +1,128 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CustomGPT Widget</title><style>* {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    #iframe-app {
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Loading styles */
+    .loading-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #f9fafb;
+    }
+
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #e5e7eb;
+      border-top: 3px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-top: 16px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    /* Error styles */
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #f9fafb;
+      padding: 20px;
+    }
+
+    .error-icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      color: #ef4444;
+    }
+
+    .error-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+
+    .error-message {
+      color: #6b7280;
+      text-align: center;
+      line-height: 1.5;
+    }</style><link href="/iframe-app.css" rel="stylesheet"></head><body><div id="iframe-app"><div class="loading-container"><div><div class="loading-spinner"></div><div class="loading-text">Loading CustomGPT...</div></div></div></div><script>window.addEventListener('error', function(event) {
+      console.error('CustomGPT Widget Error:', event.error);
+      
+      // Show error state
+      document.getElementById('iframe-app').innerHTML = `
+        <div class="error-container">
+          <svg class="error-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+          <div class="error-title">Failed to Load Widget</div>
+          <div class="error-message">
+            There was a problem loading the CustomGPT widget.<br>
+            Please check your configuration and try again.
+          </div>
+        </div>
+      `;
+      
+      // Notify parent of error
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'customgpt-error',
+          data: {
+            message: event.error?.message || 'Unknown error',
+            stack: event.error?.stack
+          }
+        }, '*');
+      }
+    });
+
+    // Handle unhandled promise rejections
+    window.addEventListener('unhandledrejection', function(event) {
+      console.error('CustomGPT Widget Promise Rejection:', event.reason);
+      
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'customgpt-error',
+          data: {
+            message: event.reason?.message || 'Promise rejection',
+            type: 'unhandledrejection'
+          }
+        }, '*');
+      }
+    });
+
+    // Security: Only allow embedding from allowed origins (configure as needed)
+    if (window.self !== window.top) {
+      // We're in an iframe
+      console.log('CustomGPT Widget loaded in iframe');
+      
+      // Add any iframe-specific security checks here
+      // For example, you could check document.referrer or use postMessage to verify parent origin
+    }</script><script defer="defer" src="/vendors.js"></script><script defer="defer" src="/iframe-app.js"></script></body></html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CustomGPT Iframe Embed Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+        }
+        .example-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .iframe-container {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #1976d2;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CustomGPT Iframe Embed Integration</h1>
+        
+        <div class="info-box">
+            <strong>Why use Iframe Embed?</strong>
+            <ul>
+                <li>Better security isolation between your site and the chat widget</li>
+                <li>Cross-domain compatibility without CORS issues</li>
+                <li>Easier to integrate with Content Security Policies (CSP)</li>
+                <li>Maintains consistent behavior across different browsers</li>
+            </ul>
+        </div>
+        
+        <!-- Example 1: Embedded Iframe -->
+        <div class="example-section">
+            <h2>1. Embedded Iframe Chat</h2>
+            <p>Embed the chat directly in a container on your page.</p>
+            
+            <div class="code-block">
+                <pre>&lt;!-- Add this to your HTML --&gt;
+&lt;div id="customgpt-chat" style="width: 100%; height: 600px;"&gt;&lt;/div&gt;
+
+&lt;!-- Add this script before closing body tag --&gt;
+&lt;script&gt;
+  (function() {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.customgpt.ai/embed/customgpt-embed.js';
+    script.onload = function() {
+      CustomGPTEmbed.init({
+        agentId: 123,  // Your agent ID
+        containerId: 'customgpt-chat',
+        mode: 'embedded',
+        iframeSrc: 'https://chat.customgpt.ai/iframe/'  // Update with your domain
+      });
+    };
+    document.head.appendChild(script);
+  })();
+&lt;/script&gt;</pre>
+            </div>
+            
+            <div id="customgpt-chat" class="iframe-container" style="width: 100%; height: 600px;"></div>
+        </div>
+        
+        <!-- Example 2: Floating Iframe -->
+        <div class="example-section">
+            <h2>2. Floating Chat Button</h2>
+            <p>Add a floating chat button that opens the chat in an overlay.</p>
+            
+            <div class="code-block">
+                <pre>&lt;script&gt;
+  (function() {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.customgpt.ai/embed/customgpt-embed.js';
+    script.onload = function() {
+      const floatingChat = CustomGPTEmbed.init({
+        agentId: 123,  // Your agent ID
+        mode: 'floating',
+        position: 'bottom-right',
+        theme: 'light',
+        iframeSrc: 'https://chat.customgpt.ai/iframe/'  // Update with your domain
+      });
+    };
+    document.head.appendChild(script);
+  })();
+&lt;/script&gt;</pre>
+            </div>
+            
+            <button onclick="toggleFloatingChat()">Toggle Floating Chat</button>
+        </div>
+        
+        <!-- Example 3: Programmatic Control -->
+        <div class="example-section">
+            <h2>3. Programmatic Control</h2>
+            <p>Control the chat widget programmatically using JavaScript.</p>
+            
+            <div class="code-block">
+                <pre>// Store reference to widget
+let chatWidget = CustomGPTEmbed.init(config);
+
+// Open the chat
+chatWidget.open();
+
+// Close the chat
+chatWidget.close();
+
+// Toggle open/close
+chatWidget.toggle();
+
+// Check if open
+if (chatWidget.isOpened) {
+  console.log('Chat is open');
+}
+
+// Update configuration
+chatWidget.updateConfig({
+  theme: 'dark',
+  enableCitations: false
+});
+
+// Destroy the widget
+chatWidget.destroy();</pre>
+            </div>
+            
+            <button onclick="openChat()">Open Chat</button>
+            <button onclick="closeChat()">Close Chat</button>
+            <button onclick="toggleTheme()">Toggle Theme</button>
+            <button onclick="destroyChat()">Destroy Chat</button>
+        </div>
+        
+        <!-- Configuration Reference -->
+        <div class="example-section">
+            <h2>Configuration Reference</h2>
+            <p>Complete configuration options for CustomGPTEmbed:</p>
+            
+            <div class="code-block">
+                <pre>{
+  // Required
+  agentId: 123,                     // Your agent/project ID
+  
+  // Display Options
+  mode: 'embedded',                 // 'embedded' | 'floating'
+  containerId: 'container-id',      // For embedded mode
+  position: 'bottom-right',         // For floating: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+  
+  // Styling
+  theme: 'light',                   // 'light' | 'dark'
+  width: '400px',                   // Chat window width
+  height: '600px',                  // Chat window height
+  borderRadius: '12px',             // Border radius
+  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',  // Box shadow
+  zIndex: 9999,                     // Z-index for layering
+  
+  // Features
+  enableCitations: true,            // Show citation sources
+  enableFeedback: true,             // Show feedback buttons
+  
+  // Iframe Source
+  iframeSrc: 'https://your-domain.com/widget/',  // Your iframe URL
+  
+  // Callbacks
+  onOpen: () => {},                 // Called when chat opens
+  onClose: () => {},                // Called when chat closes
+  onReady: () => {},                // Called when iframe is ready
+  onMessage: (msg) => {},           // Called on new message
+  onError: (err) => {}              // Called on error
+}</pre>
+            </div>
+        </div>
+        
+        <!-- Security Considerations -->
+        <div class="example-section">
+            <h2>Security Considerations</h2>
+            
+            <div class="info-box">
+                <strong>Best Practices:</strong>
+                <ul>
+                    <li>Always use HTTPS for both your site and the iframe source</li>
+                    <li>Authentication is handled server-side for security</li>
+                    <li>No client-side credentials needed</li>
+                    <li>Configure appropriate Content Security Policy (CSP) headers</li>
+                    <li>Validate the iframe source domain in production</li>
+                </ul>
+            </div>
+            
+            <div class="code-block">
+                <pre>// Example CSP header for allowing CustomGPT iframe
+Content-Security-Policy: 
+  default-src 'self';
+  frame-src https://chat.customgpt.ai https://your-domain.com;
+  connect-src https://app.customgpt.ai/api/;</pre>
+            </div>
+        </div>
+        
+        <!-- Installation Steps -->
+        <div class="example-section">
+            <h2>Quick Start Guide</h2>
+            
+            <ol>
+                <li><strong>Sign Up:</strong> Create an account at <a href="https://app.customgpt.ai">app.customgpt.ai</a></li>
+                <li><strong>Find Your Agent ID:</strong> Navigate to your agent/project in the dashboard</li>
+                <li><strong>Add the Script:</strong> Include the embed script in your HTML</li>
+                <li><strong>Initialize:</strong> Call CustomGPTEmbed.init() with your configuration</li>
+                <li><strong>Test:</strong> Open your page and test the chat functionality</li>
+            </ol>
+        </div>
+    </div>
+    
+    <!-- Demo Script -->
+    <script>
+        // Demo implementation - replace with actual values
+        let embeddedChat = null;
+        let floatingChat = null;
+        
+        // Simulated initialization (replace with actual implementation)
+        function initializeDemo() {
+            console.log('CustomGPT Iframe Embed Demo Initialized');
+            
+            // In production, you would initialize like this:
+            /*
+            embeddedChat = CustomGPTEmbed.init({
+                agentId: 123,
+                containerId: 'customgpt-chat',
+                mode: 'embedded',
+                iframeSrc: 'https://chat.customgpt.ai/iframe/'
+            });
+            
+            floatingChat = CustomGPTEmbed.init({
+                agentId: 123,
+                mode: 'floating',
+                position: 'bottom-right',
+                iframeSrc: 'https://chat.customgpt.ai/iframe/'
+            });
+            */
+        }
+        
+        function toggleFloatingChat() {
+            if (floatingChat) {
+                floatingChat.toggle();
+            } else {
+                alert('Initialize the floating chat first with your agent ID');
+            }
+        }
+        
+        function openChat() {
+            if (embeddedChat) {
+                embeddedChat.open();
+            } else {
+                alert('Initialize the embedded chat first with your agent ID');
+            }
+        }
+        
+        function closeChat() {
+            if (embeddedChat) {
+                embeddedChat.close();
+            }
+        }
+        
+        function toggleTheme() {
+            if (embeddedChat) {
+                const currentConfig = embeddedChat.configuration;
+                embeddedChat.updateConfig({
+                    theme: currentConfig.theme === 'light' ? 'dark' : 'light'
+                });
+            }
+        }
+        
+        function destroyChat() {
+            if (embeddedChat) {
+                embeddedChat.destroy();
+                embeddedChat = null;
+                alert('Chat destroyed. Refresh the page to reinitialize.');
+            }
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', initializeDemo);
+    </script>
+</body>
+</html>

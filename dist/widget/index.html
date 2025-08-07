@@ -1,0 +1,120 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CustomGPT Widget Demo</title><style>body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #f5f5f5;
+    }
+    
+    #widget-demo {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .demo-section {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .demo-section h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .demo-controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .demo-button {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .demo-button:hover {
+      background: #f5f5f5;
+    }
+    
+    .demo-button.active {
+      background: #007acc;
+      color: white;
+      border-color: #007acc;
+    }
+    
+    #widget-container {
+      min-height: 400px;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .floating-widget {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    
+    .code-example {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 16px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      white-space: pre;
+      margin-top: 16px;
+    }</style><link href="/customgpt-widget.css" rel="stylesheet"></head><body><div id="widget-demo"><div class="demo-section"><h1>CustomGPT Widget Demo</h1><p>This page demonstrates the CustomGPT widget in different modes and configurations.</p></div><div class="demo-section"><h2>Widget Modes</h2><div class="demo-controls"><button class="demo-button active" onclick="showWidget('embedded')">Embedded</button> <button class="demo-button" onclick="showWidget('floating')">Floating</button> <button class="demo-button" onclick="showWidget('fullscreen')">Fullscreen</button></div><div id="widget-container"><p style="color: #666;">Widget will appear here</p></div><div class="code-example">// Embedded Widget &lt;script src="./customgpt-widget.js"&gt;&lt;/script&gt; &lt;script&gt; CustomGPTWidget.init({ agentId: 123, mode: 'embedded', containerId: 'my-widget-container' }); &lt;/script&gt;</div></div><div class="demo-section"><h2>Configuration Options</h2><div class="demo-controls"><label><input type="checkbox" id="citations-toggle" onchange="updateConfig()"> Enable Citations</label> <label><input type="checkbox" id="feedback-toggle" onchange="updateConfig()"> Enable Feedback</label> <label>Theme: <select id="theme-select" onchange="updateConfig()"><option value="light">Light</option><option value="dark">Dark</option></select></label></div></div></div><script>// Demo functionality will be replaced by the actual widget
+    let currentMode = 'embedded';
+    
+    function showWidget(mode) {
+      currentMode = mode;
+      
+      // Update button states
+      document.querySelectorAll('.demo-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      const container = document.getElementById('widget-container');
+      
+      // Clear existing widget
+      container.innerHTML = '';
+      
+      // Show different modes
+      switch(mode) {
+        case 'embedded':
+          container.innerHTML = '<div id="embedded-widget"></div>';
+          container.className = '';
+          break;
+        case 'floating':
+          container.innerHTML = '<p style="color: #666;">Floating widget will appear in bottom-right corner</p>';
+          break;
+        case 'fullscreen':
+          container.innerHTML = '<div id="fullscreen-widget" style="width: 100%; height: 400px;"></div>';
+          break;
+      }
+      
+      // Initialize widget would happen here
+      console.log(`Initializing ${mode} widget`);
+    }
+    
+    function updateConfig() {
+      const citations = document.getElementById('citations-toggle').checked;
+      const feedback = document.getElementById('feedback-toggle').checked;
+      const theme = document.getElementById('theme-select').value;
+      
+      console.log('Config updated:', { citations, feedback, theme });
+    }</script><script defer="defer" src="/vendors.js"></script><script defer="defer" src="/customgpt-widget.js"></script></body></html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CustomGPT Widget Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+        }
+        .example-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .widget-container {
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CustomGPT Widget Integration Examples</h1>
+        
+        <!-- Example 1: Embedded Widget -->
+        <div class="example-section">
+            <h2>1. Embedded Widget</h2>
+            <p>The widget is embedded directly in a container on your page.</p>
+            
+            <div class="code-block">
+                <pre><code>&lt;div id="customgpt-embedded" style="width: 100%; height: 600px;"&gt;&lt;/div&gt;
+&lt;script src="https://cdn.customgpt.ai/widget/customgpt-widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  CustomGPTWidget.init({
+    agentId: 123, // Your agent ID
+    containerId: 'customgpt-embedded',
+    mode: 'embedded'
+  });
+&lt;/script&gt;</code></pre>
+            </div>
+            
+            <div id="customgpt-embedded" class="widget-container" style="width: 100%; height: 600px;"></div>
+        </div>
+        
+        <!-- Example 2: Floating Widget -->
+        <div class="example-section">
+            <h2>2. Floating Widget</h2>
+            <p>The widget appears as a chat bubble that can be opened/closed.</p>
+            
+            <div class="code-block">
+                <pre><code>&lt;script src="https://cdn.customgpt.ai/widget/customgpt-widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const floatingWidget = CustomGPTWidget.init({
+    agentId: 123, // Your agent ID
+    mode: 'floating',
+    position: 'bottom-right'
+  });
+&lt;/script&gt;</code></pre>
+            </div>
+            
+            <button onclick="toggleFloatingWidget()">Toggle Floating Widget</button>
+        </div>
+        
+        <!-- Widget Controls -->
+        <div class="example-section">
+            <h2>Widget Controls</h2>
+            <p>You can programmatically control the widget using JavaScript.</p>
+            
+            <div class="code-block">
+                <pre><code>// Open the widget
+widget.open();
+
+// Close the widget
+widget.close();
+
+// Toggle the widget
+widget.toggle();
+
+// Update configuration
+widget.updateConfig({
+  theme: 'dark'
+});
+
+// Destroy the widget
+widget.destroy();</code></pre>
+            </div>
+            
+            <button onclick="openWidget()">Open Widget</button>
+            <button onclick="closeWidget()">Close Widget</button>
+            <button onclick="toggleTheme()">Toggle Theme</button>
+            <button onclick="destroyWidget()">Destroy Widget</button>
+        </div>
+        
+        <!-- Configuration Options -->
+        <div class="example-section">
+            <h2>Configuration Options</h2>
+            <p>All available configuration options for the widget:</p>
+            
+            <div class="code-block">
+                <pre><code>{
+  agentId: 123,                 // Required: Your agent/project ID
+  containerId: 'container-id',  // For embedded mode: container element ID
+  mode: 'embedded',             // 'embedded' | 'floating' | 'widget'
+  theme: 'light',               // 'light' | 'dark'
+  position: 'bottom-right',     // For floating: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+  width: '400px',               // Widget width
+  height: '600px',              // Widget height
+  enableCitations: true,        // Show citation sources
+  enableFeedback: true,         // Show feedback buttons
+  onOpen: () => {},             // Callback when widget opens
+  onClose: () => {},            // Callback when widget closes
+  onMessage: (msg) => {}        // Callback when message is sent/received
+}</code></pre>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Demo Script -->
+    <script>
+        // For demo purposes - replace with actual implementation
+        let embeddedWidget = null;
+        let floatingWidget = null;
+        
+        // Initialize embedded widget
+        if (typeof CustomGPTWidget !== 'undefined') {
+            embeddedWidget = CustomGPTWidget.init({
+                agentId: 1,             // Replace with your agent ID
+                containerId: 'customgpt-embedded',
+                mode: 'embedded',
+                onOpen: () => console.log('Widget opened'),
+                onClose: () => console.log('Widget closed'),
+                onMessage: (msg) => console.log('Message:', msg)
+            });
+            
+            // Initialize floating widget
+            floatingWidget = CustomGPTWidget.init({
+                agentId: 1,             // Replace with your agent ID
+                mode: 'floating',
+                position: 'bottom-right'
+            });
+        }
+        
+        function toggleFloatingWidget() {
+            if (floatingWidget) {
+                floatingWidget.toggle();
+            }
+        }
+        
+        function openWidget() {
+            if (embeddedWidget) {
+                embeddedWidget.open();
+            }
+        }
+        
+        function closeWidget() {
+            if (embeddedWidget) {
+                embeddedWidget.close();
+            }
+        }
+        
+        function toggleTheme() {
+            if (embeddedWidget) {
+                const currentTheme = embeddedWidget.configuration.theme;
+                embeddedWidget.updateConfig({
+                    theme: currentTheme === 'light' ? 'dark' : 'light'
+                });
+            }
+        }
+        
+        function destroyWidget() {
+            if (embeddedWidget) {
+                embeddedWidget.destroy();
+                embeddedWidget = null;
+                alert('Widget destroyed. Refresh the page to reinitialize.');
+            }
+        }
+    </script>
+</body>
+</html>

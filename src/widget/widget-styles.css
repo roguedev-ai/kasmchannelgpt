@@ -1,0 +1,88 @@
+/* Widget-specific styles for proper centering and sizing */
+
+/* Center the embedded widget by default */
+#customgpt-widget,
+#customgpt-chat-container,
+.customgpt-widget-container {
+  margin: 0 auto;
+  display: block;
+}
+
+/* Ensure the chat interface respects the container width */
+.customgpt-widget-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Override default chat container styles for widget mode */
+.widget-mode .chat-container {
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+}
+
+/* Fix chat header width in widget mode */
+.widget-mode header {
+  width: 100%;
+}
+
+/* Fix message area width */
+.widget-mode .message-area {
+  width: 100%;
+  max-width: none;
+}
+
+/* Fix input area width */
+.widget-mode .chat-input-container {
+  width: 100%;
+}
+
+/* Hide agent selector in widget mode */
+.widget-mode .agent-selector {
+  display: none !important;
+}
+
+/* Ensure proper sizing for floating mode */
+.floating-mode {
+  width: 100%;
+  height: 100%;
+}
+
+/* Remove any default margins/paddings that might affect centering */
+.customgpt-embedded-widget {
+  margin: 0 auto;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Ensure floating container maintains content properly */
+.customgpt-floating-container {
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.customgpt-floating-container .customgpt-widget-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Ensure the widget wrapper takes full space */
+.customgpt-widget-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+.customgpt-widget-wrapper.widget-mode {
+  height: 100%;
+}
+
+.customgpt-widget-wrapper.floating-mode {
+  height: 100%;
+}

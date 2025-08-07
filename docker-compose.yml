@@ -1,0 +1,160 @@
+# Docker Compose for CustomGPT UI
+# Supports multiple deployment scenarios
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Main Application (Full Next.js App)
+  # ============================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: standalone
+    container_name: customgpt-ui-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      # Add your CustomGPT API configuration
+      - CUSTOMGPT_API_KEY=${CUSTOMGPT_API_KEY}
+      - CUSTOMGPT_API_BASE_URL=${CUSTOMGPT_API_BASE_URL:-https://app.customgpt.ai/api/v1}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - customgpt-network
+    labels:
+      - "com.customgpt.service=main-app"
+      - "com.customgpt.description=Full Next.js application with dashboard"
+
+  # ============================================
+  # Widget Only (Static Bundle)
+  # ============================================
+  widget:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: widget
+    container_name: customgpt-ui-widget
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/customgpt-widget.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - customgpt-network
+    labels:
+      - "com.customgpt.service=widget"
+      - "com.customgpt.description=Embeddable widget bundle for third-party sites"
+    profiles:
+      - widget
+      - all
+
+  # ============================================
+  # Iframe App (Isolated Chat Interface)
+  # ============================================
+  iframe:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: iframe
+    container_name: customgpt-ui-iframe
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - customgpt-network
+    labels:
+      - "com.customgpt.service=iframe"
+      - "com.customgpt.description=Iframe-embeddable chat interface"
+    profiles:
+      - iframe
+      - all
+
+  # ============================================
+  # Development Environment
+  # ============================================
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: customgpt-ui-dev
+    ports:
+      - "3000:3000"  # Next.js dev server
+      - "8080:8080"  # Widget dev server
+      - "8081:8081"  # Iframe dev server
+    environment:
+      - NODE_ENV=development
+      - CUSTOMGPT_API_KEY=${CUSTOMGPT_API_KEY}
+      - CUSTOMGPT_API_BASE_URL=${CUSTOMGPT_API_BASE_URL:-https://app.customgpt.ai/api/v1}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./package.json:/app/package.json
+      - ./next.config.js:/app/next.config.js
+      - ./tailwind.config.js:/app/tailwind.config.js
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./webpack.widget.js:/app/webpack.widget.js
+      - ./webpack.iframe.js:/app/webpack.iframe.js
+    restart: unless-stopped
+    networks:
+      - customgpt-network
+    labels:
+      - "com.customgpt.service=development"
+      - "com.customgpt.description=Development environment with hot reload"
+    profiles:
+      - dev
+
+  # ============================================
+  # Reverse Proxy (Optional - for production)
+  # ============================================
+  nginx:
+    image: nginx:alpine
+    container_name: customgpt-ui-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - customgpt-network
+    labels:
+      - "com.customgpt.service=proxy"
+      - "com.customgpt.description=Reverse proxy with SSL termination"
+    profiles:
+      - production
+      - all
+
+networks:
+  customgpt-network:
+    driver: bridge
+    name: customgpt-network
+
+volumes:
+  nginx_ssl:
+    name: customgpt-nginx-ssl

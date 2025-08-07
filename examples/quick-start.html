@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CustomGPT Widget Quick Start</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #444;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .code-block {
+            background: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        #widget-container {
+            margin-top: 30px;
+            border: 2px dashed #007acc;
+            border-radius: 5px;
+            min-height: 400px;
+            display: none;
+        }
+        .controls {
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CustomGPT Widget Quick Start</h1>
+        <p class="subtitle">Test the CustomGPT chat widget with your agent</p>
+        
+        <div id="setup-form">
+            <div class="form-group">
+                <label for="agentId">Agent ID:</label>
+                <input type="text" id="agentId" placeholder="Your Agent/Project ID (e.g., 123)">
+                <small style="color: #666;">Find this in your agent details on the dashboard</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="widgetType">Widget Type:</label>
+                <select id="widgetType">
+                    <option value="embedded">Embedded Chat</option>
+                    <option value="floating">Floating Button</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="theme">Theme:</label>
+                <select id="theme">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+            
+            <button onclick="initializeWidget()">Initialize Widget</button>
+            <button onclick="showIntegrationCode()">Show Integration Code</button>
+        </div>
+        
+        <div id="status-message"></div>
+        
+        <div id="widget-container"></div>
+        
+        <div class="controls" id="controls">
+            <h3>Widget Controls</h3>
+            <button onclick="openWidget()">Open</button>
+            <button onclick="closeWidget()">Close</button>
+            <button onclick="toggleWidget()">Toggle</button>
+            <button onclick="destroyWidget()">Destroy</button>
+        </div>
+        
+        <div id="integration-code" style="display: none;">
+            <h3>Integration Code</h3>
+            <p>Copy this code to add the widget to your website:</p>
+            <div class="code-block" id="code-output"></div>
+        </div>
+    </div>
+    
+    <!-- Try to load from CDN first -->
+    <script src="https://cdn.jsdelivr.net/gh/customgpt/customgpt-ui@main/dist/widget/customgpt-widget.js"></script>
+    <!-- Fallback to local if CDN fails -->
+    <script>
+        if (typeof CustomGPTWidget === 'undefined') {
+            const localScript = document.createElement('script');
+            localScript.src = 'dist/widget/customgpt-widget.js';
+            document.head.appendChild(localScript);
+        }
+    </script>
+    
+    <script>
+        let widget = null;
+        
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status-message');
+            statusEl.className = type;
+            statusEl.textContent = message;
+            statusEl.style.display = 'block';
+        }
+        
+        function initializeWidget() {
+            const agentId = document.getElementById('agentId').value;
+            const widgetType = document.getElementById('widgetType').value;
+            const theme = document.getElementById('theme').value;
+            
+            if (!agentId) {
+                showStatus('Please enter your Agent ID', 'error');
+                return;
+            }
+            
+            if (typeof CustomGPTWidget === 'undefined') {
+                showStatus('Widget script not loaded. Please check if the file exists.', 'error');
+                return;
+            }
+            
+            try {
+                // Destroy existing widget if any
+                if (widget) {
+                    widget.destroy();
+                }
+                
+                const config = {
+                    agentId: parseInt(agentId) || agentId,
+                    theme: theme,
+                    enableCitations: true,
+                    enableFeedback: true,
+                    onOpen: () => console.log('Widget opened'),
+                    onClose: () => console.log('Widget closed'),
+                    onMessage: (msg) => console.log('Message:', msg)
+                };
+                
+                if (widgetType === 'embedded') {
+                    config.containerId = 'widget-container';
+                    config.mode = 'embedded';
+                    document.getElementById('widget-container').style.display = 'block';
+                } else {
+                    config.mode = 'floating';
+                    config.position = 'bottom-right';
+                }
+                
+                widget = CustomGPTWidget.init(config);
+                
+                showStatus('Widget initialized successfully!', 'success');
+                document.getElementById('controls').style.display = 'block';
+                
+                // Save to localStorage for convenience
+                localStorage.setItem('customgpt_agent_id', agentId);
+                
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+        
+        function showIntegrationCode() {
+            const agentId = document.getElementById('agentId').value || 'YOUR_AGENT_ID';
+            const widgetType = document.getElementById('widgetType').value;
+            const theme = document.getElementById('theme').value;
+            
+            let code = '';
+            
+            if (widgetType === 'embedded') {
+                code = `<!-- Embedded CustomGPT Chat Widget -->
+<div id="customgpt-chat" style="width: 400px; height: 600px;"></div>
+<script src="https://cdn.jsdelivr.net/gh/customgpt/customgpt-ui@main/dist/widget/customgpt-widget.js"></script>
+<script>
+  CustomGPTWidget.init({
+    agentId: ${agentId},
+    containerId: 'customgpt-chat',
+    mode: 'embedded',
+    theme: '${theme}',
+    enableCitations: true,
+    enableFeedback: true
+  });
+</script>`;
+            } else {
+                code = `<!-- Floating CustomGPT Chat Button -->
+<script src="https://cdn.jsdelivr.net/gh/customgpt/customgpt-ui@main/dist/widget/customgpt-widget.js"></script>
+<script>
+  CustomGPTWidget.init({
+    agentId: ${agentId},
+    mode: 'floating',
+    position: 'bottom-right',
+    theme: '${theme}'
+  });
+</script>`;
+            }
+            
+            document.getElementById('code-output').textContent = code;
+            document.getElementById('integration-code').style.display = 'block';
+        }
+        
+        function openWidget() {
+            if (widget) widget.open();
+        }
+        
+        function closeWidget() {
+            if (widget) widget.close();
+        }
+        
+        function toggleWidget() {
+            if (widget) widget.toggle();
+        }
+        
+        function destroyWidget() {
+            if (widget) {
+                widget.destroy();
+                widget = null;
+                showStatus('Widget destroyed', 'info');
+                document.getElementById('widget-container').style.display = 'none';
+                document.getElementById('controls').style.display = 'none';
+            }
+        }
+        
+        // Load saved credentials if any
+        window.addEventListener('load', () => {
+            const savedAgentId = localStorage.getItem('customgpt_agent_id');
+            
+            if (savedAgentId) document.getElementById('agentId').value = savedAgentId;
+            
+            if (typeof CustomGPTWidget !== 'undefined') {
+                showStatus('Widget script loaded successfully. Enter your Agent ID to test.', 'info');
+            } else {
+                showStatus('Widget script not found. Make sure to build the widget first.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

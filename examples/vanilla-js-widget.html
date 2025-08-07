@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CustomGPT Widget - Vanilla JavaScript Examples</title>
+    
+    <!-- 
+        IMPORTANT: Include widget files (choose one option)
+        
+        Option 1: Local files (after running npm run build:widget)
+    -->
+    <script src="../dist/widget/vendors.js"></script>
+    <script src="../dist/widget/customgpt-widget.js"></script>
+    <link rel="stylesheet" href="../dist/widget/customgpt-widget.css">
+    
+    <!-- 
+        Option 2: CDN (when available)
+        <script src="https://cdn.customgpt.ai/widget/latest/vendors.js"></script>
+        <script src="https://cdn.customgpt.ai/widget/latest/customgpt-widget.js"></script>
+        <link rel="stylesheet" href="https://cdn.customgpt.ai/widget/latest/customgpt-widget.css">
+    -->
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .example-section {
+            background: white;
+            padding: 30px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        .widget-demo {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .controls {
+            padding: 15px;
+            background: #f8f9fa;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CustomGPT Widget - Vanilla JavaScript Integration</h1>
+        
+        <!-- Basic Embedded Widget -->
+        <div class="example-section">
+            <h2>1. Basic Embedded Widget</h2>
+            <p>Simple embedded chat widget with default settings.</p>
+            
+            <div class="code-block">
+// Basic initialization
+const widget = CustomGPTWidget.init({
+    apiKey: 'your-api-key',
+    agentId: '123',
+    containerId: 'chat-container',
+    mode: 'embedded'
+});
+            </div>
+            
+            <div class="widget-demo">
+                <div id="basic-widget" style="height: 500px;"></div>
+            </div>
+        </div>
+
+        <!-- Widget with Conversation Management -->
+        <div class="example-section">
+            <h2>2. Widget with Conversation Management</h2>
+            <p>Full-featured widget with conversation switching, limits, and persistence.</p>
+            
+            <div class="code-block">
+// With conversation management
+const widget = CustomGPTWidget.init({
+    apiKey: 'your-api-key',
+    agentId: '123',
+    agentName: 'Support Bot',
+    containerId: 'managed-chat',
+    mode: 'embedded',
+    enableConversationManagement: true,
+    maxConversations: 5,
+    onConversationChange: (conv) => {
+        console.log('Switched to:', conv.title);
+    }
+});
+            </div>
+            
+            <div class="widget-demo">
+                <div class="controls">
+                    <button onclick="getManagedConversations()">Get Conversations</button>
+                    <button onclick="createManagedConversation()">New Conversation</button>
+                    <button onclick="getManagedWidgetState()">Widget State</button>
+                </div>
+                <div id="managed-widget" style="height: 500px;"></div>
+            </div>
+        </div>
+
+        <!-- Floating Button -->
+        <div class="example-section">
+            <h2>3. Floating Button Widget</h2>
+            <p>Floating chat button that appears in the corner of the page.</p>
+            
+            <div class="code-block">
+// Floating button
+const floatingWidget = CustomGPTWidget.init({
+    agentId: '123',
+    agentName: 'Assistant',
+    mode: 'floating',
+    position: 'bottom-right',
+    enableConversationManagement: true,
+    maxConversations: 3
+});
+            </div>
+            
+            <div class="controls">
+                <button onclick="initFloatingWidget()">Initialize Floating Widget</button>
+                <button onclick="toggleFloating()">Toggle Chat</button>
+                <button onclick="destroyFloating()">Remove Widget</button>
+            </div>
+            
+            <div class="info">
+                Look for the floating button in the bottom-right corner after initialization.
+            </div>
+        </div>
+
+        <!-- Advanced API Usage -->
+        <div class="example-section">
+            <h2>4. Advanced API Usage</h2>
+            <p>Demonstrates programmatic control of the widget.</p>
+            
+            <div class="code-block">
+// Get all conversations
+const conversations = widget.getConversations();
+
+// Create new conversation
+const newConv = widget.createConversation('Order Support');
+
+// Switch conversation
+widget.switchConversation(conversationId);
+
+// Update title
+widget.updateConversationTitle(conversationId, 'New Title');
+
+// Delete conversation
+widget.deleteConversation(conversationId);
+
+// Force refresh
+widget.refresh();
+            </div>
+            
+            <div class="widget-demo">
+                <div class="controls">
+                    <button onclick="demoCreateConv()">Create "Demo Chat"</button>
+                    <button onclick="demoListConvs()">List All</button>
+                    <button onclick="demoSwitchFirst()">Switch to First</button>
+                    <button onclick="demoUpdateTitle()">Update Title</button>
+                    <button onclick="demoDeleteLast()">Delete Last</button>
+                </div>
+                <div id="api-widget" style="height: 400px;"></div>
+                <pre id="api-output" style="background: #f5f5f5; padding: 10px; margin-top: 10px; border-radius: 4px;"></pre>
+            </div>
+        </div>
+
+        <!-- Multiple Widgets -->
+        <div class="example-section">
+            <h2>5. Multiple Widget Instances</h2>
+            <p>Run multiple chat widgets on the same page with different configurations.</p>
+            
+            <div class="code-block">
+// Sales chat
+const salesWidget = CustomGPTWidget.init({
+    agentId: 'sales-agent',
+    agentName: 'Sales Bot',
+    containerId: 'sales-chat',
+    sessionId: 'sales-session' // Different session
+});
+
+// Support chat
+const supportWidget = CustomGPTWidget.init({
+    agentId: 'support-agent',
+    agentName: 'Support Bot',
+    containerId: 'support-chat',
+    sessionId: 'support-session' // Different session
+});
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="widget-demo">
+                    <h3 style="padding: 10px; margin: 0; background: #f8f9fa;">Sales Chat</h3>
+                    <div id="sales-widget" style="height: 400px;"></div>
+                </div>
+                <div class="widget-demo">
+                    <h3 style="padding: 10px; margin: 0; background: #f8f9fa;">Support Chat</h3>
+                    <div id="support-widget" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CDN Usage -->
+        <div class="example-section">
+            <h2>6. CDN Integration</h2>
+            <p>Load the widget from CDN for easy integration.</p>
+            
+            <div class="code-block">
+&lt;!-- Include from CDN (vendors.js must be loaded first!) --&gt;
+&lt;script src="https://cdn.customgpt.ai/widget/latest/vendors.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.customgpt.ai/widget/latest/customgpt-widget.js"&gt;&lt;/script&gt;
+&lt;link rel="stylesheet" href="https://cdn.customgpt.ai/widget/latest/customgpt-widget.css"&gt;
+
+&lt;!-- Initialize widget --&gt;
+&lt;script&gt;
+  CustomGPTWidget.init({
+    agentId: '123',
+    containerId: 'chat',
+    mode: 'embedded'
+  });
+&lt;/script&gt;
+            </div>
+            
+            <div class="warning">
+                <strong>Note:</strong> Replace CDN URLs with actual CustomGPT CDN endpoints when available.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Widget instances
+        let basicWidget, managedWidget, floatingWidget, apiWidget, salesWidget, supportWidget;
+
+        // Initialize basic widget
+        basicWidget = CustomGPTWidget.init({
+            agentId: '123',
+            containerId: 'basic-widget',
+            mode: 'embedded'
+        });
+
+        // Initialize managed widget
+        managedWidget = CustomGPTWidget.init({
+            agentId: '123',
+            agentName: 'Support Bot',
+            containerId: 'managed-widget',
+            mode: 'embedded',
+            enableConversationManagement: true,
+            maxConversations: 5,
+            onConversationChange: (conv) => {
+                console.log('Conversation changed:', conv);
+            }
+        });
+
+        // Managed widget functions
+        function getManagedConversations() {
+            const convs = managedWidget.getConversations();
+            alert(`Found ${convs.length} conversations:\n${convs.map(c => c.title).join('\n')}`);
+        }
+
+        function createManagedConversation() {
+            const title = prompt('Enter conversation title:') || 'New Chat';
+            managedWidget.createConversation(title);
+            alert('Conversation created!');
+        }
+
+        function getManagedWidgetState() {
+            alert(`Widget open: ${managedWidget.isOpened}\nConversations: ${managedWidget.getConversations().length}`);
+        }
+
+        // Floating widget functions
+        function initFloatingWidget() {
+            if (floatingWidget) {
+                floatingWidget.destroy();
+            }
+            floatingWidget = CustomGPTWidget.init({
+                apiKey: 'demo-api-key',
+                agentId: '123',
+                agentName: 'Assistant',
+                mode: 'floating',
+                position: 'bottom-right',
+                enableConversationManagement: true,
+                maxConversations: 3
+            });
+            alert('Floating widget initialized! Look for the button in the bottom-right corner.');
+        }
+
+        function toggleFloating() {
+            if (floatingWidget) {
+                floatingWidget.toggle();
+            } else {
+                alert('Initialize the floating widget first!');
+            }
+        }
+
+        function destroyFloating() {
+            if (floatingWidget) {
+                floatingWidget.destroy();
+                floatingWidget = null;
+                alert('Floating widget removed!');
+            }
+        }
+
+        // API demo widget
+        apiWidget = CustomGPTWidget.init({
+            agentId: '123',
+            agentName: 'API Demo',
+            containerId: 'api-widget',
+            mode: 'embedded',
+            enableConversationManagement: true
+        });
+
+        // API demo functions
+        function updateOutput(text) {
+            document.getElementById('api-output').textContent = text;
+        }
+
+        function demoCreateConv() {
+            const conv = apiWidget.createConversation('Demo Chat');
+            updateOutput(`Created: ${JSON.stringify(conv, null, 2)}`);
+        }
+
+        function demoListConvs() {
+            const convs = apiWidget.getConversations();
+            updateOutput(`Conversations:\n${JSON.stringify(convs, null, 2)}`);
+        }
+
+        function demoSwitchFirst() {
+            const convs = apiWidget.getConversations();
+            if (convs.length > 0) {
+                apiWidget.switchConversation(convs[0].id);
+                updateOutput(`Switched to: ${convs[0].title}`);
+            } else {
+                updateOutput('No conversations found!');
+            }
+        }
+
+        function demoUpdateTitle() {
+            const convs = apiWidget.getConversations();
+            if (convs.length > 0) {
+                const newTitle = prompt('Enter new title:') || 'Updated Title';
+                apiWidget.updateConversationTitle(convs[0].id, newTitle);
+                updateOutput(`Updated title to: ${newTitle}`);
+            }
+        }
+
+        function demoDeleteLast() {
+            const convs = apiWidget.getConversations();
+            if (convs.length > 1) {
+                const last = convs[convs.length - 1];
+                apiWidget.deleteConversation(last.id);
+                updateOutput(`Deleted: ${last.title}`);
+            } else {
+                updateOutput('Cannot delete the only conversation!');
+            }
+        }
+
+        // Multiple widgets
+        salesWidget = CustomGPTWidget.init({
+            agentId: 'sales-123',
+            agentName: 'Sales Bot',
+            containerId: 'sales-widget',
+            mode: 'embedded',
+            sessionId: 'sales-session'
+        });
+
+        supportWidget = CustomGPTWidget.init({
+            agentId: 'support-456',
+            agentName: 'Support Bot',
+            containerId: 'support-widget',
+            mode: 'embedded',
+            sessionId: 'support-session'
+        });
+    </script>
+</body>
+</html>

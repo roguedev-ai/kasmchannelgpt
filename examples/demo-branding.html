@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CustomGPT Branding Demo</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .demo-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .demo-section h2 {
+            margin-top: 0;
+            color: #007acc;
+        }
+        .branding-info {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .branding-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .feature-card {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+        .feature-card h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+        }
+        .feature-card p {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CustomGPT Widget Branding</h1>
+        <p class="subtitle">Subtle, professional branding that respects user experience</p>
+        
+        <div class="demo-section">
+            <h2>Branding Implementation</h2>
+            <div class="branding-info">
+                <p><strong>Design Philosophy:</strong></p>
+                <ul>
+                    <li>Small and unobtrusive - doesn't interfere with the chat experience</li>
+                    <li>Professional appearance with subtle styling</li>
+                    <li>Clickable link to CustomGPT.ai (opens in new tab)</li>
+                    <li>Positioned at the bottom of the chat interface</li>
+                    <li>Light gray color (#999) with subtle hover effect</li>
+                    <li>Separated by a light border for visual distinction</li>
+                </ul>
+            </div>
+            
+            <div class="branding-features">
+                <div class="feature-card">
+                    <h4>🎨 Visual Design</h4>
+                    <p>11px font size for widget, 10px for floating button</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎯 Positioning</h4>
+                    <p>Bottom footer with light background</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔗 Interactive</h4>
+                    <p>Clickable link with hover effect</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🌐 Accessibility</h4>
+                    <p>Proper link with noopener security</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Widget Demo</h2>
+            <p>The branding appears at the bottom of the widget:</p>
+            <div id="widget-root"></div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Floating Button Demo</h2>
+            <p>Look for the floating button in the bottom-right corner. Open it to see the branding at the bottom of the chat window.</p>
+            <div id="floating-root"></div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Customization Options</h2>
+            <p>The branding is built into the components, but you can customize it by modifying the style properties in the source code:</p>
+            <ul>
+                <li><strong>Font Size:</strong> Adjust the fontSize property (currently 11px for widget, 10px for floating)</li>
+                <li><strong>Color:</strong> Change the color property (currently #999)</li>
+                <li><strong>Background:</strong> Modify the backgroundColor (currently #fafafa)</li>
+                <li><strong>Padding:</strong> Adjust spacing with the padding property</li>
+                <li><strong>Border:</strong> Customize the borderTop style</li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="text/babel" src="./examples/CustomGPTWidget.jsx"></script>
+    <script type="text/babel" src="./examples/CustomGPTFloatingButton.jsx"></script>
+    
+    <script type="text/babel">
+        // Replace with your actual agent ID
+        const AGENT_ID = '123';
+        const AGENT_NAME = 'Demo Bot';
+        
+        // Widget Demo
+        const WidgetDemo = () => {
+            return (
+                <CustomGPTWidget
+                    agentId={AGENT_ID}
+                    agentName={AGENT_NAME}
+                    width="100%"
+                    height="400px"
+                    alignment="center"
+                    maxConversations={5}
+                    enableConversationManagement={true}
+                />
+            );
+        };
+        
+        // Floating Button Demo
+        const FloatingDemo = () => {
+            return (
+                <CustomGPTFloatingButton
+                    agentId={AGENT_ID}
+                    agentName={AGENT_NAME}
+                    position="bottom-right"
+                    chatHeight="500px"
+                    maxConversations={5}
+                    enableConversationManagement={true}
+                />
+            );
+        };
+        
+        // Mount components
+        ReactDOM.render(<WidgetDemo />, document.getElementById('widget-root'));
+        ReactDOM.render(<FloatingDemo />, document.getElementById('floating-root'));
+    </script>
+</body>
+</html>

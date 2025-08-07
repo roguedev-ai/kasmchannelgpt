@@ -1,0 +1,487 @@
+/**
+ * Global CSS Styles
+ * 
+ * This file contains all global styles for the CustomGPT Chat UI.
+ * It uses Tailwind CSS as the foundation with custom additions.
+ * 
+ * Structure:
+ * 1. Font imports - Inter for UI, Fira Code for code blocks
+ * 2. Tailwind directives - Base, components, and utilities
+ * 3. CSS variables - Theme colors and customization
+ * 4. Base styles - Resets and defaults
+ * 5. Custom components - Scrollbars, animations, markdown
+ * 
+ * Customization Guide:
+ * - Colors: Modify CSS variables in :root
+ * - Dark mode: Add styles within .dark class
+ * - Fonts: Change the Google Fonts import
+ * - Animations: Add new keyframes at the bottom
+ * - Components: Use @apply directive for Tailwind classes
+ */
+
+/* Import fonts from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap');
+
+/* Tailwind CSS directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * CSS Variables (Light Theme)
+ * 
+ * Comprehensive color system for dual theme support.
+ * These variables are mapped to Tailwind classes for consistent theming.
+ * 
+ * Usage in CSS: color: var(--foreground);
+ * Usage in Tailwind: bg-background, text-foreground, etc.
+ */
+:root {
+  /* Base colors */
+  --background: #ffffff;
+  --foreground: #171717;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  
+  /* Border and input colors */
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #0a75ff;
+  
+  /* Brand colors */
+  --primary: #0a75ff;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  
+  /* State colors */
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  
+  /* Chat-specific colors */
+  --chat-user-bg: #0a75ff;
+  --chat-user-text: #ffffff;
+  --chat-assistant-bg: #f8fafc;
+  --chat-assistant-text: #0f172a;
+  --chat-border: #e2e8f0;
+  --chat-hover: #f1f5f9;
+  
+  /* Sidebar and navigation */
+  --sidebar-bg: #f8fafc;
+  --sidebar-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-hover: #f1f5f9;
+}
+
+/**
+ * Dark Mode Variables
+ * 
+ * Comprehensive dark theme colors that override the light theme.
+ * Dark theme is activated by adding .dark class to <html> element.
+ */
+.dark {
+  /* Base colors */
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --muted: #1a1a1a;
+  --muted-foreground: #a1a1aa;
+  --popover: #1a1a1a;
+  --popover-foreground: #fafafa;
+  --card: #1a1a1a;
+  --card-foreground: #fafafa;
+  
+  /* Border and input colors */
+  --border: #2d2d2d;
+  --input: #2d2d2d;
+  --ring: #3b82f6;
+  
+  /* Brand colors */
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #1f2937;
+  --secondary-foreground: #f9fafb;
+  
+  /* State colors */
+  --accent: #1f2937;
+  --accent-foreground: #f9fafb;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --success: #059669;
+  --success-foreground: #ffffff;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  
+  /* Chat-specific colors */
+  --chat-user-bg: #3b82f6;
+  --chat-user-text: #ffffff;
+  --chat-assistant-bg: #1f2937;
+  --chat-assistant-text: #f9fafb;
+  --chat-border: #374151;
+  --chat-hover: #2d3748;
+  
+  /* Sidebar and navigation */
+  --sidebar-bg: #111111;
+  --sidebar-foreground: #fafafa;
+  --sidebar-border: #2d2d2d;
+  --sidebar-hover: #1f1f1f;
+}
+
+/**
+ * CSS Reset
+ * 
+ * Ensures consistent styling across browsers.
+ * - box-sizing: border-box for predictable sizing
+ * - Remove default margins and padding
+ */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+/**
+ * Base Document Styles
+ * 
+ * Sets up the foundation for the entire application:
+ * - Prevents horizontal scroll
+ * - Sets up font stack with Inter as primary
+ * - Enables font smoothing for better rendering
+ * 
+ * Font stack fallbacks ensure good typography on all systems
+ */
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;  
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/**
+ * Custom Scrollbar Styles
+ * 
+ * Theme-aware scrollbars that adapt to light and dark modes.
+ * Only affects Webkit browsers (Chrome, Safari, Edge).
+ */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.4);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.6);
+}
+
+/* Dark mode scrollbar adjustments */
+.dark ::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.6);
+}
+
+/**
+ * Animation Classes
+ * 
+ * Custom animations for UI elements:
+ * - animate-blink: Used for cursor in streaming messages
+ * - animate-bounce-subtle: Used for loading indicators
+ * - delay-*: Animation delays for staggered effects
+ * 
+ * Add @keyframes definitions at the end of this file
+ */
+/* Animation classes */
+.animate-blink {
+  animation: blink 1s infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounceSubtle 1.4s infinite;
+}
+
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+/* Message transitions */
+.message-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.message-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Smooth scrolling */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* Text selection */
+::selection {
+  background-color: rgba(10, 117, 255, 0.2);
+  color: inherit;
+}
+
+/* Focus styles */
+.focus\:ring-brand:focus {
+  --tw-ring-color: rgb(10 117 255 / 0.5);
+}
+
+/**
+ * Markdown Content Styles
+ * 
+ * Styles for rendered markdown in chat messages.
+ * Provides consistent typography and spacing.
+ * 
+ * These styles ensure:
+ * - Readable line height
+ * - Proper heading hierarchy
+ * - Styled code blocks
+ * - Formatted tables
+ * - Clean link styling
+ * 
+ * To customize, adjust the specific element styles below
+ */
+/* Custom markdown styling */
+.markdown-content {
+  max-width: none;
+  color: #1f2937;
+  line-height: 1.6;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.markdown-content h1 { font-size: 1.875rem; }
+.markdown-content h2 { font-size: 1.5rem; }
+.markdown-content h3 { font-size: 1.25rem; }
+.markdown-content h4 { font-size: 1.125rem; }
+
+.markdown-content p {
+  margin-bottom: 1em;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.markdown-content li {
+  margin-bottom: 0.25em;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1em;
+  margin: 1em 0;
+  font-style: italic;
+  color: #6b7280;
+}
+
+.markdown-content code {
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  background-color: #f3f4f6;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #1f2937;
+}
+
+.markdown-content pre {
+  background-color: #1f2937 !important;
+  color: #f9fafb !important;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.markdown-content pre code {
+  background-color: transparent !important;
+  color: inherit !important;
+  padding: 0;
+}
+
+.markdown-content a {
+  color: #0a75ff;
+  text-decoration: none;
+}
+
+.markdown-content a:hover {
+  color: #0058e6;
+  text-decoration: underline;
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5em;
+  text-align: left;
+}
+
+.markdown-content th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+/**
+ * Keyframe Animations
+ * 
+ * Define custom animations used throughout the app.
+ * Add new @keyframes here for additional animations.
+ */
+
+/* Blinking cursor animation for streaming messages */
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Subtle bounce animation for loading states */
+@keyframes bounceSubtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Pulse animation for highlights */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/**
+ * Sonner Toast Customization
+ * 
+ * Override Sonner's default close button positioning to place it on the right side
+ * Uses multiple selectors to ensure compatibility across different Sonner versions
+ */
+[data-sonner-toaster] [data-close-button],
+[data-sonner-toaster] button[data-close-button],
+[data-sonner-toaster] .sonner-close-button {
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  left: unset !important;
+  background: transparent !important;
+  border: none !important;
+  color: #6b7280 !important;
+  cursor: pointer !important;
+  padding: 4px !important;
+  border-radius: 4px !important;
+  width: 20px !important;
+  height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 1 !important;
+}
+
+[data-sonner-toaster] [data-close-button]:hover,
+[data-sonner-toaster] button[data-close-button]:hover,
+[data-sonner-toaster] .sonner-close-button:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #374151 !important;
+}
+
+/* Ensure toast content has padding for close button */
+[data-sonner-toaster] [data-content],
+[data-sonner-toaster] .sonner-content {
+  padding-right: 40px !important;
+}
+
+/* Alternative selector for toast items */
+[data-sonner-toaster] [data-sonner-toast] {
+  position: relative !important;
+  padding-right: 40px !important;
+}
