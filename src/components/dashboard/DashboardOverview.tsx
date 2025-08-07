@@ -53,12 +53,12 @@ const MetricCard: React.FC<MetricCardProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+      className="bg-card rounded-lg border border-border p-6 hover:shadow-md transition-shadow"
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 mb-2">{value}</p>
+          <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
+          <p className="text-3xl font-bold text-foreground mb-2">{value}</p>
           {change && (
             <div className="flex items-center gap-1">
               {change.trend === 'up' ? (
@@ -66,13 +66,13 @@ const MetricCard: React.FC<MetricCardProps> = ({
               ) : change.trend === 'down' ? (
                 <TrendingDown className="h-4 w-4 text-red-500" />
               ) : (
-                <Activity className="h-4 w-4 text-gray-500" />
+                <Activity className="h-4 w-4 text-muted-foreground" />
               )}
               <span className={cn(
                 'text-sm font-medium',
                 change.trend === 'up' && 'text-green-600',
                 change.trend === 'down' && 'text-red-600',
-                change.trend === 'neutral' && 'text-gray-600'
+                change.trend === 'neutral' && 'text-muted-foreground'
               )}>
                 {change.value}
               </span>
@@ -112,15 +112,15 @@ const QuickAction: React.FC<QuickActionProps> = ({
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="bg-white rounded-lg border border-gray-200 p-6 text-left hover:shadow-md transition-all"
+      className="bg-card rounded-lg border border-border p-6 text-left hover:shadow-md transition-all"
     >
       <div className="flex items-start gap-4">
         <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center', color)}>
           <Icon className="h-5 w-5 text-white" />
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
-          <p className="text-sm text-gray-600">{description}</p>
+          <h3 className="font-semibold text-foreground mb-1">{title}</h3>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
       </div>
     </motion.button>
@@ -148,23 +148,23 @@ const ActivityItem: React.FC<{ item: RecentActivityItem }> = ({ item }) => {
       case 'settings_updated':
         return <Activity className="h-4 w-4 text-orange-600" />;
       default:
-        return <Activity className="h-4 w-4 text-gray-600" />;
+        return <Activity className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   return (
-    <div className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg">
-      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+    <div className="flex items-start gap-3 p-3 hover:bg-accent rounded-lg">
+      <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 mt-0.5">
         {getIcon()}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900">{item.title}</p>
-        <p className="text-sm text-gray-600 mt-0.5">{item.description}</p>
+        <p className="text-sm font-medium text-foreground">{item.title}</p>
+        <p className="text-sm text-muted-foreground mt-0.5">{item.description}</p>
         {item.agent && (
-          <p className="text-xs text-gray-500 mt-1">Agent: {item.agent}</p>
+          <p className="text-xs text-muted-foreground mt-1">Agent: {item.agent}</p>
         )}
       </div>
-      <div className="text-xs text-gray-500 flex-shrink-0">
+      <div className="text-xs text-muted-foreground flex-shrink-0">
         {item.timestamp}
       </div>
     </div>
@@ -296,8 +296,8 @@ export const DashboardOverview: React.FC = () => {
     <div className="p-6 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard Overview</h1>
-        <p className="text-gray-600">Welcome back! Here's what's happening with your agents.</p>
+        <h1 className="text-2xl font-bold text-foreground mb-2">Dashboard Overview</h1>
+        <p className="text-muted-foreground">Welcome back! Here's what's happening with your agents.</p>
       </div>
 
       {/* Metrics Grid */}
@@ -305,14 +305,14 @@ export const DashboardOverview: React.FC = () => {
         {isLoading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
+            <div key={index} className="bg-card rounded-lg border border-border p-6 animate-pulse">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-32 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-24"></div>
+                  <div className="h-4 bg-muted rounded w-20 mb-2"></div>
+                  <div className="h-8 bg-muted rounded w-32 mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-24"></div>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-gray-200"></div>
+                <div className="w-12 h-12 rounded-lg bg-muted"></div>
               </div>
             </div>
           ))
@@ -338,7 +338,7 @@ export const DashboardOverview: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Quick Actions */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {quickActions.map((action, index) => (
               <QuickAction key={index} {...action} />
@@ -348,14 +348,14 @@ export const DashboardOverview: React.FC = () => {
 
         {/* Recent Activity */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
-          <div className="bg-white rounded-lg border border-gray-200">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h2>
+          <div className="bg-card rounded-lg border border-border">
             <div className="divide-y divide-gray-200">
               {recentActivity.map((item) => (
                 <ActivityItem key={item.id} item={item} />
               ))}
             </div>
-            <div className="p-4 text-center border-t border-gray-200">
+            <div className="p-4 text-center border-t border-border">
               <button className="text-sm text-brand-600 hover:text-brand-700 font-medium">
                 View all activity
               </button>
@@ -365,34 +365,34 @@ export const DashboardOverview: React.FC = () => {
       </div>
 
       {/* Usage Overview */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Usage Overview</h2>
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h2 className="text-lg font-semibold text-foreground mb-4">Usage Overview</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-3 bg-blue-100 rounded-full flex items-center justify-center">
               <Clock className="h-8 w-8 text-blue-600" />
             </div>
-            <h3 className="font-semibold text-gray-900">Response Time</h3>
+            <h3 className="font-semibold text-foreground">Response Time</h3>
             <p className="text-2xl font-bold text-blue-600 mt-1">1.2s</p>
-            <p className="text-sm text-gray-500">Average response time</p>
+            <p className="text-sm text-muted-foreground">Average response time</p>
           </div>
           
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-3 bg-green-100 rounded-full flex items-center justify-center">
               <Globe className="h-8 w-8 text-green-600" />
             </div>
-            <h3 className="font-semibold text-gray-900">Global Reach</h3>
+            <h3 className="font-semibold text-foreground">Global Reach</h3>
             <p className="text-2xl font-bold text-green-600 mt-1">23</p>
-            <p className="text-sm text-gray-500">Countries served</p>
+            <p className="text-sm text-muted-foreground">Countries served</p>
           </div>
           
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-3 bg-purple-100 rounded-full flex items-center justify-center">
               <Zap className="h-8 w-8 text-purple-600" />
             </div>
-            <h3 className="font-semibold text-gray-900">Uptime</h3>
+            <h3 className="font-semibold text-foreground">Uptime</h3>
             <p className="text-2xl font-bold text-purple-600 mt-1">99.9%</p>
-            <p className="text-sm text-gray-500">Service availability</p>
+            <p className="text-sm text-muted-foreground">Service availability</p>
           </div>
         </div>
       </div>

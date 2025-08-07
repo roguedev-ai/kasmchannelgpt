@@ -146,10 +146,10 @@ export const SourceUploadModal: React.FC<SourceUploadModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div className="bg-background rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-foreground">
             Add Data Sources
           </h2>
           
@@ -170,7 +170,7 @@ export const SourceUploadModal: React.FC<SourceUploadModalProps> = ({
               'flex-1 px-4 py-3 text-sm font-medium text-center',
               activeTab === 'file'
                 ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50'
-                : 'text-gray-500 hover:text-gray-700'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <File className="w-4 h-4 inline mr-2" />
@@ -183,7 +183,7 @@ export const SourceUploadModal: React.FC<SourceUploadModalProps> = ({
               'flex-1 px-4 py-3 text-sm font-medium text-center',
               activeTab === 'url'
                 ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50'
-                : 'text-gray-500 hover:text-gray-700'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <Link className="w-4 h-4 inline mr-2" />
@@ -196,7 +196,7 @@ export const SourceUploadModal: React.FC<SourceUploadModalProps> = ({
               'flex-1 px-4 py-3 text-sm font-medium text-center',
               activeTab === 'text'
                 ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50'
-                : 'text-gray-500 hover:text-gray-700'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <Type className="w-4 h-4 inline mr-2" />
@@ -217,14 +217,14 @@ export const SourceUploadModal: React.FC<SourceUploadModalProps> = ({
                 )}
               >
                 <input {...getInputProps()} />
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-4" />
-                <p className="text-sm text-gray-600">
+                <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
+                <p className="text-sm text-muted-foreground">
                   {isDragActive
                     ? 'Drop files here...'
                     : 'Drag and drop files here, or click to select files'
                   }
                 </p>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   Supports: PDF, DOC, TXT, CSV, JSON, etc.
                 </p>
               </div>
@@ -232,15 +232,15 @@ export const SourceUploadModal: React.FC<SourceUploadModalProps> = ({
               {/* File List */}
               {files.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-700">
+                  <h4 className="text-sm font-medium text-foreground">
                     Selected Files ({files.length})
                   </h4>
                   {files.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
                       <div className="flex items-center gap-2">
-                        <File className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm text-gray-700">{file.name}</span>
-                        <span className="text-xs text-gray-500">
+                        <File className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-foreground">{file.name}</span>
+                        <span className="text-xs text-muted-foreground">
                           ({(file.size / 1024).toFixed(1)} KB)
                         </span>
                       </div>
@@ -302,7 +302,7 @@ export const SourceUploadModal: React.FC<SourceUploadModalProps> = ({
                 {textSources.map((source, index) => (
                   <div key={index} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-medium text-gray-700">
+                      <h4 className="text-sm font-medium text-foreground">
                         Text Source {index + 1}
                       </h4>
                       {textSources.length > 1 && (

@@ -68,6 +68,13 @@ class SpeechManager {
     }
   };
 
+  // Public method to stop audio playback
+  public stopAudio = () => {
+    this.stopSourceIfNeeded();
+    this.callbacks.onReset?.();
+    this.debug("Audio stopped by user");
+  };
+
   private processAudio = async (audio: Float32Array) => {
     this.debug("Processing audio started");
     this.callbacks.onProcessing?.();
@@ -87,7 +94,9 @@ class SpeechManager {
     const blob = new Blob([wavBuffer], { type: 'audio/wav' });
     this.debug("Created audio blob", { 
       size: `${(blob.size / 1024).toFixed(2)}KB`,
-      type: blob.type 
+      type: blob.type,
+      samples: audio.length,
+      duration: `${audio.length / 16000}s` // Assuming 16kHz from VAD
     });
     return blob;
   };
@@ -127,8 +136,20 @@ class SpeechManager {
       });
 
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`API Error (${response.status}): ${error}`);
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
+        }
+        
+        // Check if it's specifically an OpenAI API key error
+        if (response.status === 503 && errorData.userMessage) {
+          throw new Error(errorData.userMessage);
+        }
+        
+        throw new Error(`API Error (${response.status}): ${errorData.error || errorText}`);
       }
 
       const textHeader = response.headers.get("text");

@@ -183,11 +183,11 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+          className="relative bg-background rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-foreground">
               Citation Details
             </h2>
             <Button
@@ -204,7 +204,7 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
           <div className="p-4 overflow-y-auto max-h-[calc(90vh-120px)]">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader className="h-8 w-8 animate-spin text-gray-400" />
+                <Loader className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : error ? (
               <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg">
@@ -218,7 +218,7 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
               <div className="space-y-4">
                 {/* Open Graph Image */}
                 {citationData.image && !imageError && (
-                  <div className="relative rounded-lg overflow-hidden bg-gray-100">
+                  <div className="relative rounded-lg overflow-hidden bg-muted">
                     <img
                       src={citationData.image}
                       alt={citationData.title}
@@ -230,13 +230,13 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
 
                 {/* Title */}
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-xl font-semibold text-foreground">
                     {citationData.title}
                   </h3>
                 </div>
 
                 {/* URL */}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Globe className="h-4 w-4" />
                   <a
                     href={citationData.url}
@@ -251,20 +251,20 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
                 {/* Description */}
                 {citationData.description && (
                   <div className="prose prose-gray max-w-none">
-                    <p className="text-gray-700">{citationData.description}</p>
+                    <p className="text-foreground">{citationData.description}</p>
                   </div>
                 )}
 
                 {/* Metadata */}
                 <div className="pt-4 border-t space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Citation ID</span>
-                    <span className="font-mono text-gray-700">#{citationData.id}</span>
+                    <span className="text-muted-foreground">Citation ID</span>
+                    <span className="font-mono text-foreground">#{citationData.id}</span>
                   </div>
                   {citationData.image && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Has preview image</span>
-                      <ImageIcon className="h-4 w-4 text-gray-400" />
+                      <span className="text-muted-foreground">Has preview image</span>
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
                     </div>
                   )}
                 </div>
@@ -273,9 +273,9 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t bg-gray-50">
+          <div className="p-4 border-t bg-muted">
             <div className="flex items-center justify-between">
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 Open Graph data from cited source
               </div>
               {citationData && (

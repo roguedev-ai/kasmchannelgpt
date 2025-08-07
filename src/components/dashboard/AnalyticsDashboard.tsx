@@ -66,7 +66,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
       case 'down':
         return <ArrowDownRight className="h-4 w-4 text-red-500" />;
       default:
-        return <Minus className="h-4 w-4 text-gray-500" />;
+        return <Minus className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -74,15 +74,15 @@ const MetricCard: React.FC<MetricCardProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+      className="bg-card rounded-lg border border-border p-6 hover:shadow-md transition-shadow"
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
+          <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
           {loading ? (
             <div className="h-8 bg-gray-200 rounded animate-pulse mb-2" />
           ) : (
-            <p className="text-3xl font-bold text-gray-900 mb-2">{value}</p>
+            <p className="text-3xl font-bold text-foreground mb-2">{value}</p>
           )}
           {change && !loading && (
             <div className="flex items-center gap-1">
@@ -91,7 +91,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
                 'text-sm font-medium',
                 change.trend === 'up' && 'text-green-600',
                 change.trend === 'down' && 'text-red-600',
-                change.trend === 'neutral' && 'text-gray-600'
+                change.trend === 'neutral' && 'text-muted-foreground'
               )}>
                 {change.value}
               </span>
@@ -117,9 +117,9 @@ interface ChartCardProps {
 }
 
 const ChartCard: React.FC<ChartCardProps> = ({ title, children, loading, actions }) => (
-  <div className="bg-white rounded-lg border border-gray-200 p-6">
+  <div className="bg-card rounded-lg border border-border p-6">
     <div className="flex items-center justify-between mb-6">
-      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      <h3 className="text-lg font-semibold text-foreground">{title}</h3>
       {actions}
     </div>
     {loading ? (
@@ -245,8 +245,8 @@ export const AnalyticsDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-gray-600 mt-1">Monitor your agent performance and user engagement</p>
+          <h1 className="text-2xl font-bold text-foreground">Analytics Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Monitor your agent performance and user engagement</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -254,7 +254,7 @@ export const AnalyticsDashboard: React.FC = () => {
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value as any)}
-            className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
@@ -266,7 +266,7 @@ export const AnalyticsDashboard: React.FC = () => {
           <select
             value={selectedAgent}
             onChange={(e) => setSelectedAgent(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-            className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
           >
             <option value="all">All Agents</option>
             {agents.map((agent) => (
@@ -307,10 +307,10 @@ export const AnalyticsDashboard: React.FC = () => {
             </Button>
           }
         >
-          <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg">
+          <div className="h-64 flex items-center justify-center border-2 border-dashed border-border rounded-lg">
             <div className="text-center">
               <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-500">Conversation trends chart would render here</p>
+              <p className="text-muted-foreground">Conversation trends chart would render here</p>
               <p className="text-sm text-gray-400">Integration with charting library needed</p>
             </div>
           </div>
@@ -327,10 +327,10 @@ export const AnalyticsDashboard: React.FC = () => {
             </Button>
           }
         >
-          <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg">
+          <div className="h-64 flex items-center justify-center border-2 border-dashed border-border rounded-lg">
             <div className="text-center">
               <Clock className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-500">Response time chart would render here</p>
+              <p className="text-muted-foreground">Response time chart would render here</p>
               <p className="text-sm text-gray-400">Shows average, median, and p95 response times</p>
             </div>
           </div>
@@ -339,9 +339,9 @@ export const AnalyticsDashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Queries */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Top Queries</h3>
+            <h3 className="text-lg font-semibold text-foreground">Top Queries</h3>
             <Button variant="outline" size="sm">
               View All
             </Button>
@@ -349,15 +349,15 @@ export const AnalyticsDashboard: React.FC = () => {
           
           <div className="space-y-4">
             {topQueries.map((query, index) => (
-              <div key={index} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-3 hover:bg-accent rounded-lg">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {query.query}
                   </p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-gray-500">{query.count} times</span>
+                    <span className="text-xs text-muted-foreground">{query.count} times</span>
                     <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs text-gray-500">{query.percentage}%</span>
+                    <span className="text-xs text-muted-foreground">{query.percentage}%</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -371,9 +371,9 @@ export const AnalyticsDashboard: React.FC = () => {
         </div>
 
         {/* Traffic Sources */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Traffic Sources</h3>
+            <h3 className="text-lg font-semibold text-foreground">Traffic Sources</h3>
             <Button variant="outline" size="sm">
               <Globe className="h-4 w-4 mr-2" />
               Geographic
@@ -384,12 +384,12 @@ export const AnalyticsDashboard: React.FC = () => {
             {trafficSources.map((source, index) => (
               <div key={index} className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-900">{source.source}</span>
+                  <span className="text-sm font-medium text-foreground">{source.source}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">{source.visitors.toLocaleString()}</span>
+                    <span className="text-sm text-muted-foreground">{source.visitors.toLocaleString()}</span>
                     <span className={cn(
                       'text-xs font-medium',
-                      source.change > 0 ? 'text-green-600' : source.change < 0 ? 'text-red-600' : 'text-gray-600'
+                      source.change > 0 ? 'text-green-600' : source.change < 0 ? 'text-red-600' : 'text-muted-foreground'
                     )}>
                       {source.change > 0 ? '+' : ''}{source.change}%
                     </span>
@@ -408,44 +408,44 @@ export const AnalyticsDashboard: React.FC = () => {
       </div>
 
       {/* User Engagement Metrics */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">User Engagement</h3>
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-6">User Engagement</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-3 bg-blue-100 rounded-full flex items-center justify-center">
               <MessageSquare className="h-8 w-8 text-blue-600" />
             </div>
-            <h4 className="font-semibold text-gray-900">Messages per Session</h4>
+            <h4 className="font-semibold text-foreground">Messages per Session</h4>
             <p className="text-2xl font-bold text-blue-600 mt-1">4.7</p>
-            <p className="text-sm text-gray-500">+12% from last month</p>
+            <p className="text-sm text-muted-foreground">+12% from last month</p>
           </div>
           
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-3 bg-green-100 rounded-full flex items-center justify-center">
               <Users className="h-8 w-8 text-green-600" />
             </div>
-            <h4 className="font-semibold text-gray-900">Return Users</h4>
+            <h4 className="font-semibold text-foreground">Return Users</h4>
             <p className="text-2xl font-bold text-green-600 mt-1">68%</p>
-            <p className="text-sm text-gray-500">+5% from last month</p>
+            <p className="text-sm text-muted-foreground">+5% from last month</p>
           </div>
           
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-3 bg-purple-100 rounded-full flex items-center justify-center">
               <Zap className="h-8 w-8 text-purple-600" />
             </div>
-            <h4 className="font-semibold text-gray-900">User Satisfaction</h4>
+            <h4 className="font-semibold text-foreground">User Satisfaction</h4>
             <p className="text-2xl font-bold text-purple-600 mt-1">4.6/5</p>
-            <p className="text-sm text-gray-500">+0.2 from last month</p>
+            <p className="text-sm text-muted-foreground">+0.2 from last month</p>
           </div>
           
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-3 bg-orange-100 rounded-full flex items-center justify-center">
               <MousePointer className="h-8 w-8 text-orange-600" />
             </div>
-            <h4 className="font-semibold text-gray-900">Click-through Rate</h4>
+            <h4 className="font-semibold text-foreground">Click-through Rate</h4>
             <p className="text-2xl font-bold text-orange-600 mt-1">23.4%</p>
-            <p className="text-sm text-gray-500">+3% from last month</p>
+            <p className="text-sm text-muted-foreground">+3% from last month</p>
           </div>
         </div>
       </div>

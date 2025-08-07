@@ -88,7 +88,7 @@ const AgentCard: React.FC<AgentCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+      className="bg-card rounded-lg border border-border p-6 hover:shadow-md transition-shadow"
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-3">
@@ -96,7 +96,7 @@ const AgentCard: React.FC<AgentCardProps> = ({
             <Bot className="h-5 w-5 text-brand-600" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-gray-900 truncate">{agent.project_name}</h3>
+            <h3 className="font-semibold text-foreground truncate">{agent.project_name}</h3>
             <div className="flex items-center gap-2 mt-1">
               <span className={cn(
                 'inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
@@ -111,7 +111,7 @@ const AgentCard: React.FC<AgentCardProps> = ({
                   Public
                 </span>
               )}
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-accent text-foreground">
                 {agent.type}
               </span>
             </div>
@@ -134,33 +134,33 @@ const AgentCard: React.FC<AgentCardProps> = ({
                 initial={{ opacity: 0, scale: 0.95, y: -5 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                className="absolute right-0 top-8 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+                className="absolute right-0 top-8 mt-1 w-48 bg-background border border-border rounded-lg shadow-lg z-50"
               >
                 <div className="py-1">
                   <button
                     onClick={() => { onEdit(agent); setShowMenu(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent"
                   >
                     <Edit3 className="h-4 w-4" />
                     Edit Agent
                   </button>
                   <button
                     onClick={() => { onViewAnalytics(agent); setShowMenu(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent"
                   >
                     <BarChart3 className="h-4 w-4" />
                     View Analytics
                   </button>
                   <button
                     onClick={() => { onReplicate(agent); setShowMenu(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent"
                   >
                     <Copy className="h-4 w-4" />
                     Replicate
                   </button>
                   <button
                     onClick={() => { onToggleStatus(agent); setShowMenu(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent"
                   >
                     {agent.is_chat_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                     {agent.is_chat_active ? 'Deactivate' : 'Activate'}
@@ -182,20 +182,20 @@ const AgentCard: React.FC<AgentCardProps> = ({
 
       {/* Metrics */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <div className="text-lg font-semibold text-gray-900">
+        <div className="text-center p-3 bg-accent rounded-lg">
+          <div className="text-lg font-semibold text-foreground">
             {agent.stats?.total_queries?.toLocaleString() || '0'}
           </div>
-          <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+          <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
             <MessageSquare className="h-3 w-3" />
             Total Queries
           </div>
         </div>
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <div className="text-lg font-semibold text-gray-900">
+        <div className="text-center p-3 bg-accent rounded-lg">
+          <div className="text-lg font-semibold text-foreground">
             {agent.stats?.pages_indexed?.toLocaleString() || '0'}
           </div>
-          <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+          <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
             <BarChart3 className="h-3 w-3" />
             Pages Indexed
           </div>
@@ -207,26 +207,26 @@ const AgentCard: React.FC<AgentCardProps> = ({
         {agent.stats && (
           <>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Pages Crawled</span>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm text-muted-foreground">Pages Crawled</span>
+              <span className="text-sm font-medium text-foreground">
                 {agent.stats.pages_crawled}/{agent.stats.pages_found}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Credits Used</span>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm text-muted-foreground">Credits Used</span>
+              <span className="text-sm font-medium text-foreground">
                 {(agent.stats.crawl_credits_used + agent.stats.query_credits_used).toLocaleString()}
               </span>
             </div>
           </>
         )}
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Type</span>
+          <span className="text-sm text-muted-foreground">Type</span>
           <span className="text-sm font-medium text-gray-900">{agent.type}</span>
         </div>
         {agent.type === 'SITEMAP' && agent.sitemap_path && (
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Sitemap</span>
+            <span className="text-sm text-muted-foreground">Sitemap</span>
             <a 
               href={agent.sitemap_path} 
               target="_blank" 
@@ -239,14 +239,14 @@ const AgentCard: React.FC<AgentCardProps> = ({
           </div>
         )}
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Licenses</span>
+          <span className="text-sm text-muted-foreground">Licenses</span>
           <span className="text-sm font-medium text-gray-900">
             {agent.are_licenses_allowed ? 'Enabled' : 'Disabled'}
           </span>
         </div>
         {agent.updated_at && (
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Last Updated</span>
+            <span className="text-sm text-muted-foreground">Last Updated</span>
             <span className="text-sm font-medium text-gray-900">
               {new Date(agent.updated_at).toLocaleDateString()}
             </span>
@@ -289,28 +289,28 @@ const AgentCard: React.FC<AgentCardProps> = ({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="mt-4 pt-4 border-t border-gray-200 space-y-2"
+            className="mt-4 pt-4 border-t border-border space-y-2"
           >
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Additional Details</h4>
+            <h4 className="text-sm font-medium text-foreground mb-2">Additional Details</h4>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <span className="text-gray-600">User ID:</span>
-                <span className="ml-2 font-medium text-gray-900">{agent.user_id}</span>
+                <span className="text-muted-foreground">User ID:</span>
+                <span className="ml-2 font-medium text-foreground">{agent.user_id}</span>
               </div>
               <div>
                 <span className="text-gray-600">Team ID:</span>
-                <span className="ml-2 font-medium text-gray-900">{agent.team_id}</span>
+                <span className="ml-2 font-medium text-foreground">{agent.team_id}</span>
               </div>
               {agent.shareable_slug && (
                 <div className="col-span-2">
                   <span className="text-gray-600">Shareable Slug:</span>
-                  <span className="ml-2 font-medium text-gray-900">{agent.shareable_slug}</span>
+                  <span className="ml-2 font-medium text-foreground">{agent.shareable_slug}</span>
                 </div>
               )}
               {agent.live_chat_code && (
                 <div className="col-span-2">
                   <span className="text-gray-600">Live Chat Code:</span>
-                  <code className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded font-mono">
+                  <code className="ml-2 text-xs bg-accent px-2 py-1 rounded font-mono">
                     {agent.live_chat_code}
                   </code>
                 </div>
@@ -329,8 +329,8 @@ const AgentCard: React.FC<AgentCardProps> = ({
       </AnimatePresence>
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-        <div className="flex items-center gap-1 text-xs text-gray-500">
+      <div className="flex items-center justify-between pt-4 border-t border-border">
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <Calendar className="h-3 w-3" />
           Created {new Date(agent.created_at).toLocaleDateString()}
         </div>
@@ -462,8 +462,8 @@ export const AgentManagement: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Agent Management</h1>
-          <p className="text-gray-600 mt-1">Create and manage your AI agents</p>
+          <h1 className="text-2xl font-bold text-foreground">Agent Management</h1>
+          <p className="text-muted-foreground mt-1">Create and manage your AI agents</p>
         </div>
         <Button onClick={handleCreateAgent} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
@@ -476,13 +476,13 @@ export const AgentManagement: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search agents..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-80"
+              className="pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-80 bg-background text-foreground"
             />
           </div>
 
@@ -490,7 +490,7 @@ export const AgentManagement: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -502,7 +502,7 @@ export const AgentManagement: React.FC = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
           >
             <option value="created">Created Date</option>
             <option value="name">Name</option>
@@ -531,49 +531,49 @@ export const AgentManagement: React.FC = () => {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="bg-card rounded-lg border border-border p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
               <Bot className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{extendedAgents.length}</p>
-              <p className="text-sm text-gray-600">Total Agents</p>
+              <p className="text-2xl font-bold text-foreground">{extendedAgents.length}</p>
+              <p className="text-sm text-muted-foreground">Total Agents</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="bg-card rounded-lg border border-border p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
               <CheckCircle className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{extendedAgents.filter(a => getAgentStatus(a) === 'active').length}</p>
-              <p className="text-sm text-gray-600">Active</p>
+              <p className="text-2xl font-bold text-foreground">{extendedAgents.filter(a => getAgentStatus(a) === 'active').length}</p>
+              <p className="text-sm text-muted-foreground">Active</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="bg-card rounded-lg border border-border p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
               <MessageSquare className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{extendedAgents.filter(a => a.is_shared).length}</p>
-              <p className="text-sm text-gray-600">Public Agents</p>
+              <p className="text-2xl font-bold text-foreground">{extendedAgents.filter(a => a.is_shared).length}</p>
+              <p className="text-sm text-muted-foreground">Public Agents</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="bg-card rounded-lg border border-border p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
               <BarChart3 className="h-5 w-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-foreground">
                 {extendedAgents.reduce((sum, a) => sum + (a.stats?.total_queries || 0), 0).toLocaleString()}
               </p>
-              <p className="text-sm text-gray-600">Total Queries</p>
+              <p className="text-sm text-muted-foreground">Total Queries</p>
             </div>
           </div>
         </div>
@@ -584,21 +584,21 @@ export const AgentManagement: React.FC = () => {
         <div className="text-center py-12">
           <div className="inline-flex items-center gap-2">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-600"></div>
-            <p className="text-gray-600">Loading agents...</p>
+            <p className="text-muted-foreground">Loading agents...</p>
           </div>
         </div>
       ) : error ? (
         <div className="text-center py-12">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading agents</h3>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h3 className="text-lg font-medium text-foreground mb-2">Error loading agents</h3>
+          <p className="text-muted-foreground mb-6">{error}</p>
           <Button onClick={() => fetchAgents()}>Try Again</Button>
         </div>
       ) : filteredAgents.length === 0 ? (
         <div className="text-center py-12">
-          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No agents found</h3>
-          <p className="text-gray-600 mb-6">
+          <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">No agents found</h3>
+          <p className="text-muted-foreground mb-6">
             {searchQuery || statusFilter !== 'all' 
               ? 'Try adjusting your search or filters'
               : 'Create your first agent to get started'
@@ -646,17 +646,17 @@ export const AgentManagement: React.FC = () => {
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.95 }}
-            className="bg-white rounded-lg p-6 max-w-md w-full"
+            className="bg-background rounded-lg p-6 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold mb-4">Share Link</h3>
-            <p className="text-gray-600 mb-4">Share this link to give others access to your agent:</p>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Share Link</h3>
+            <p className="text-muted-foreground mb-4">Share this link to give others access to your agent:</p>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={showShareModal.shareable_link || ''}
                 readOnly
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
+                className="flex-1 px-3 py-2 border border-border rounded-lg bg-accent text-foreground"
               />
               <Button
                 onClick={() => {
@@ -691,16 +691,16 @@ export const AgentManagement: React.FC = () => {
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.95 }}
-            className="bg-white rounded-lg p-6 max-w-2xl w-full"
+            className="bg-background rounded-lg p-6 max-w-2xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold mb-4">Embed Code</h3>
-            <p className="text-gray-600 mb-4">Add this code to your website to embed the agent:</p>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Embed Code</h3>
+            <p className="text-muted-foreground mb-4">Add this code to your website to embed the agent:</p>
             <textarea
               value={showEmbedModal.embed_code || ''}
               readOnly
               rows={10}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 font-mono text-sm"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-accent font-mono text-sm text-foreground"
             />
             <div className="flex gap-2 mt-4">
               <Button

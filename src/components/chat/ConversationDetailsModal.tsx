@@ -60,12 +60,12 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-x-0 top-[10%] mx-auto max-w-2xl bg-white rounded-lg shadow-xl z-50 max-h-[80vh] overflow-hidden"
+            className="fixed inset-x-0 top-[10%] mx-auto max-w-2xl bg-background rounded-lg shadow-xl z-50 max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Conversation Details</h2>
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h2 className="text-xl font-semibold text-foreground">Conversation Details</h2>
               <Button
                 size="icon"
                 variant="ghost"
@@ -80,25 +80,25 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
             <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(80vh-200px)]">
               {/* Basic Information */}
               <div>
-                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
                   Basic Information
                 </h3>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="bg-muted rounded-lg p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-700">Conversation Name</span>
+                      <Hash className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground">Conversation Name</span>
                     </div>
-                    <span className="text-sm text-gray-900 font-medium">{conversation.name}</span>
+                    <span className="text-sm text-foreground font-medium">{conversation.name}</span>
                   </div>
 
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-700">Conversation ID</span>
+                      <Hash className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground">Conversation ID</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-900 font-mono">{conversation.id}</span>
+                      <span className="text-sm text-foreground font-mono">{conversation.id}</span>
                       <Button
                         size="icon"
                         variant="ghost"
@@ -112,11 +112,11 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
 
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-700">Session ID</span>
+                      <Hash className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground">Session ID</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-900 font-mono truncate max-w-[300px]" title={conversation.session_id}>
+                      <span className="text-sm text-foreground font-mono truncate max-w-[300px]" title={conversation.session_id}>
                         {conversation.session_id}
                       </span>
                       <Button
@@ -132,19 +132,19 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
 
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-700">Project ID</span>
+                      <Hash className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground">Project ID</span>
                     </div>
-                    <span className="text-sm text-gray-900">{conversation.project_id}</span>
+                    <span className="text-sm text-foreground">{conversation.project_id}</span>
                   </div>
 
                   {conversation.message_count !== undefined && (
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
-                        <Hash className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-700">Message Count</span>
+                        <Hash className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium text-foreground">Message Count</span>
                       </div>
-                      <span className="text-sm text-gray-900">{conversation.message_count} messages</span>
+                      <span className="text-sm text-foreground">{conversation.message_count} messages</span>
                     </div>
                   )}
                 </div>
@@ -152,29 +152,29 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
 
               {/* Timestamps */}
               <div>
-                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
                   Timeline
                 </h3>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="bg-muted rounded-lg p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-700">Created At</span>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground">Created At</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm text-gray-900 block">{formatFullTimestamp(conversation.created_at)}</span>
-                      <span className="text-xs text-gray-500">({formatTimestamp(conversation.created_at)})</span>
+                      <span className="text-sm text-foreground block">{formatFullTimestamp(conversation.created_at)}</span>
+                      <span className="text-xs text-muted-foreground">({formatTimestamp(conversation.created_at)})</span>
                     </div>
                   </div>
 
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-medium text-gray-700">Last Updated</span>
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground">Last Updated</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm text-gray-900 block">{formatFullTimestamp(conversation.updated_at)}</span>
-                      <span className="text-xs text-gray-500">({formatTimestamp(conversation.updated_at)})</span>
+                      <span className="text-sm text-foreground block">{formatFullTimestamp(conversation.updated_at)}</span>
+                      <span className="text-xs text-muted-foreground">({formatTimestamp(conversation.updated_at)})</span>
                     </div>
                   </div>
 
@@ -196,16 +196,16 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
               {/* User Information */}
               {conversation.created_by && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
                     User Information
                   </h3>
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-accent rounded-lg p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-700">Created By</span>
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium text-foreground">Created By</span>
                       </div>
-                      <span className="text-sm text-gray-900">User ID: {conversation.created_by}</span>
+                      <span className="text-sm text-foreground">User ID: {conversation.created_by}</span>
                     </div>
                   </div>
                 </div>
@@ -213,7 +213,7 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
 
               {/* Actions */}
               <div>
-                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
                   Actions
                 </h3>
                 <div className="flex gap-3">
@@ -242,7 +242,7 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
+            <div className="p-6 border-t border-border bg-accent">
               <div className="flex justify-end">
                 <Button onClick={onClose}>
                   Close

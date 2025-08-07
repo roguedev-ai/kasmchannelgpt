@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useMicVAD } from '@ricky0123/vad-react';
 import RotateLoader from 'react-spinners/RotateLoader';
-import { X } from 'lucide-react';
+import { X, StopCircle } from 'lucide-react';
 import Canvas from './Canvas';
 import { speechManager } from '@/lib/voice/speech-manager';
 import { particleActions } from '@/lib/voice/particle-manager';
@@ -20,9 +20,12 @@ interface VoiceModalProps {
 export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceModalProps) {
   const [loading, setLoading] = useState(true);
   const [transcript, setTranscript] = useState('');
+  const [agentResponse, setAgentResponse] = useState('');
   const [debugMessages, setDebugMessages] = useState<string[]>([]);
   const [isManualRecording, setIsManualRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [apiKeyError, setApiKeyError] = useState(false);
+  const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // Message store integration
@@ -71,8 +74,14 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
         onProcessing: () => {
           particleActions.onProcessing();
         },
-        onAiSpeaking: () => particleActions.onAiSpeaking(),
-        onReset: () => particleActions.reset(),
+        onAiSpeaking: () => {
+          particleActions.onAiSpeaking();
+          setIsAgentSpeaking(true);
+        },
+        onReset: () => {
+          particleActions.reset();
+          setIsAgentSpeaking(false);
+        },
         onDebug: (message: string, data?: any) => {
           const debugMsg = `${new Date().toLocaleTimeString()} - ${message}`;
           setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
@@ -80,6 +89,11 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
         onError: (error: string) => {
           const errorMsg = `${new Date().toLocaleTimeString()} - ERROR: ${error}`;
           setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
+          
+          // Check if it's an API key error
+          if (error.includes('OpenAI API key')) {
+            setApiKeyError(true);
+          }
         },
         onTranscriptReceived: async (transcript: string) => {
           console.log('🎯 [VOICE-MODAL] Transcript received:', transcript);
@@ -106,6 +120,9 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
         onResponseReceived: async (response: string) => {
           console.log('🎯 [VOICE-MODAL] Response received:', response);
           
+          // Display the agent's response in the voice window
+          setAgentResponse(response);
+          
           if (currentConversation) {
             // Create and add assistant message to chat
             const assistantMessage = {
@@ -130,7 +147,9 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
     if (!isOpen) {
       speechManager.clearConversation();
       setTranscript('');
+      setAgentResponse('');
       setDebugMessages([]);
+      setIsAgentSpeaking(false);
     }
   }, [isOpen, projectId]);
 
@@ -232,9 +251,22 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
     
     try {
       if (!isManualRecording) {
-        // Start manual recording
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const recorder = new MediaRecorder(stream);
+        // Start manual recording with better audio quality
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 48000
+          } 
+        });
+        
+        // Choose the best available audio format
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+          ? 'audio/webm;codecs=opus' 
+          : 'audio/webm';
+          
+        const recorder = new MediaRecorder(stream, { mimeType });
         const chunks: Blob[] = [];
         
         recorder.ondataavailable = (event) => {
@@ -245,7 +277,8 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
         
         recorder.onstop = async () => {
           console.log('🎤 [MANUAL] Recording stopped, processing audio...');
-          const audioBlob = new Blob(chunks, { type: 'audio/wav' });
+          // MediaRecorder doesn't produce WAV, it produces webm/opus or similar
+          const audioBlob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
           
           try {
             // Create audio context for decoding compressed audio
@@ -265,9 +298,30 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
             
             // Convert to mono Float32Array (match VAD format)
             const channelData = decodedAudio.getChannelData(0); // Get first channel
-            const audioArray = new Float32Array(channelData);
             
-            console.log('🎯 [MANUAL] Audio converted to Float32Array:', audioArray.length, 'samples');
+            // CRITICAL: Resample from 48kHz to 16kHz for VAD/Whisper compatibility
+            let audioArray: Float32Array;
+            if (decodedAudio.sampleRate !== 16000) {
+              console.log('🔄 [MANUAL] Resampling from', decodedAudio.sampleRate, 'to 16kHz');
+              const resampleRatio = 16000 / decodedAudio.sampleRate;
+              const newLength = Math.floor(channelData.length * resampleRatio);
+              audioArray = new Float32Array(newLength);
+              
+              // Simple linear interpolation resampling
+              for (let i = 0; i < newLength; i++) {
+                const srcIndex = i / resampleRatio;
+                const srcIndexFloor = Math.floor(srcIndex);
+                const srcIndexCeil = Math.min(srcIndexFloor + 1, channelData.length - 1);
+                const fraction = srcIndex - srcIndexFloor;
+                
+                audioArray[i] = channelData[srcIndexFloor] * (1 - fraction) + 
+                               channelData[srcIndexCeil] * fraction;
+              }
+            } else {
+              audioArray = new Float32Array(channelData);
+            }
+            
+            console.log('🎯 [MANUAL] Audio ready:', audioArray.length, 'samples at 16kHz');
             
             // Process through speech manager
             speechManager.onSpeechStart();
@@ -310,6 +364,13 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
 
   // Track if we've already auto-started to prevent loops
   const [hasAutoStarted, setHasAutoStarted] = useState(false);
+
+  // Handle stopping the agent's speech
+  const handleStopSpeech = useCallback(() => {
+    console.log('🛑 [VOICE-MODAL] Stopping agent speech');
+    speechManager.stopAudio();
+    setIsAgentSpeaking(false);
+  }, []);
 
   // Handle VAD state updates with comprehensive error checking
   useEffect(() => {
@@ -365,10 +426,14 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
     }
   }, [isOpen, vad.loading, vad.listening, vad.errored, hasAutoStarted]);
 
-  // Reset auto-start flag when modal opens
+  // Reset auto-start flag and error state when modal opens
   useEffect(() => {
     if (isOpen) {
       setHasAutoStarted(false);
+      setApiKeyError(false);
+      setTranscript('');
+      setAgentResponse('');
+      setIsAgentSpeaking(false);
     }
   }, [isOpen]);
 
@@ -403,89 +468,78 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
                 <X className="w-6 h-6 text-white" />
               </button>
               
-              {/* Control buttons */}
-              <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 flex gap-4">
-                <button
-                  onClick={handleToggleListening}
-                  className={`px-8 py-4 rounded-full font-medium transition-all transform hover:scale-105 ${
-                    vad.listening
-                      ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/50'
-                      : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm'
-                  }`}
-                >
-                  {vad.listening ? 'Pause' : 'Resume'}
-                </button>
-                
-                {/* Manual recording fallback if VAD fails */}
-                {vad.errored && (
-                  <>
-                    <button
-                      onClick={handleManualRecording}
-                      className={`px-6 py-4 rounded-full font-medium transition-all transform hover:scale-105 ${
-                        isManualRecording
-                          ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/50'
-                          : 'bg-green-500 hover:bg-green-600 text-white'
-                      }`}
-                    >
-                      {isManualRecording ? 'Stop Recording' : 'Manual Record'}
-                    </button>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="px-6 py-4 rounded-full font-medium bg-blue-500 hover:bg-blue-600 text-white transition-all transform hover:scale-105"
-                    >
-                      Reload & Retry
-                    </button>
-                  </>
-                )}
-              </div>
+              {/* API Key Error Message */}
+              {apiKeyError && (
+                <div className="absolute top-24 left-1/2 transform -translate-x-1/2 bg-red-500/20 backdrop-blur-md border border-red-500/30 rounded-lg p-4 max-w-md">
+                  <p className="text-white text-center mb-2">
+                    <strong>Voice feature unavailable</strong>
+                  </p>
+                  <p className="text-white/80 text-sm text-center">
+                    OpenAI API key is required for voice transcription and text-to-speech. 
+                    Please add <code className="bg-black/30 px-1 rounded">OPENAI_API_KEY</code> to your <code className="bg-black/30 px-1 rounded">.env.local</code> file.
+                  </p>
+                </div>
+              )}
+              
+              {/* Manual recording button only shown if VAD fails */}
+              {vad.errored && (
+                <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2">
+                  <button
+                    onClick={handleManualRecording}
+                    className={`px-8 py-4 rounded-full font-medium transition-all transform hover:scale-105 ${
+                      isManualRecording
+                        ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/50'
+                        : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm'
+                    }`}
+                  >
+                    {isManualRecording ? 'Stop Recording' : 'Hold to Speak'}
+                  </button>
+                </div>
+              )}
 
               {/* Status display */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center pointer-events-none">
-                <p className="text-2xl font-light mb-2">
+                <p className="text-3xl font-light mb-4">
                   {isManualRecording 
                     ? 'Recording...' 
                     : vad.errored 
-                    ? 'Error - Try Manual Mode' 
+                    ? 'Click button to speak' 
                     : vad.listening 
                     ? 'Listening...' 
-                    : 'Paused'}
+                    : 'Initializing...'}
                 </p>
-                {vad.errored && !isManualRecording && (
-                  <p className="text-sm text-red-300 max-w-md mx-auto mb-2">
-                    VAD worklet failed to load. Use "Manual Record" button below or reload page.
-                  </p>
-                )}
-                {isManualRecording && (
-                  <p className="text-sm text-green-300 max-w-md mx-auto mb-2">
-                    Press "Stop Recording" when you finish speaking.
-                  </p>
-                )}
+                
+                {/* Show user's transcript */}
                 {transcript && (
-                  <p className="text-lg text-white/70 max-w-md mx-auto">"{transcript}"</p>
+                  <div className="mb-6">
+                    <p className="text-sm text-white/50 mb-1">You said:</p>
+                    <p className="text-lg text-white/80 max-w-md mx-auto">"{transcript}"</p>
+                  </div>
+                )}
+                
+                {/* Show agent's response */}
+                {agentResponse && (
+                  <div className="animate-fade-in">
+                    <p className="text-sm text-white/50 mb-1">Agent:</p>
+                    <p className="text-xl text-white max-w-md mx-auto">"{agentResponse}"</p>
+                  </div>
                 )}
               </div>
 
-              {/* Debug console - Always visible for debugging */}
-              <div className="absolute bottom-32 left-8 right-8 max-w-2xl mx-auto max-h-40 overflow-y-auto bg-black/30 backdrop-blur-sm rounded-lg p-4">
-                <div className="text-xs text-green-400 font-mono space-y-1">
-                  <div className={`${vad.errored ? 'text-red-400' : 'text-yellow-400'}`}>
-                    VAD Status: {vad.loading ? 'Loading...' : vad.errored ? 'ERROR' : vad.listening ? 'Listening' : 'Paused'}
-                  </div>
-                  <div className="text-yellow-400">User Speaking: {vad.userSpeaking ? 'Yes' : 'No'}</div>
-                  <div className="text-yellow-400">Project ID: {projectId || 'Not Set'}</div>
-                  <div className={`${vad.errored ? 'text-red-400' : 'text-blue-400'}`}>
-                    VAD Error: {vad.errored ? 'Yes - Check microphone permissions' : 'No'}
-                  </div>
-                  <div className="text-blue-400">Model Files: /silero_vad.onnx, /vad.worklet.bundle.min.js</div>
-                  {debugMessages.length > 0 ? (
-                    debugMessages.slice(-6).map((msg, i) => (
-                      <div key={i} className={`opacity-90 ${msg.includes('ERROR') ? 'text-red-300' : ''}`}>{msg}</div>
-                    ))
-                  ) : (
-                    <div className="text-gray-400">Initializing VAD... Check console for details</div>
-                  )}
+              {/* Stop button when agent is speaking */}
+              {isAgentSpeaking && (
+                <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2">
+                  <button
+                    onClick={handleStopSpeech}
+                    className="group flex items-center gap-2 px-6 py-3 rounded-full bg-red-500/20 hover:bg-red-500/30 text-white backdrop-blur-sm transition-all transform hover:scale-105"
+                    aria-label="Stop speaking"
+                  >
+                    <StopCircle className="w-5 h-5" />
+                    <span className="font-medium">Stop Response</span>
+                  </button>
                 </div>
-              </div>
+              )}
+
             </>
           )}
         </div>
