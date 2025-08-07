@@ -121,7 +121,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-accent text-foreground';
     }
   };
 
@@ -130,8 +130,8 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Reports & Analytics</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-foreground">Reports & Analytics</h2>
+          <p className="text-muted-foreground mt-1">
             View traffic, queries, and conversation metrics for {project.project_name}
           </p>
         </div>
@@ -162,7 +162,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
 
       {/* Tab Navigation */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg">
+        <div className="flex items-center gap-2 p-1 bg-accent rounded-lg">
           {[
             { id: 'overview', label: 'Overview', icon: BarChart3 },
             { id: 'traffic', label: 'Traffic Sources', icon: Globe },
@@ -177,7 +177,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
                   'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors',
                   activeTab === tab.id
                     ? 'bg-white text-brand-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 <Icon className="w-4 h-4" />
@@ -192,8 +192,8 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-24 mb-3" />
-              <div className="h-8 bg-gray-200 rounded w-16" />
+              <div className="h-4 bg-muted rounded w-24 mb-3" />
+              <div className="h-8 bg-muted rounded w-16" />
             </Card>
           ))}
         </div>
@@ -210,8 +210,8 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
                       <MessageCircle className="w-6 h-6 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Queries</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-sm font-medium text-muted-foreground">Total Queries</p>
+                      <p className="text-2xl font-bold text-foreground">
                         {data.queries.total.toLocaleString()}
                       </p>
                     </div>
@@ -224,8 +224,8 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
                       <Users className="w-6 h-6 text-green-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Total Conversations</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-sm font-medium text-muted-foreground">Total Conversations</p>
+                      <p className="text-2xl font-bold text-foreground">
                         {data.conversations.total.toLocaleString()}
                       </p>
                     </div>
@@ -238,8 +238,8 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
                       <TrendingUp className="w-6 h-6 text-purple-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Avg Queries/Conversation</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-sm font-medium text-muted-foreground">Avg Queries/Conversation</p>
+                      <p className="text-2xl font-bold text-foreground">
                         {typeof data.conversations.average_queries_per_conversation === 'number' 
                           ? data.conversations.average_queries_per_conversation.toFixed(2)
                           : Number(data.conversations.average_queries_per_conversation || 0).toFixed(2)}
@@ -252,7 +252,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
               {/* Query Status Breakdown */}
               {data.queries.query_status.length > 0 && (
                 <Card className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Query Status Breakdown</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Query Status Breakdown</h3>
                   <div className="space-y-3">
                     {data.queries.query_status.map((status) => {
                       const percentage = data.queries.total > 0 
@@ -269,11 +269,11 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
                               )}>
                                 {status.status}
                               </span>
-                              <span className="text-sm text-gray-600">
+                              <span className="text-sm text-muted-foreground">
                                 {status.count} ({percentage}%)
                               </span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="w-full bg-muted rounded-full h-2">
                               <div 
                                 className={cn(
                                   'h-2 rounded-full',
@@ -295,9 +295,9 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
           {/* Traffic Sources Tab */}
           {activeTab === 'traffic' && (
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Traffic Sources</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Traffic Sources</h3>
               {data.traffic.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No traffic data available</p>
+                <p className="text-muted-foreground text-center py-8">No traffic data available</p>
               ) : (
                 <div className="space-y-4">
                   {data.traffic.map((source) => {
@@ -313,14 +313,14 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium text-gray-900 capitalize">
+                            <span className="font-medium text-foreground capitalize">
                               {source.request_source}
                             </span>
-                            <span className="text-sm text-gray-600">
+                            <span className="text-sm text-muted-foreground">
                               {source.request_source_number} ({percentage}%)
                             </span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-muted rounded-full h-2">
                             <div 
                               className="bg-brand-600 h-2 rounded-full" 
                               style={{ width: `${percentage}%` }}
@@ -340,11 +340,11 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
             <div className="space-y-6">
               {/* Interval Selector */}
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Time-based Analysis</h3>
+                <h3 className="text-lg font-semibold text-foreground">Time-based Analysis</h3>
                 <select
                   value={interval}
                   onChange={(e) => setInterval(e.target.value as AnalysisInterval)}
-                  className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
@@ -354,9 +354,9 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
 
               {/* Queries Over Time */}
               <Card className="p-6">
-                <h4 className="font-medium text-gray-900 mb-4">Queries Over Time</h4>
+                <h4 className="font-medium text-foreground mb-4">Queries Over Time</h4>
                 {data.analysis.queries.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No query data available</p>
+                  <p className="text-muted-foreground text-center py-8">No query data available</p>
                 ) : (
                   <div className="h-48 flex items-end justify-between gap-1">
                     {data.analysis.queries.map((point, index) => {
@@ -370,11 +370,11 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
                               className="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors"
                               style={{ height: `${height}%`, minHeight: '4px' }}
                             />
-                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 mt-1 whitespace-nowrap z-10">
+                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity bg-foreground text-white text-xs rounded py-1 px-2 mt-1 whitespace-nowrap z-10">
                               {point.queries_number} queries
                             </div>
                           </div>
-                          <span className="text-xs text-gray-500 mt-2 rotate-45 origin-left">
+                          <span className="text-xs text-muted-foreground mt-2 rotate-45 origin-left">
                             {point.created_at_interval}
                           </span>
                         </div>
@@ -386,9 +386,9 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
 
               {/* Conversations Over Time */}
               <Card className="p-6">
-                <h4 className="font-medium text-gray-900 mb-4">Conversations Over Time</h4>
+                <h4 className="font-medium text-foreground mb-4">Conversations Over Time</h4>
                 {data.analysis.conversations.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No conversation data available</p>
+                  <p className="text-muted-foreground text-center py-8">No conversation data available</p>
                 ) : (
                   <div className="h-48 flex items-end justify-between gap-1">
                     {data.analysis.conversations.map((point, index) => {
@@ -402,11 +402,11 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
                               className="w-full bg-green-500 rounded-t hover:bg-green-600 transition-colors"
                               style={{ height: `${height}%`, minHeight: '4px' }}
                             />
-                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 mt-1 whitespace-nowrap z-10">
+                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity bg-foreground text-white text-xs rounded py-1 px-2 mt-1 whitespace-nowrap z-10">
                               {point.queries_number} conversations
                             </div>
                           </div>
-                          <span className="text-xs text-gray-500 mt-2 rotate-45 origin-left">
+                          <span className="text-xs text-muted-foreground mt-2 rotate-45 origin-left">
                             {point.created_at_interval}
                           </span>
                         </div>
@@ -418,9 +418,9 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
 
               {/* Average Queries per Conversation */}
               <Card className="p-6">
-                <h4 className="font-medium text-gray-900 mb-4">Average Queries per Conversation</h4>
+                <h4 className="font-medium text-foreground mb-4">Average Queries per Conversation</h4>
                 {data.analysis.queries_per_conversation.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No data available</p>
+                  <p className="text-muted-foreground text-center py-8">No data available</p>
                 ) : (
                   <div className="h-48 flex items-end justify-between gap-1">
                     {data.analysis.queries_per_conversation.map((point, index) => {
@@ -434,11 +434,11 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
                               className="w-full bg-purple-500 rounded-t hover:bg-purple-600 transition-colors"
                               style={{ height: `${height}%`, minHeight: '4px' }}
                             />
-                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded py-1 px-2 mt-1 whitespace-nowrap z-10">
+                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity bg-foreground text-white text-xs rounded py-1 px-2 mt-1 whitespace-nowrap z-10">
                               {Number(point.queries_number || 0).toFixed(2)} avg
                             </div>
                           </div>
-                          <span className="text-xs text-gray-500 mt-2 rotate-45 origin-left">
+                          <span className="text-xs text-muted-foreground mt-2 rotate-45 origin-left">
                             {point.created_at_interval}
                           </span>
                         </div>

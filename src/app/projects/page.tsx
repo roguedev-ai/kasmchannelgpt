@@ -137,7 +137,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, isSelected, onClick 
         'w-full p-4 text-left border rounded-lg transition-all hover:shadow-sm',
         isSelected 
           ? 'border-brand-500 bg-brand-50 shadow-sm' 
-          : 'border-gray-200 hover:border-gray-300'
+          : 'border-border hover:border-border/80'
       )}
     >
       <div className="flex items-start gap-3">
@@ -151,22 +151,22 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, isSelected, onClick 
         
         {/* Project details */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-base text-gray-900 mb-1 break-words">
+          <h3 className="font-semibold text-base text-foreground mb-1 break-words">
             {project.project_name}
           </h3>
           <div className="space-y-1">
-            <p className="text-sm text-gray-600 font-medium">
+            <p className="text-sm text-muted-foreground font-medium">
               ID: {project.id}
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Status: <span className={cn(
                 'font-medium',
-                project.is_chat_active ? 'text-green-600' : 'text-gray-500'
+                project.is_chat_active ? 'text-green-600' : 'text-muted-foreground'
               )}>
                 {project.is_chat_active ? 'Active' : 'Inactive'}
               </span>
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Updated {formatTimestamp(project.updated_at)}
             </p>
           </div>
@@ -208,23 +208,23 @@ const SettingsTabButton: React.FC<SettingsTabProps> = ({ tab, isActive, onClick 
       onClick={onClick}
       data-tab={tab.id}
       className={cn(
-        'w-full p-3 text-left border-b border-gray-200 transition-colors hover:bg-gray-50',
+        'w-full p-3 text-left border-b border-border transition-colors hover:bg-accent',
         isActive && 'bg-brand-50 border-r-2 border-r-brand-500'
       )}
     >
       <div className="flex items-center gap-3">
         <Icon className={cn(
           'w-4 h-4', 
-          isActive ? 'text-brand-600' : 'text-gray-400'
+          isActive ? 'text-brand-600' : 'text-muted-foreground'
         )} />
         <div>
           <h4 className={cn(
             'text-sm font-medium',
-            isActive ? 'text-brand-900' : 'text-gray-900'
+            isActive ? 'text-brand-900' : 'text-foreground'
           )}>
             {tab.label}
           </h4>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {tab.description}
           </p>
         </div>
@@ -382,11 +382,11 @@ function ProjectsPageContent() {
       return (
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
-            <Bot className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <Bot className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               No Project Selected
             </h3>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Select a project from the sidebar to view and edit its settings
             </p>
           </div>
@@ -419,17 +419,17 @@ function ProjectsPageContent() {
 
   return (
     <PageLayout>
-      <div className="h-[calc(100vh-4rem)] flex bg-gray-50 relative">
+      <div className="h-[calc(100vh-4rem)] flex bg-background relative">
         {/* Left Sidebar - Project List */}
         <div 
           ref={sidebarRef}
           style={{ width: `${sidebarWidth}px` }}
-          className="bg-white border-r border-gray-200 flex flex-col flex-shrink-0 relative"
+          className="bg-card border-r border-border flex flex-col flex-shrink-0 relative"
         >
           {/* Sidebar Header */}
-          <div className="p-5 border-b border-gray-200">
+          <div className="p-5 border-b border-border">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-xl font-bold text-gray-900">Projects</h1>
+              <h1 className="text-xl font-bold text-foreground">Projects</h1>
               {/* Refresh button */}
               <Button
                 variant="outline"
@@ -444,13 +444,13 @@ function ProjectsPageContent() {
             
             {/* Search input */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search projects..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
                 aria-label="Search projects"
               />
             </div>
@@ -462,12 +462,12 @@ function ProjectsPageContent() {
             {loading && agents.length === 0 ? (
               <div className="space-y-3">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="p-4 border border-gray-200 rounded-lg animate-pulse">
+                  <div key={i} className="p-4 border border-border rounded-lg animate-pulse">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-200 rounded-lg" />
+                      <div className="w-10 h-10 bg-muted rounded-lg" />
                       <div className="flex-1">
-                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
-                        <div className="h-3 bg-gray-200 rounded w-1/2" />
+                        <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+                        <div className="h-3 bg-muted rounded w-1/2" />
                       </div>
                     </div>
                   </div>
@@ -476,8 +476,8 @@ function ProjectsPageContent() {
             ) : filteredProjects.length === 0 ? (
               // Empty state
               <div className="text-center py-8">
-                <Bot className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600">
+                <Bot className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">
                   {searchQuery ? 'No projects found' : 'No projects available'}
                 </p>
               </div>
@@ -495,7 +495,7 @@ function ProjectsPageContent() {
                 
                 {/* Load More Button */}
                 {!searchQuery && paginationMeta?.hasMore && (
-                  <div className="pt-3 border-t border-gray-200">
+                  <div className="pt-3 border-t border-border">
                     <Button
                       variant="outline"
                       onClick={async () => {
@@ -539,7 +539,7 @@ function ProjectsPageContent() {
           title="Drag to resize sidebar"
         >
           <div className={cn(
-            "w-6 h-16 bg-gray-400 rounded-full flex items-center justify-center transition-all opacity-0",
+            "w-6 h-16 bg-muted-foreground rounded-full flex items-center justify-center transition-all opacity-0",
             "group-hover:opacity-100 group-hover:scale-110 group-hover:bg-brand-500",
             isResizing && "opacity-100 bg-brand-600 scale-110"
           )}>
@@ -551,13 +551,13 @@ function ProjectsPageContent() {
         <div className="flex-1 flex" style={{ marginLeft: '4px' }}>
           {/* Center Panel - Settings Tabs */}
           {selectedProject && (
-            <div className="w-56 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+            <div className="w-56 bg-card border-r border-border flex flex-col flex-shrink-0">
               {/* Selected project header */}
-              <div className="p-3 border-b border-gray-200 flex-shrink-0">
-                <h2 className="text-sm font-semibold text-gray-900 truncate">
+              <div className="p-3 border-b border-border flex-shrink-0">
+                <h2 className="text-sm font-semibold text-foreground truncate">
                   {selectedProject.project_name}
                 </h2>
-                <p className="text-xs text-gray-600">Project Settings</p>
+                <p className="text-xs text-muted-foreground">Project Settings</p>
               </div>
               
               {/* Settings tabs list */}
@@ -575,7 +575,7 @@ function ProjectsPageContent() {
           )}
 
           {/* Right Panel - Settings Content */}
-          <div className="flex-1 bg-white overflow-y-auto overflow-x-hidden">
+          <div className="flex-1 bg-card overflow-y-auto overflow-x-hidden">
             {renderSettingsContent()}
           </div>
         </div>

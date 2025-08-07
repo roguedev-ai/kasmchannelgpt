@@ -133,10 +133,10 @@ export const PageMetadataModal: React.FC<PageMetadataModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col bg-background">
         {/* Header */}
-        <div className="p-6 border-b flex items-center justify-between">
+        <div className="p-6 border-b border-border flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-foreground">Page Metadata</h2>
             <p className="text-sm text-muted-foreground mt-1">
@@ -160,12 +160,12 @@ export const PageMetadataModal: React.FC<PageMetadataModalProps> = ({
               <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
             </div>
           ) : error ? (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center gap-2 text-red-800">
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
                 <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">Error loading metadata</span>
               </div>
-              <p className="text-red-700 mt-1 text-sm">{error}</p>
+              <p className="text-red-600 dark:text-red-400 mt-1 text-sm">{error}</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -179,7 +179,7 @@ export const PageMetadataModal: React.FC<PageMetadataModalProps> = ({
                   type="text"
                   value={metadata?.id || pageId}
                   readOnly
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-muted text-muted-foreground"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-muted text-foreground"
                 />
               </div>
 
@@ -193,7 +193,7 @@ export const PageMetadataModal: React.FC<PageMetadataModalProps> = ({
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
                   placeholder="Page title"
                 />
               </div>
@@ -207,7 +207,7 @@ export const PageMetadataModal: React.FC<PageMetadataModalProps> = ({
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
                   placeholder="Page description"
                   rows={4}
                 />
@@ -223,7 +223,7 @@ export const PageMetadataModal: React.FC<PageMetadataModalProps> = ({
                   type="url"
                   value={formData.url}
                   onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
                   placeholder="https://example.com"
                 />
               </div>
@@ -238,7 +238,7 @@ export const PageMetadataModal: React.FC<PageMetadataModalProps> = ({
                   type="url"
                   value={formData.image}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
                   placeholder="https://example.com/image.png"
                 />
                 
@@ -248,7 +248,7 @@ export const PageMetadataModal: React.FC<PageMetadataModalProps> = ({
                     <img 
                       src={formData.image} 
                       alt="Preview" 
-                      className="w-full max-w-xs rounded-lg border"
+                      className="w-full max-w-xs rounded-lg border border-border"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}

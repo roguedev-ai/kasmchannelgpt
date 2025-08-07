@@ -133,8 +133,8 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">General Settings</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-foreground">General Settings</h2>
+          <p className="text-muted-foreground mt-1">
             Configure basic project information and behavior
           </p>
         </div>
@@ -163,12 +163,12 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
 
       {/* Error State */}
       {settingsError && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center gap-2 text-red-800">
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
             <AlertCircle className="w-5 h-5" />
             <span className="font-medium">Error loading settings</span>
           </div>
-          <p className="text-red-700 mt-1 text-sm">{settingsError}</p>
+          <p className="text-red-600 dark:text-red-400 mt-1 text-sm">{settingsError}</p>
         </div>
       )}
 
@@ -177,9 +177,9 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
         <div className="space-y-6">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/4 mb-4" />
-              <div className="h-10 bg-gray-200 rounded mb-2" />
-              <div className="h-3 bg-gray-200 rounded w-3/4" />
+              <div className="h-4 bg-muted rounded w-1/4 mb-4" />
+              <div className="h-10 bg-muted rounded mb-2" />
+              <div className="h-3 bg-muted rounded w-3/4" />
             </Card>
           ))}
         </div>
@@ -188,15 +188,15 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
           {/* Project Info */}
           <Card className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Project Information</h3>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <h3 className="text-lg font-semibold text-foreground">Project Information</h3>
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}
               </span>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Project Name
                 </label>
                 <input
@@ -205,22 +205,22 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
                   onChange={(e) => handleInputChange('project_name', e.target.value)}
                   placeholder="Enter project name"
                   maxLength={100}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   A descriptive name for your project ({formData.project_name.length}/100)
                 </p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Project ID
                 </label>
                 <input
                   type="text"
                   value={project.id}
                   disabled
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-accent text-muted-foreground cursor-not-allowed"
                 />
               </div>
             </div>
@@ -229,14 +229,14 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
           {/* Default Prompt */}
           <Card className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Default Prompt</h3>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <h3 className="text-lg font-semibold text-foreground">Default Prompt</h3>
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}/settings
               </span>
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Welcome Message
               </label>
               <textarea
@@ -245,9 +245,9 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
                 placeholder="How can I help you?"
                 rows={3}
                 maxLength={255}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none bg-background text-foreground"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 This message is shown to users when they start a conversation ({formData.default_prompt.length}/255)
               </p>
             </div>
@@ -256,23 +256,23 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
           {/* Example Questions */}
           <Card className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Example Questions</h3>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <h3 className="text-lg font-semibold text-foreground">Example Questions</h3>
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 GET /projects/{project.id}/settings
               </span>
             </div>
-            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <p className="text-sm text-amber-800">
+            <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+              <p className="text-sm text-amber-600 dark:text-amber-400">
                 <strong>Note:</strong> Example questions are currently read-only and managed by CustomGPT. They cannot be edited through the API.
               </p>
             </div>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               These questions help guide users on what they can ask your agent
             </p>
             
             <div className="space-y-3">
               {formData.example_questions.length === 0 || (formData.example_questions.length === 1 && !formData.example_questions[0]) ? (
-                <p className="text-sm text-gray-500 italic">No example questions have been set by CustomGPT.</p>
+                <p className="text-sm text-muted-foreground italic">No example questions have been set by CustomGPT.</p>
               ) : (
                 formData.example_questions.map((question, index) => (
                   <div key={index} className="flex items-center gap-3">
@@ -282,7 +282,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
                       readOnly
                       disabled
                       placeholder="No example question set"
-                      className="flex-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-accent text-muted-foreground cursor-not-allowed"
                     />
                   </div>
                 ))
@@ -291,18 +291,18 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
           </Card>
 
           {/* Danger Zone */}
-          <Card className="p-6 border-red-200 bg-red-50/50">
+          <Card className="p-6 border-red-500/20 bg-red-500/5">
             <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-red-900">Danger Zone</h3>
-              <span className="text-xs text-red-600 font-mono bg-red-100 px-2 py-1 rounded">
+              <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Danger Zone</h3>
+              <span className="text-xs text-red-600 dark:text-red-400 font-mono bg-red-500/10 px-2 py-1 rounded">
                 DELETE /projects/{project.id}
               </span>
             </div>
             
             <div className="space-y-4">
               <div>
-                <h4 className="text-sm font-medium text-red-800 mb-2">Delete this project</h4>
-                <p className="text-sm text-red-700 mb-4">
+                <h4 className="text-sm font-medium text-red-600 dark:text-red-400 mb-2">Delete this project</h4>
+                <p className="text-sm text-red-600 dark:text-red-400 mb-4">
                   Once you delete a project, there is no going back. This action will permanently delete the project, 
                   all its data sources, conversations, and settings.
                 </p>

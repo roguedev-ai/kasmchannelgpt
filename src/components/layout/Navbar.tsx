@@ -95,14 +95,14 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <nav className="bg-background border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left side - Logo and Back Button */}
           <div className="flex items-center gap-4">
             {showBackButton && pathname !== '/' && (
               <Link href="/">
-                <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2 text-gray-600 hover:text-gray-900">
+                <button className="p-2 rounded-lg hover:bg-accent transition-colors flex items-center gap-2 text-muted-foreground hover:text-foreground">
                   <ArrowLeft className="w-4 h-4" />
                   <span className="hidden sm:inline">Back to Chat</span>
                 </button>
@@ -117,7 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
                   className="w-8 h-8 rounded-lg"
                 />
               </div>
-              <span className="text-lg font-semibold text-gray-900 hidden sm:block">
+              <span className="text-lg font-semibold text-foreground hidden sm:block">
                 CustomGPT Chat
               </span>
             </Link>
@@ -136,7 +136,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
                       'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                       active
                         ? 'bg-brand-50 text-brand-600 border border-brand-200'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                     )}
                   >
                     <Icon className="w-4 h-4" />
@@ -162,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
                         'p-2 rounded-lg transition-colors',
                         active
                           ? 'bg-brand-50 text-brand-600'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                       )}
                       title={item.label}
                     >
@@ -177,7 +177,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
             {pathname !== '/' && (
               <Link href="/" className="md:hidden">
                 <button 
-                  className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                   title="Go to Chat"
                 >
                   <Home className="w-4 h-4" />

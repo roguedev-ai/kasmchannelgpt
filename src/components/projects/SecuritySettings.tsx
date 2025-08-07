@@ -148,8 +148,8 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Security Settings</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-foreground">Security Settings</h2>
+          <p className="text-muted-foreground mt-1">
             Configure security, access control, and data protection for {project.project_name}
           </p>
         </div>
@@ -198,10 +198,10 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
         <div className="space-y-6">
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/4 mb-4" />
+              <div className="h-4 bg-muted rounded w-1/4 mb-4" />
               <div className="space-y-2">
-                <div className="h-3 bg-gray-200 rounded w-full" />
-                <div className="h-3 bg-gray-200 rounded w-3/4" />
+                <div className="h-3 bg-muted rounded w-full" />
+                <div className="h-3 bg-muted rounded w-3/4" />
               </div>
             </Card>
           ))}
@@ -216,11 +216,11 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                   <AlertTriangle className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Anti-Hallucination</h3>
-                  <p className="text-sm text-gray-600">Prevent AI from generating false or misleading information</p>
+                  <h3 className="text-lg font-semibold text-foreground">Anti-Hallucination</h3>
+                  <p className="text-sm text-muted-foreground">Prevent AI from generating false or misleading information</p>
                 </div>
               </div>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}/security
               </span>
             </div>
@@ -237,11 +237,11 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                     }
                   })}
                 />
-                <span className="text-sm font-medium text-gray-900">Enable anti-hallucination protection</span>
+                <span className="text-sm font-medium text-foreground">Enable anti-hallucination protection</span>
               </label>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Strictness Level
                 </label>
                 <select 
@@ -252,7 +252,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                       strictness_level: e.target.value as any
                     }
                   })}
-                  className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
                 >
                   <option value="low">Low - Minimal restrictions</option>
                   <option value="medium">Medium - Balanced approach</option>
@@ -262,7 +262,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Custom Safety Prompts
                 </label>
                 <div className="space-y-2">
@@ -271,7 +271,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                       <input 
                         type="text"
                         value={prompt}
-                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
                         readOnly
                       />
                       <Button size="sm" variant="ghost">
@@ -293,11 +293,11 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                   <Eye className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Agent Visibility</h3>
-                  <p className="text-sm text-gray-600">Control who can access and discover your agent</p>
+                  <h3 className="text-lg font-semibold text-foreground">Agent Visibility</h3>
+                  <p className="text-sm text-muted-foreground">Control who can access and discover your agent</p>
                 </div>
               </div>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}/security
               </span>
             </div>
@@ -314,7 +314,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                     }
                   })}
                 />
-                <span className="text-sm font-medium text-gray-900">Make agent publicly accessible</span>
+                <span className="text-sm font-medium text-foreground">Make agent publicly accessible</span>
               </label>
 
               <label className="flex items-center gap-3">
@@ -328,7 +328,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                     }
                   })}
                 />
-                <span className="text-sm font-medium text-gray-900">Allow discovery in search engines</span>
+                <span className="text-sm font-medium text-foreground">Allow discovery in search engines</span>
               </label>
 
               <label className="flex items-center gap-3">
@@ -342,11 +342,11 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                     }
                   })}
                 />
-                <span className="text-sm font-medium text-gray-900">Require user authentication</span>
+                <span className="text-sm font-medium text-foreground">Require user authentication</span>
               </label>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   Allowed Domains
                 </label>
                 <div className="space-y-2">
@@ -355,7 +355,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                       <input 
                         type="text"
                         value={domain}
-                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
                         readOnly
                       />
                       <Button size="sm" variant="ghost">
@@ -377,11 +377,11 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                   <Shield className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">reCAPTCHA Protection</h3>
-                  <p className="text-sm text-gray-600">Protect against bots and automated abuse</p>
+                  <h3 className="text-lg font-semibold text-foreground">reCAPTCHA Protection</h3>
+                  <p className="text-sm text-muted-foreground">Protect against bots and automated abuse</p>
                 </div>
               </div>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}/security
               </span>
             </div>
@@ -398,25 +398,25 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                     }
                   })}
                 />
-                <span className="text-sm font-medium text-gray-900">Enable reCAPTCHA protection</span>
+                <span className="text-sm font-medium text-foreground">Enable reCAPTCHA protection</span>
               </label>
 
               {config.recaptcha.enabled && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Site Key
                     </label>
                     <input 
                       type="text"
                       value={config.recaptcha.site_key || ''}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
                       placeholder="6Lc-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Score Threshold (0.0 - 1.0)
                     </label>
                     <input 
@@ -425,9 +425,9 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                       max="1"
                       step="0.1"
                       value={config.recaptcha.threshold}
-                      className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
                     />
-                    <p className="text-xs text-gray-600 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Lower values are more restrictive (0.5 recommended)
                     </p>
                   </div>
@@ -444,11 +444,11 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                   <Zap className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Rate Limiting</h3>
-                  <p className="text-sm text-gray-600">Control request frequency to prevent abuse</p>
+                  <h3 className="text-lg font-semibold text-foreground">Rate Limiting</h3>
+                  <p className="text-sm text-muted-foreground">Control request frequency to prevent abuse</p>
                 </div>
               </div>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}/security
               </span>
             </div>
@@ -465,41 +465,41 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                     }
                   })}
                 />
-                <span className="text-sm font-medium text-gray-900">Enable rate limiting</span>
+                <span className="text-sm font-medium text-foreground">Enable rate limiting</span>
               </label>
 
               {config.rate_limiting.enabled && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Requests per minute
                     </label>
                     <input 
                       type="number"
                       value={config.rate_limiting.requests_per_minute}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Requests per hour
                     </label>
                     <input 
                       type="number"
                       value={config.rate_limiting.requests_per_hour}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Block duration (minutes)
                     </label>
                     <input 
                       type="number"
                       value={config.rate_limiting.block_duration_minutes}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
                     />
                   </div>
                 </div>
@@ -515,11 +515,11 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                   <Clock className="w-5 h-5 text-yellow-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Data Retention</h3>
-                  <p className="text-sm text-gray-600">Configure how long data is stored</p>
+                  <h3 className="text-lg font-semibold text-foreground">Data Retention</h3>
+                  <p className="text-sm text-muted-foreground">Configure how long data is stored</p>
                 </div>
               </div>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}/security
               </span>
             </div>
@@ -527,24 +527,24 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Conversation retention (days)
                   </label>
                   <input 
                     type="number"
                     value={config.data_retention.conversation_retention_days}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Analytics retention (days)
                   </label>
                   <input 
                     type="number"
                     value={config.data_retention.analytics_retention_days}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
               </div>
@@ -560,7 +560,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({ project }) =
                     }
                   })}
                 />
-                <span className="text-sm font-medium text-gray-900">Enable automatic data deletion</span>
+                <span className="text-sm font-medium text-foreground">Enable automatic data deletion</span>
               </label>
             </div>
           </Card>

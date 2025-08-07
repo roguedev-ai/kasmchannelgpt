@@ -130,8 +130,8 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Conversations</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-foreground">Conversations</h2>
+          <p className="text-muted-foreground mt-1">
             Manage chat history, sharing, and analytics for {project.project_name}
           </p>
         </div>
@@ -147,7 +147,7 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
             Refresh
           </Button>
           
-          <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+          <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
             GET /projects/{project.id}/conversations
           </span>
         </div>
@@ -176,8 +176,8 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
         <div className="flex items-center">
           <MessageCircle className="w-8 h-8 text-blue-600" />
           <div className="ml-4">
-            <p className="text-sm font-medium text-gray-600">Total Conversations</p>
-            <p className="text-2xl font-bold text-gray-900">{total}</p>
+            <p className="text-sm font-medium text-muted-foreground">Total Conversations</p>
+            <p className="text-2xl font-bold text-foreground">{total}</p>
           </div>
         </div>
       </Card>
@@ -185,13 +185,13 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
       {/* Search */}
       <div className="mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search conversations by name or session ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -202,11 +202,11 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
           {[...Array(5)].map((_, i) => (
             <Card key={i} className="p-6 animate-pulse">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-gray-200 rounded-lg" />
+                <div className="w-10 h-10 bg-muted rounded-lg" />
                 <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
-                  <div className="h-3 bg-gray-200 rounded w-2/3 mb-2" />
-                  <div className="h-3 bg-gray-200 rounded w-1/4" />
+                  <div className="h-4 bg-muted rounded w-1/3 mb-2" />
+                  <div className="h-3 bg-muted rounded w-2/3 mb-2" />
+                  <div className="h-3 bg-muted rounded w-1/4" />
                 </div>
               </div>
             </Card>
@@ -214,11 +214,11 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
         </div>
       ) : filteredConversations.length === 0 ? (
         <Card className="p-12 text-center">
-          <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <MessageCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">
             {searchQuery ? 'No conversations found' : 'No conversations yet'}
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p className="text-muted-foreground mb-6">
             {searchQuery 
               ? 'Try adjusting your search or filters'
               : 'Conversations will appear here once users start chatting with your agent'
@@ -240,11 +240,11 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 truncate mb-1">
+                        <h3 className="text-lg font-semibold text-foreground truncate mb-1">
                           {conversation.name || `Conversation ${conversation.id}`}
                         </h3>
                         
-                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
                           <span>Session ID: {conversation.session_id}</span>
                           {conversation.created_by && (
                             <span>User ID: {conversation.created_by}</span>
@@ -254,7 +254,7 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
                     </div>
 
                     {/* Metadata */}
-                    <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
                       <span>Created {formatTimestamp(conversation.created_at)}</span>
                       {conversation.updated_at && (
                         <span>Updated {formatTimestamp(conversation.updated_at)}</span>
@@ -302,7 +302,7 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
               >
                 Previous
               </Button>
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-muted-foreground">
                 Page {currentPage} of {totalPages}
               </span>
               <Button

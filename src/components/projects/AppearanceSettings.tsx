@@ -129,8 +129,8 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Appearance Settings</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-foreground">Appearance Settings</h2>
+          <p className="text-muted-foreground mt-1">
             Customize the visual appearance of your chatbot
           </p>
         </div>
@@ -159,12 +159,12 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
 
       {/* Error State */}
       {settingsError && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center gap-2 text-red-800">
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
             <AlertCircle className="w-5 h-5" />
             <span className="font-medium">Error loading settings</span>
           </div>
-          <p className="text-red-700 mt-1 text-sm">{settingsError}</p>
+          <p className="text-red-600 dark:text-red-400 mt-1 text-sm">{settingsError}</p>
         </div>
       )}
 
@@ -173,9 +173,9 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
         <div className="space-y-6">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/4 mb-4" />
-              <div className="h-24 bg-gray-200 rounded mb-2" />
-              <div className="h-3 bg-gray-200 rounded w-3/4" />
+              <div className="h-4 bg-muted rounded w-1/4 mb-4" />
+              <div className="h-24 bg-muted rounded mb-2" />
+              <div className="h-3 bg-muted rounded w-3/4" />
             </Card>
           ))}
         </div>
@@ -184,19 +184,19 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
           {/* Avatar Settings */}
           <Card className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Chatbot Avatar</h3>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <h3 className="text-lg font-semibold text-foreground">Chatbot Avatar</h3>
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}/settings
               </span>
             </div>
             
             <div className="flex items-start gap-6">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Current Avatar
                 </label>
                 
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 mb-4">
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-accent border-2 border-border mb-4">
                   {formData.chatbot_avatar ? (
                     <img
                       src={formData.chatbot_avatar}
@@ -205,7 +205,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Image className="w-8 h-8 text-gray-400" />
+                      <Image className="w-8 h-8 text-muted-foreground" />
                     </div>
                   )}
                 </div>
@@ -233,11 +233,11 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
               </div>
               
               <div className="flex-1">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Upload a profile picture or company logo to represent your chatbot. 
                   This image will appear in chat conversations next to AI responses.
                 </p>
-                <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                <ul className="text-xs text-muted-foreground mt-2 space-y-1">
                   <li>• Recommended size: 200x200 pixels</li>
                   <li>• Supported formats: JPG, PNG, GIF</li>
                   <li>• Maximum file size: 5MB</li>
@@ -249,8 +249,8 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
           {/* Background Settings */}
           <Card className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Chat Background</h3>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <h3 className="text-lg font-semibold text-foreground">Chat Background</h3>
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}/settings
               </span>
             </div>
@@ -258,7 +258,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
             <div className="space-y-4">
               {/* Background Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-muted-foreground mb-3">
                   Background Type
                 </label>
                 
@@ -291,11 +291,11 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
               {formData.chatbot_background_type === 'image' && (
                 <div className="flex items-start gap-6">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Background Image
                     </label>
                     
-                    <div className="w-32 h-20 rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200 mb-4">
+                    <div className="w-32 h-20 rounded-lg overflow-hidden bg-accent border-2 border-border mb-4">
                       {formData.chatbot_background ? (
                         <img
                           src={formData.chatbot_background}
@@ -304,7 +304,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <Image className="w-6 h-6 text-gray-400" />
+                          <Image className="w-6 h-6 text-muted-foreground" />
                         </div>
                       )}
                     </div>
@@ -332,10 +332,10 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                   </div>
                   
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Upload a background image for the chat widget. This will be displayed behind the conversation.
                     </p>
-                    <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                    <ul className="text-xs text-muted-foreground mt-2 space-y-1">
                       <li>• Recommended size: 1200x800 pixels</li>
                       <li>• Supported formats: JPG, PNG</li>
                       <li>• Maximum file size: 5MB</li>
@@ -347,7 +347,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
               {/* Background Color */}
               {formData.chatbot_background_type === 'color' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
                     Background Color
                   </label>
                   
@@ -356,7 +356,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                       type="color"
                       value={formData.chatbot_background_color}
                       onChange={(e) => handleInputChange('chatbot_background_color', e.target.value)}
-                      className="w-12 h-10 border border-gray-200 rounded cursor-pointer"
+                      className="w-12 h-10 border border-border rounded cursor-pointer bg-background"
                     />
                     
                     <input
@@ -364,7 +364,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                       value={formData.chatbot_background_color}
                       onChange={(e) => handleInputChange('chatbot_background_color', e.target.value)}
                       placeholder="#F5F5F5"
-                      className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                      className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
                     />
                   </div>
                 </div>
@@ -375,15 +375,15 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
           {/* Color Settings */}
           <Card className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Color Theme</h3>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <h3 className="text-lg font-semibold text-foreground">Color Theme</h3>
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}/settings
               </span>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Primary Color
                 </label>
                 
@@ -392,7 +392,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                     type="color"
                     value={formData.chatbot_color}
                     onChange={(e) => handleInputChange('chatbot_color', e.target.value)}
-                    className="w-12 h-10 border border-gray-200 rounded cursor-pointer"
+                    className="w-12 h-10 border border-border rounded cursor-pointer"
                   />
                   
                   <input
@@ -400,17 +400,17 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                     value={formData.chatbot_color}
                     onChange={(e) => handleInputChange('chatbot_color', e.target.value)}
                     placeholder="#000000"
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
                   />
                 </div>
                 
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Main accent color for buttons and highlights
                 </p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Toolbar Color
                 </label>
                 
@@ -419,7 +419,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                     type="color"
                     value={formData.chatbot_toolbar_color}
                     onChange={(e) => handleInputChange('chatbot_toolbar_color', e.target.value)}
-                    className="w-12 h-10 border border-gray-200 rounded cursor-pointer"
+                    className="w-12 h-10 border border-border rounded cursor-pointer"
                   />
                   
                   <input
@@ -427,11 +427,11 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                     value={formData.chatbot_toolbar_color}
                     onChange={(e) => handleInputChange('chatbot_toolbar_color', e.target.value)}
                     placeholder="#000000"
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
                   />
                 </div>
                 
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Color for the chat widget toolbar and header
                 </p>
               </div>
@@ -440,9 +440,9 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
 
           {/* Preview */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Preview</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Preview</h3>
             
-            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <div className="border border-border rounded-lg p-4 bg-accent">
               <div 
                 className="w-full h-32 rounded-lg flex items-center justify-center relative"
                 style={{
@@ -459,7 +459,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                 <div className="absolute inset-0 bg-white bg-opacity-80 rounded-lg" />
                 
                 <div className="relative flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100">
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-accent">
                     {formData.chatbot_avatar ? (
                       <img
                         src={formData.chatbot_avatar}
@@ -468,7 +468,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Image className="w-4 h-4 text-gray-400" />
+                        <Image className="w-4 h-4 text-muted-foreground" />
                       </div>
                     )}
                   </div>
@@ -482,7 +482,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                 </div>
               </div>
               
-              <p className="text-xs text-gray-500 mt-2 text-center">
+              <p className="text-xs text-muted-foreground mt-2 text-center">
                 This is how your chatbot will appear to users
               </p>
             </div>

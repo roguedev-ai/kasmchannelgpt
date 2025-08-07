@@ -1,6 +1,6 @@
 <div align="center">
   <img src="logo.png" alt="CustomGPT.ai" width="100" height="100" />
-  <h1>CustomGPT Chat UI</h1>
+  <h1>CustomGPT Chat UI(beta)</h1>
   <p><strong>A modern, secure chat interface for CustomGPT.ai with multiple deployment options including embedded widgets, floating buttons, and standalone applications.</strong></p>
 </div>
 

@@ -84,10 +84,10 @@ const CitationCard: React.FC<CitationCardProps> = ({
   onPreviewClick,
 }) => {
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden transition-all hover:border-gray-300">
+    <div className="border border-border rounded-lg overflow-hidden transition-all hover:border-border/80">
       <button
         onClick={onToggle}
-        className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left"
+        className="w-full px-3 py-2 flex items-center gap-3 hover:bg-accent transition-colors text-left"
       >
         {/* Citation Index */}
         <div className="flex-shrink-0 w-6 h-6 rounded bg-brand-100 flex items-center justify-center">
@@ -96,10 +96,10 @@ const CitationCard: React.FC<CitationCardProps> = ({
         
         {/* Citation Info */}
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm text-gray-900 line-clamp-1">
+          <div className="font-medium text-sm text-foreground line-clamp-1">
             {citation.title}
           </div>
-          <div className="text-xs text-gray-500 line-clamp-1">
+          <div className="text-xs text-muted-foreground line-clamp-1">
             {citation.source || citation.url}
           </div>
         </div>
@@ -107,7 +107,7 @@ const CitationCard: React.FC<CitationCardProps> = ({
         {/* Expand Icon */}
         <ChevronDown
           className={cn(
-            'w-4 h-4 text-gray-400 transition-transform flex-shrink-0',
+            'w-4 h-4 text-muted-foreground transition-transform flex-shrink-0',
             isExpanded && 'rotate-180'
           )}
         />
@@ -123,8 +123,8 @@ const CitationCard: React.FC<CitationCardProps> = ({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-3 py-2 border-t border-gray-100 bg-gray-50">
-              <p className="text-sm text-gray-700 mb-2">
+            <div className="px-3 py-2 border-t border-border bg-accent">
+              <p className="text-sm text-foreground mb-2">
                 {citation.content}
               </p>
               
@@ -222,10 +222,10 @@ export const CitationList: React.FC<CitationProps & { onPreviewClick?: (citation
   return (
     <div className={cn('mt-4 space-y-2', className)}>
       {/* Header */}
-      <div className="flex items-center gap-2 text-sm text-gray-600">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <BookOpen className="w-4 h-4" />
         <span className="font-medium">Sources</span>
-        <span className="text-gray-400">({citations.length})</span>
+        <span className="text-muted-foreground">({citations.length})</span>
         
         {hasMore && (
           <Button

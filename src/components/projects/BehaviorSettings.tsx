@@ -121,8 +121,8 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Behavior Settings</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-foreground">Behavior Settings</h2>
+          <p className="text-muted-foreground mt-1">
             Configure how your AI agent behaves and responds to users
           </p>
         </div>
@@ -151,12 +151,12 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
 
       {/* Error State */}
       {settingsError && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center gap-2 text-red-800">
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+          <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
             <AlertCircle className="w-5 h-5" />
             <span className="font-medium">Error loading settings</span>
           </div>
-          <p className="text-red-700 mt-1 text-sm">{settingsError}</p>
+          <p className="text-red-600 dark:text-red-400 mt-1 text-sm">{settingsError}</p>
         </div>
       )}
 
@@ -165,9 +165,9 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
         <div className="space-y-6">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/4 mb-4" />
-              <div className="h-32 bg-gray-200 rounded mb-2" />
-              <div className="h-3 bg-gray-200 rounded w-3/4" />
+              <div className="h-4 bg-muted rounded w-1/4 mb-4" />
+              <div className="h-32 bg-muted rounded mb-2" />
+              <div className="h-3 bg-muted rounded w-3/4" />
             </Card>
           ))}
         </div>
@@ -179,20 +179,20 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
               <div className="flex items-start gap-3">
                 <Brain className="w-6 h-6 text-brand-600 mt-1" />
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">AI Persona Instructions</h3>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <h3 className="text-lg font-semibold text-foreground">AI Persona Instructions</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
                     Define your AI agent's personality, role, and behavior patterns
                   </p>
                 </div>
               </div>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}/settings
               </span>
             </div>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   System Instructions
                 </label>
                 <textarea
@@ -200,9 +200,9 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                   onChange={(e) => handleInputChange('persona_instructions', e.target.value)}
                   placeholder="You are a helpful assistant that..."
                   rows={6}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none bg-background text-foreground"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   These instructions control your AI's personality and behavior. Be specific about tone, expertise, and how it should interact with users.
                 </p>
               </div>
@@ -217,10 +217,10 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                 <div className="space-y-3">
                   {personaExamples.map((example, index) => (
                     <div key={index} className="bg-white rounded p-3 border border-blue-100">
-                      <h5 className="text-sm font-medium text-gray-900 mb-2">
+                      <h5 className="text-sm font-medium text-foreground mb-2">
                         {example.title}
                       </h5>
-                      <p className="text-xs text-gray-600 mb-2">
+                      <p className="text-xs text-muted-foreground mb-2">
                         {example.content}
                       </p>
                       <Button
@@ -241,12 +241,12 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
           {/* Response Source */}
           <Card className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Knowledge Source</h3>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <h3 className="text-lg font-semibold text-foreground">Knowledge Source</h3>
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}/settings
               </span>
             </div>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-muted-foreground mb-4">
               Control what information your AI agent can access when generating responses
             </p>
             
@@ -258,7 +258,7 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                     "flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors",
                     formData.response_source === option.value
                       ? "border-brand-500 bg-brand-50"
-                      : "border-gray-200 hover:bg-gray-50"
+                      : "border-border hover:bg-accent"
                   )}
                 >
                   <input
@@ -271,14 +271,14 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-gray-900">{option.label}</span>
+                      <span className="font-medium text-foreground">{option.label}</span>
                       {option.recommended && (
                         <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                           Recommended
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600">{option.description}</p>
+                    <p className="text-sm text-muted-foreground">{option.description}</p>
                     
                     {option.value === 'own_content' && formData.response_source === option.value && (
                       <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded text-xs text-green-800">
@@ -302,8 +302,8 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
           {/* Language Settings */}
           <Card className="p-6">
             <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Language Settings</h3>
-              <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+              <h3 className="text-lg font-semibold text-foreground">Language Settings</h3>
+              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                 POST /projects/{project.id}/settings
               </span>
             </div>
@@ -315,7 +315,7 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
               <select
                 value={formData.chatbot_msg_lang}
                 onChange={(e) => handleInputChange('chatbot_msg_lang', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
               >
                 {languageOptions.map((lang) => (
                   <option key={lang.value} value={lang.value}>
@@ -335,12 +335,12 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
 
           {/* Advanced Settings */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Advanced Behavior</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Advanced Behavior</h3>
             
             <div className="space-y-4">
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Response Guidelines</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
+              <div className="p-4 bg-accent border border-border rounded-lg">
+                <h4 className="text-sm font-medium text-foreground mb-2">Response Guidelines</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• The AI will always try to be helpful and accurate</li>
                   <li>• Responses are generated based on your configured knowledge source</li>
                   <li>• The AI will indicate when it doesn't have enough information</li>

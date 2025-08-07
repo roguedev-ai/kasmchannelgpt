@@ -18,6 +18,7 @@ class SpeechManager {
   private conversationThusFar: any[] = [];
   private callbacks: VoiceCallbacks = {};
   private projectId: string | null = null;
+  private sessionId: string | null = null;
 
   setCallbacks(callbacks: VoiceCallbacks) {
     this.callbacks = callbacks;
@@ -27,6 +28,11 @@ class SpeechManager {
   setProjectId(projectId: string) {
     this.projectId = projectId;
     this.debug("Project ID set", { projectId });
+  }
+
+  setSessionId(sessionId: string | null) {
+    this.sessionId = sessionId;
+    this.debug("Session ID set", { sessionId });
   }
 
   private debug(message: string, data?: any) {
@@ -113,9 +119,13 @@ class SpeechManager {
     const formData = new FormData();
     formData.append("audio", blob, "audio.wav");
     formData.append("projectId", this.projectId);
+    if (this.sessionId) {
+      formData.append("sessionId", this.sessionId);
+    }
 
     this.debug("Sending request to voice API", {
       projectId: this.projectId,
+      sessionId: this.sessionId,
       conversationLength: this.conversationThusFar.length,
       audioSize: `${(blob.size / 1024).toFixed(2)}KB`
     });
@@ -159,6 +169,13 @@ class SpeechManager {
 
       const newMessages = JSON.parse(this.base64Decode(textHeader));
       this.debug("Messages decoded", { newMessages });
+      
+      // Check if we got a new session ID from the API
+      const sessionIdHeader = response.headers.get("x-session-id");
+      if (sessionIdHeader && sessionIdHeader !== this.sessionId) {
+        this.debug("Received new session ID from API", { oldSessionId: this.sessionId, newSessionId: sessionIdHeader });
+        this.setSessionId(sessionIdHeader);
+      }
       
       // Extract user transcript and AI response for conversation store
       if (newMessages.length > 0) {
@@ -277,6 +294,21 @@ class SpeechManager {
 
   getConversationThusFar() {
     return this.conversationThusFar;
+  }
+
+  getSessionId() {
+    return this.sessionId;
+  }
+
+  // Set the conversation history from existing messages
+  setConversationHistory(messages: any[]) {
+    this.conversationThusFar = messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+    this.debug("Conversation history loaded", {
+      messageCount: this.conversationThusFar.length
+    });
   }
 }
 

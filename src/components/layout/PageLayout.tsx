@@ -66,7 +66,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   showBackButton = true 
 }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Conditional navbar rendering */}
       {showNavbar && <Navbar showBackButton={showBackButton} />}
       

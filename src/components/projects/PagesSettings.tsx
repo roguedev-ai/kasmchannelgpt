@@ -219,8 +219,8 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Content Pages</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-xl font-bold text-foreground">Content Pages</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Manage indexed content for {project.project_name}
           </p>
         </div>
@@ -253,20 +253,20 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
       <div className="mb-4 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex-1 relative">
-            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+              className="w-full pl-8 pr-3 py-1.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
             />
           </div>
           
           <select
             value={queryParams.crawl_status}
             onChange={(e) => handleFilterChange('crawl_status', e.target.value)}
-            className="px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="px-2 py-1.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             <option value="all">All Crawl</option>
             <option value="queued">Queued</option>
@@ -278,7 +278,7 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
           <select
             value={queryParams.index_status}
             onChange={(e) => handleFilterChange('index_status', e.target.value)}
-            className="px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="px-2 py-1.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             <option value="all">All Index</option>
             <option value="queued">Queued</option>
@@ -290,7 +290,7 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
           <select
             value={queryParams.order}
             onChange={(e) => handleFilterChange('order', e.target.value)}
-            className="px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="px-2 py-1.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
           >
             <option value="desc">Newest</option>
             <option value="asc">Oldest</option>
@@ -304,8 +304,8 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
           <div className="flex items-center">
             <FileText className="w-6 h-6 text-blue-600 flex-shrink-0" />
             <div className="ml-3 min-w-0">
-              <p className="text-xs font-medium text-gray-600">Total Pages</p>
-              <p className="text-lg font-bold text-gray-900">{loading ? '-' : paginationInfo.total}</p>
+              <p className="text-xs font-medium text-muted-foreground">Total Pages</p>
+              <p className="text-lg font-bold text-foreground">{loading ? '-' : paginationInfo.total}</p>
             </div>
           </div>
         </Card>
@@ -314,8 +314,8 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
           <div className="flex items-center">
             <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
             <div className="ml-3 min-w-0">
-              <p className="text-xs font-medium text-gray-600">Indexed</p>
-              <p className="text-lg font-bold text-gray-900">
+              <p className="text-xs font-medium text-muted-foreground">Indexed</p>
+              <p className="text-lg font-bold text-foreground">
                 {loading ? '-' : pages.filter(p => p.index_status === 'indexed').length}
               </p>
             </div>
@@ -326,8 +326,8 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
           <div className="flex items-center">
             <Clock className="w-6 h-6 text-blue-600 flex-shrink-0" />
             <div className="ml-3 min-w-0">
-              <p className="text-xs font-medium text-gray-600">Processing</p>
-              <p className="text-lg font-bold text-gray-900">
+              <p className="text-xs font-medium text-muted-foreground">Processing</p>
+              <p className="text-lg font-bold text-foreground">
                 {loading ? '-' : pages.filter(p => 
                   p.crawl_status === 'crawling' || p.index_status === 'indexing'
                 ).length}
@@ -340,8 +340,8 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
           <div className="flex items-center">
             <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
             <div className="ml-3 min-w-0">
-              <p className="text-xs font-medium text-gray-600">Failed</p>
-              <p className="text-lg font-bold text-gray-900">
+              <p className="text-xs font-medium text-muted-foreground">Failed</p>
+              <p className="text-lg font-bold text-foreground">
                 {loading ? '-' : pages.filter(p => 
                   p.crawl_status === 'failed' || p.index_status === 'failed'
                 ).length}
@@ -358,11 +358,11 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
         </div>
       ) : filteredPages.length === 0 ? (
         <Card className="p-8 text-center">
-          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <h3 className="text-base font-medium text-gray-900 mb-2">
+          <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+          <h3 className="text-base font-medium text-foreground mb-2">
             {searchQuery ? 'No pages found' : 'No pages indexed yet'}
           </h3>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             {searchQuery 
               ? 'Try adjusting your search criteria'
               : 'Add content sources to start indexing pages'
@@ -388,18 +388,18 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <Hash className="w-3 h-3 text-gray-400" />
-                        <span className="text-xs font-medium text-gray-600">
+                        <Hash className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">
                           Page #{page.id}
                         </span>
                       </div>
                       
-                      <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                      <h3 className="text-sm font-semibold text-foreground mb-1">
                         {page.filename || page.page_url}
                       </h3>
                       
                       {page.page_url && (
-                        <p className="text-xs text-gray-600 truncate mb-2">
+                        <p className="text-xs text-muted-foreground truncate mb-2">
                           {page.page_url}
                         </p>
                       )}
@@ -409,7 +409,7 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
                   {/* Status */}
                   <div className="flex items-center gap-4 mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">Crawl:</span>
+                      <span className="text-xs text-muted-foreground">Crawl:</span>
                       <span className={cn(
                         'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium',
                         crawlStatusColors[page.crawl_status]
@@ -419,7 +419,7 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">Index:</span>
+                      <span className="text-xs text-muted-foreground">Index:</span>
                       <span className={cn(
                         'inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium',
                         indexStatusColors[page.index_status]
@@ -430,7 +430,7 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
                   </div>
 
                   {/* Metadata */}
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-2">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-2">
                     <span>Created: {formatTimestamp(page.created_at)}</span>
                     <span>Updated: {formatTimestamp(page.updated_at)}</span>
                     {page.filesize && (
@@ -440,7 +440,7 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
 
                   {/* Additional Info */}
                   {page.s3_path && (
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                       <HardDrive className="w-3 h-3" />
                       <span className="truncate">Storage: {page.s3_path}</span>
                     </div>
@@ -498,7 +498,7 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
       {/* Pagination */}
       {paginationInfo.last_page > 1 && (
         <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-xs text-gray-600">
+          <div className="text-xs text-muted-foreground">
             Showing {((paginationInfo.current_page - 1) * paginationInfo.per_page) + 1} to{' '}
             {Math.min(paginationInfo.current_page * paginationInfo.per_page, paginationInfo.total)} of{' '}
             {paginationInfo.total} pages
@@ -532,7 +532,7 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
                   </Button>
                 );
                 if (currentPage > 4) {
-                  pages.push(<span key="ellipsis1" className="px-1 text-xs text-gray-500">...</span>);
+                  pages.push(<span key="ellipsis1" className="px-1 text-xs text-muted-foreground">...</span>);
                 }
               }
               
@@ -553,7 +553,7 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
               // Always show last page if not in range
               if (currentPage < lastPage - 2) {
                 if (currentPage < lastPage - 3) {
-                  pages.push(<span key="ellipsis2" className="px-1 text-xs text-gray-500">...</span>);
+                  pages.push(<span key="ellipsis2" className="px-1 text-xs text-muted-foreground">...</span>);
                 }
                 pages.push(
                   <Button

@@ -122,7 +122,7 @@ const AgentAvatar: React.FC<AgentAvatarProps> = ({
     <div className={cn(
       'rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden',
       sizeClasses[size],
-      isSelected ? 'bg-brand-600' : 'bg-gray-200',
+      isSelected ? 'bg-brand-600' : 'bg-accent',
       className
     )}>
       {avatarUrl ? (
@@ -146,7 +146,7 @@ const AgentAvatar: React.FC<AgentAvatarProps> = ({
       ) : (
         <User className={cn(
           iconSizeClasses[size],
-          isSelected ? 'text-white' : 'text-gray-600'
+          isSelected ? 'text-white' : 'text-muted-foreground'
         )} />
       )}
     </div>
@@ -172,7 +172,7 @@ const AgentItem: React.FC<AgentItemProps> = ({
     <div
       className={cn(
         'flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors group',
-        'hover:bg-gray-50',
+        'hover:bg-accent',
         isSelected && 'bg-brand-50 hover:bg-brand-100'
       )}
       onClick={() => onSelect(agent)}
@@ -188,7 +188,7 @@ const AgentItem: React.FC<AgentItemProps> = ({
         {/* Agent Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-medium text-gray-900 truncate">
+            <h3 className="font-medium text-foreground truncate">
               {agent.project_name}
             </h3>
             {isSelected && (
@@ -197,7 +197,7 @@ const AgentItem: React.FC<AgentItemProps> = ({
           </div>
           
           {/* Status */}
-          <div className="mt-1 text-xs text-gray-400">
+          <div className="mt-1 text-xs text-muted-foreground">
             <span>Status: {agent.is_chat_active ? 'Active' : 'Inactive'}</span>
           </div>
         </div>
@@ -212,7 +212,7 @@ const AgentItem: React.FC<AgentItemProps> = ({
             e.stopPropagation();
             onSettingsClick(agent);
           }}
-          className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 text-gray-400 hover:text-gray-600"
+          className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 text-muted-foreground hover:text-foreground"
           title="Agent Settings"
         >
           <Settings className="h-3 w-3" />
@@ -448,12 +448,12 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
     return (
       <div className={cn('p-3 bg-background border border-border rounded-lg', className)}>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-            <Bot className="w-4 h-4 text-gray-600" />
+          <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+            <Bot className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="flex-1">
-            <p className="text-sm text-gray-600 font-medium">No agents available</p>
-            <p className="text-xs text-gray-500">Check your API configuration</p>
+            <p className="text-sm text-muted-foreground font-medium">No agents available</p>
+            <p className="text-xs text-muted-foreground">Check your API configuration</p>
           </div>
           <Button
             size="sm"
@@ -473,7 +473,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
       {/* Loading overlay when selecting agent */}
       {isSelectingAgent && (
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-lg flex items-center justify-center z-50">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Spinner size="sm" />
             <span className="text-foreground">Switching agent...</span>
           </div>
@@ -499,7 +499,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
             
             {/* Agent Info */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 truncate">
+              <h3 className="font-medium text-foreground truncate">
                 {currentAgent?.project_name || 'Select Agent'}
               </h3>
             </div>
@@ -517,7 +517,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
                   window.location.href = `/projects?id=${currentAgent.id}&tab=analytics`;
                 }}
                 title="View Analytics"
-                className="text-gray-600 hover:text-gray-900"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <BarChart3 className="w-4 h-4" />
               </Button>
@@ -532,7 +532,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
                 handleRefresh();
               }}
               disabled={loading}
-              className="h-6 w-6 text-gray-400 hover:text-gray-600"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground"
               title="Refresh Agents"
             >
               <RefreshCw className={cn('h-3 w-3', loading && 'animate-spin')} />
@@ -540,7 +540,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
             
             {/* Dropdown Arrow */}
             <ChevronDown className={cn(
-              'w-4 h-4 text-gray-400 transition-transform',
+              'w-4 h-4 text-muted-foreground transition-transform',
               isOpen && 'rotate-180'
             )} />
           </div>
@@ -560,7 +560,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
             <div className="p-2">
               {/* Header */}
               <div className="px-2 py-1 mb-2">
-                <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Available Agents ({Array.isArray(agents) ? agents.length : 0}
                   {paginationMeta?.totalCount && paginationMeta.totalCount !== agents.length && (
                     <span> of {paginationMeta.totalCount}</span>
@@ -582,7 +582,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
                   ))
                 ) : (
                   <div className="px-2 py-4 text-center">
-                    <p className="text-sm text-gray-500">No agents found</p>
+                    <p className="text-sm text-muted-foreground">No agents found</p>
                     <Button
                       size="sm"
                       variant="ghost"

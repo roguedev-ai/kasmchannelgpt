@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { Readable } from 'stream';
-import { handleProxyRequest } from '@/lib/api/proxy-handler';
+import { proxyRequest } from '@/lib/api/proxy-handler';
 
 const VOICE_LANGUAGE = process.env.VOICE_LANGUAGE || 'en';
 
@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const audioFile = formData.get('audio') as File;
     const projectId = formData.get('projectId') as string;
+    const sessionId = formData.get('sessionId') as string | null;
     const conversationHeader = request.headers.get('conversation') || '';
     
     console.log('📦 [VOICE-API] Request data:', {
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
       audioType: audioFile?.type || 'unknown',
       audioName: audioFile?.name || 'unknown',
       projectId,
+      sessionId,
       hasConversation: !!conversationHeader
     });
     
@@ -66,8 +68,8 @@ export async function POST(request: NextRequest) {
     
     console.log('💬 [VOICE-API] Conversation history length:', conversation.length);
     
-    const aiResponse = await getCustomGPTCompletion(transcription, conversation, projectId);
-    console.log('✅ [VOICE-API] AI response received:', aiResponse);
+    const { response: aiResponse, sessionId: newSessionId } = await getCustomGPTCompletion(transcription, conversation, projectId, sessionId, request);
+    console.log('✅ [VOICE-API] AI response received:', aiResponse, 'session:', newSessionId);
 
     // Step 3: Convert response to speech
     console.log('🎯 [VOICE-API] Step 3: Converting to speech...');
@@ -89,6 +91,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'audio/mpeg',
         'text': responseHeader,
+        // Pass back any new session_id if we got one
+        ...(newSessionId && { 'x-session-id': newSessionId }),
       },
     });
 
@@ -172,8 +176,8 @@ async function transcribeAudio(audioFile: File, openai: OpenAI): Promise<string>
   }
 }
 
-async function getCustomGPTCompletion(userPrompt: string, conversation: any[], projectId: string): Promise<string> {
-  console.log('🎯 [VOICE-API] Using CustomGPT proxy API');
+async function getCustomGPTCompletion(userPrompt: string, conversation: any[], projectId: string, sessionId: string | null, voiceRequest: NextRequest): Promise<{ response: string; sessionId?: string }> {
+  console.log('🎯 [VOICE-API] Using CustomGPT proxy API', { sessionId });
   
   try {
     // Build conversation history in CustomGPT format
@@ -196,39 +200,40 @@ async function getCustomGPTCompletion(userPrompt: string, conversation: any[], p
     // Add the current user message
     messages.push({ role: 'user', content: userPrompt });
     
-    // Get session_id from conversation history if available
-    let sessionId = undefined;
-    if (conversation.length > 0) {
-      // Try to extract session_id from previous messages
-      const lastAssistantMsg = [...conversation].reverse().find(msg => msg.role === 'assistant');
-      if (lastAssistantMsg && lastAssistantMsg.session_id) {
-        sessionId = lastAssistantMsg.session_id;
-      }
-    }
-    
     // Build request body matching the format used in the main chat
-    const requestBody = {
+    const requestBody: any = {
       messages: messages,
       stream: false,
       lang: 'en',
-      is_inline_citation: false,
-      ...(sessionId && { session_id: sessionId })
+      is_inline_citation: false
     };
     
-    // Create a mock NextRequest for the proxy handler
-    const proxyRequest = new NextRequest(
-      new URL(`/api/proxy/projects/${projectId}/chat/completions`, process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      }
-    );
+    // Only add session_id if it exists
+    if (sessionId) {
+      requestBody.session_id = sessionId;
+    }
+    
+    console.log('📝 [VOICE-API] Request body:', {
+      messageCount: messages.length,
+      hasSessionId: !!sessionId,
+      sessionId: sessionId
+    });
+    
+    // Create a new request for the proxy
+    const mockRequest = new NextRequest(voiceRequest.url, {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
     
     // Use the proxy handler to make the request
-    const proxyResponse = await handleProxyRequest(proxyRequest, [`projects/${projectId}/chat/completions`]);
+    const proxyResponse = await proxyRequest(
+      `/projects/${projectId}/chat/completions`,
+      mockRequest,
+      { method: 'POST' }
+    );
     
     if (!proxyResponse.ok) {
       const errorText = await proxyResponse.text();
@@ -246,6 +251,7 @@ async function getCustomGPTCompletion(userPrompt: string, conversation: any[], p
       hasResponse: !!data.response,
       hasAnswer: !!data.answer,
       hasData: !!data.data,
+      hasSessionId: !!data.session_id,
       keys: Object.keys(data).slice(0, 10)
     });
     
@@ -253,7 +259,9 @@ async function getCustomGPTCompletion(userPrompt: string, conversation: any[], p
     let newSessionId = undefined;
     if (data.session_id) {
       newSessionId = data.session_id;
-      console.log('📝 [VOICE-API] Session ID for continuity:', newSessionId);
+      console.log('📝 [VOICE-API] Got new session ID from response:', newSessionId);
+    } else if (!sessionId) {
+      console.log('⚠️ [VOICE-API] No session ID in response and none provided - this might cause issues');
     }
     
     // Handle the response format from CustomGPT
@@ -271,13 +279,14 @@ async function getCustomGPTCompletion(userPrompt: string, conversation: any[], p
       responseContent = 'I couldn\'t understand the response format.';
     }
     
-    return responseContent;
+    return { response: responseContent, sessionId: newSessionId };
   } catch (error) {
     console.error('❌ [VOICE-API] CustomGPT proxy error:', error);
     
     // Fallback to OpenAI if CustomGPT fails
     const openai = getOpenAIClient();
-    return await getOpenAICompletion(userPrompt, conversation, openai);
+    const openaiResponse = await getOpenAICompletion(userPrompt, conversation, openai);
+    return { response: openaiResponse, sessionId: sessionId || undefined };
   }
 }
 

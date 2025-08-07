@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useMicVAD } from '@ricky0123/vad-react';
+import { useMicVAD, utils } from '@ricky0123/vad-react';
 import RotateLoader from 'react-spinners/RotateLoader';
-import { X, StopCircle } from 'lucide-react';
+import { X, StopCircle, Mic, MicOff } from 'lucide-react';
 import Canvas from './Canvas';
 import { speechManager } from '@/lib/voice/speech-manager';
 import { particleActions } from '@/lib/voice/particle-manager';
@@ -17,7 +17,8 @@ interface VoiceModalProps {
   projectName?: string;
 }
 
-export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceModalProps) {
+// Separate component that handles VAD initialization
+function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceModalProps) {
   const [loading, setLoading] = useState(true);
   const [transcript, setTranscript] = useState('');
   const [agentResponse, setAgentResponse] = useState('');
@@ -29,10 +30,11 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // Message store integration
-  const { addMessage } = useMessageStore();
+  const { addMessage, messages } = useMessageStore();
   const { currentConversation, ensureConversation } = useConversationStore();
   const [currentUserMessageId, setCurrentUserMessageId] = useState<string | null>(null);
 
+  // Initialize VAD
   const vad = useMicVAD({
     preSpeechPadFrames: 5,
     positiveSpeechThreshold: 0.90,  // Back to AIUI settings
@@ -66,6 +68,33 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
     if (isOpen && projectId) {
       console.log('🔧 [VOICE-MODAL] Setting up speech manager');
       speechManager.setProjectId(projectId);
+      
+      // Ensure we have a conversation before starting voice
+      const setupConversation = async () => {
+        try {
+          let conversation = currentConversation;
+          
+          // If no current conversation, create one for voice
+          if (!conversation) {
+            console.log('🔄 [VOICE-MODAL] No current conversation, creating one for voice');
+            conversation = await ensureConversation(parseInt(projectId), 'Voice conversation');
+            console.log('✅ [VOICE-MODAL] Created conversation:', conversation.id, 'session:', conversation.session_id);
+          }
+          
+          // Load conversation history and session ID
+          const conversationMessages = messages.get(conversation.id.toString()) || [];
+          console.log('📝 [VOICE-MODAL] Loading conversation history:', conversationMessages.length, 'messages');
+          speechManager.setConversationHistory(conversationMessages);
+          speechManager.setSessionId(conversation.session_id);
+        } catch (error) {
+          console.error('❌ [VOICE-MODAL] Failed to setup conversation:', error);
+          const errorMsg = `${new Date().toLocaleTimeString()} - ERROR: Failed to setup conversation`;
+          setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
+        }
+      };
+      
+      setupConversation();
+      
       speechManager.setCallbacks({
         onUserSpeaking: () => {
           particleActions.onUserSpeaking();
@@ -101,6 +130,12 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
           
           // Ensure we have a conversation
           const conversation = await ensureConversation(parseInt(projectId), transcript);
+          
+          // Update sessionId if we got a new conversation
+          if (conversation.session_id && conversation.session_id !== speechManager.getSessionId()) {
+            console.log('🔄 [VOICE-MODAL] Updating session ID:', conversation.session_id);
+            speechManager.setSessionId(conversation.session_id);
+          }
           
           // Create and add user message to chat
           const userMessage = {
@@ -145,13 +180,13 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
     
     // Clean up when modal closes
     if (!isOpen) {
-      speechManager.clearConversation();
+      // Don't clear conversation history to maintain context
       setTranscript('');
       setAgentResponse('');
       setDebugMessages([]);
       setIsAgentSpeaking(false);
     }
-  }, [isOpen, projectId]);
+  }, [isOpen, projectId, currentConversation, messages]);
 
   // Define handleToggleListening before useEffect that uses it
   const handleToggleListening = useCallback(async () => {
@@ -391,17 +426,12 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
       return;
     }
     
-    // Auto-start VAD when it finishes loading (like AIUI behavior) - but only once
-    if (isOpen && !vad.loading && !vad.listening && !vad.errored && !hasAutoStarted) {
-      console.log('🎯 [VOICE-MODAL] VAD loaded successfully, attempting auto-start...');
-      const debugMsg = `${new Date().toLocaleTimeString()} - VAD loaded, attempting auto-start`;
+    // Don't auto-start VAD - wait for user interaction
+    // This prevents microphone permission request on modal open
+    if (isOpen && !vad.loading && !vad.listening && !vad.errored) {
+      console.log('🎯 [VOICE-MODAL] VAD loaded successfully, ready for manual start');
+      const debugMsg = `${new Date().toLocaleTimeString()} - Click to start listening`;
       setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
-      
-      setHasAutoStarted(true);
-      // Use setTimeout to break the synchronous cycle and allow for proper initialization
-      setTimeout(() => {
-        handleToggleListening();
-      }, 300); // Increased delay for better stability
     }
     
     // If VAD is in error state but we haven't tried recovery, attempt recovery
@@ -481,24 +511,9 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
                 </div>
               )}
               
-              {/* Manual recording button only shown if VAD fails */}
-              {vad.errored && (
-                <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2">
-                  <button
-                    onClick={handleManualRecording}
-                    className={`px-8 py-4 rounded-full font-medium transition-all transform hover:scale-105 ${
-                      isManualRecording
-                        ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/50'
-                        : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm'
-                    }`}
-                  >
-                    {isManualRecording ? 'Stop Recording' : 'Hold to Speak'}
-                  </button>
-                </div>
-              )}
 
               {/* Status display */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center pointer-events-none">
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center">
                 <p className="text-3xl font-light mb-4">
                   {isManualRecording 
                     ? 'Recording...' 
@@ -506,7 +521,9 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
                     ? 'Click button to speak' 
                     : vad.listening 
                     ? 'Listening...' 
-                    : 'Initializing...'}
+                    : vad.loading
+                    ? 'Initializing...'
+                    : 'Click to start'}
                 </p>
                 
                 {/* Show user's transcript */}
@@ -524,21 +541,50 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
                     <p className="text-xl text-white max-w-md mx-auto">"{agentResponse}"</p>
                   </div>
                 )}
+                
+                {/* Start listening button when not listening */}
+                {!vad.loading && !vad.listening && !isManualRecording && (
+                  <button
+                    onClick={handleToggleListening}
+                    className="mt-8 px-8 py-4 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all transform hover:scale-105 pointer-events-auto"
+                  >
+                    Start Listening
+                  </button>
+                )}
               </div>
 
-              {/* Stop button when agent is speaking */}
-              {isAgentSpeaking && (
-                <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2">
+              {/* Bottom control buttons */}
+              <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 flex items-center gap-4">
+                {/* Manual recording button only shown if VAD fails */}
+                {vad.errored && (
+                  <button
+                    onClick={handleManualRecording}
+                    className={`group flex items-center gap-2 px-4 sm:px-6 py-3 rounded-full font-medium transition-all transform hover:scale-105 ${
+                      isManualRecording
+                        ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/50'
+                        : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm'
+                    }`}
+                    aria-label={isManualRecording ? 'Stop recording' : 'Start recording'}
+                  >
+                    {isManualRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                    <span className="font-medium hidden sm:inline">
+                      {isManualRecording ? 'Stop Recording' : 'Hold to Speak'}
+                    </span>
+                  </button>
+                )}
+
+                {/* Stop button when agent is speaking */}
+                {isAgentSpeaking && (
                   <button
                     onClick={handleStopSpeech}
-                    className="group flex items-center gap-2 px-6 py-3 rounded-full bg-red-500/20 hover:bg-red-500/30 text-white backdrop-blur-sm transition-all transform hover:scale-105"
+                    className="group flex items-center gap-2 px-4 sm:px-6 py-3 rounded-full bg-red-500/20 hover:bg-red-500/30 text-white backdrop-blur-sm transition-all transform hover:scale-105"
                     aria-label="Stop speaking"
                   >
                     <StopCircle className="w-5 h-5" />
-                    <span className="font-medium">Stop Response</span>
+                    <span className="font-medium hidden sm:inline">Stop Response</span>
                   </button>
-                </div>
-              )}
+                )}
+              </div>
 
             </>
           )}
@@ -546,4 +592,14 @@ export function VoiceModal({ isOpen, onClose, projectId, projectName }: VoiceMod
       )}
     </>
   );
+}
+
+// Main component that conditionally renders the VAD component
+export function VoiceModal(props: VoiceModalProps) {
+  // Only render the content (and initialize VAD) when modal is open
+  if (!props.isOpen) {
+    return null;
+  }
+  
+  return <VoiceModalContent {...props} />;
 }

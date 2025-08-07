@@ -78,7 +78,7 @@ export const MessageDetails: React.FC<MessageDetailsProps> = ({ details, classNa
     <div className={cn('mt-2', className)}>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
         <Info className="w-3 h-3" />
         <span>More Details</span>
@@ -98,9 +98,9 @@ export const MessageDetails: React.FC<MessageDetailsProps> = ({ details, classNa
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="mt-2 p-3 bg-accent rounded-lg border border-border">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs font-semibold text-gray-700">Message Details</h4>
+                <h4 className="text-xs font-semibold text-foreground">Message Details</h4>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -140,8 +140,8 @@ export const MessageDetails: React.FC<MessageDetailsProps> = ({ details, classNa
 
                 {/* Metadata Section */}
                 {details.metadata && (
-                  <div className="mt-3 pt-2 border-t border-gray-200">
-                    <h5 className="text-xs font-semibold text-gray-600 mb-2">Metadata</h5>
+                  <div className="mt-3 pt-2 border-t border-border">
+                    <h5 className="text-xs font-semibold text-muted-foreground mb-2">Metadata</h5>
                     
                     {details.metadata.user_ip && (
                       <DetailRow
@@ -196,11 +196,11 @@ interface DetailRowProps {
 const DetailRow: React.FC<DetailRowProps> = ({ label, value, onCopy, truncate }) => {
   return (
     <div className="flex items-start justify-between gap-2 text-xs">
-      <span className="text-gray-600 font-medium whitespace-nowrap">{label}:</span>
+      <span className="text-muted-foreground font-medium whitespace-nowrap">{label}:</span>
       <div className="flex items-center gap-1 flex-1 min-w-0">
         <span 
           className={cn(
-            "text-gray-800 break-all",
+            "text-foreground break-all",
             truncate && "truncate"
           )}
           title={truncate ? value : undefined}
@@ -209,7 +209,7 @@ const DetailRow: React.FC<DetailRowProps> = ({ label, value, onCopy, truncate })
         </span>
         <button
           onClick={() => onCopy(value)}
-          className="p-1 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+          className="p-1 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
           title="Copy value"
         >
           <Copy className="w-3 h-3" />

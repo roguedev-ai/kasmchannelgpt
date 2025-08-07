@@ -239,8 +239,8 @@ export default function ProfilePage() {
         {/* Page Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-            <p className="text-gray-600 mt-1">Manage your account information</p>
+            <h1 className="text-3xl font-bold text-foreground">Profile</h1>
+            <p className="text-muted-foreground mt-1">Manage your account information</p>
           </div>
           
           {/* Refresh button for manual data reload */}
@@ -257,12 +257,12 @@ export default function ProfilePage() {
 
         {/* Error State Display */}
         {error && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center gap-2 text-yellow-800">
+          <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+            <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
               <AlertCircle className="w-5 h-5" />
               <span className="font-medium">Error</span>
             </div>
-            <p className="text-yellow-700 mt-1 text-sm">{error}</p>
+            <p className="text-yellow-600 dark:text-yellow-400 mt-1 text-sm">{error}</p>
           </div>
         )}
 
@@ -271,11 +271,11 @@ export default function ProfilePage() {
           <Card className="p-8">
             <div className="animate-pulse space-y-4">
               <div className="flex items-center gap-6">
-                <div className="w-24 h-24 bg-gray-200 rounded-full" />
+                <div className="w-24 h-24 bg-muted rounded-full" />
                 <div className="space-y-2">
-                  <div className="h-6 bg-gray-200 rounded w-48" />
-                  <div className="h-4 bg-gray-200 rounded w-32" />
-                  <div className="h-4 bg-gray-200 rounded w-40" />
+                  <div className="h-6 bg-muted rounded w-48" />
+                  <div className="h-4 bg-muted rounded w-32" />
+                  <div className="h-4 bg-muted rounded w-40" />
                 </div>
               </div>
             </div>
@@ -286,14 +286,14 @@ export default function ProfilePage() {
             <Card className="p-8">
               {/* API Endpoint Indicator */}
               <div className="flex justify-end mb-4">
-                <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                   GET /user
                 </span>
               </div>
               <div className="flex items-start gap-8">
                 {/* Avatar Section with Upload */}
                 <div className="relative">
-                  <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200">
+                  <div className="w-32 h-32 rounded-full overflow-hidden bg-muted">
                     {getDisplayAvatar() ? (
                       <img
                         src={getDisplayAvatar()!}
@@ -337,7 +337,7 @@ export default function ProfilePage() {
                   <div className="space-y-6">
                     {/* Name Field - Editable */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">
                         Full Name
                       </label>
                       {isEditing ? (
@@ -345,12 +345,12 @@ export default function ProfilePage() {
                           type="text"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-lg"
+                          className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-lg bg-background text-foreground"
                           placeholder="Enter your name"
                           aria-label="Edit full name"
                         />
                       ) : (
-                        <p className="text-2xl font-bold text-gray-900">{profile.name}</p>
+                        <p className="text-2xl font-bold text-foreground">{profile.name}</p>
                       )}
                     </div>
 
@@ -360,19 +360,19 @@ export default function ProfilePage() {
                       <div className="space-y-4">
                         {/* Email - Read-only from CustomGPT */}
                         <div className="flex items-center gap-3">
-                          <Mail className="w-5 h-5 text-gray-400" />
+                          <Mail className="w-5 h-5 text-muted-foreground" />
                           <div>
-                            <p className="text-sm text-gray-600">Email</p>
-                            <p className="font-medium text-gray-900">{profile.email}</p>
+                            <p className="text-sm text-muted-foreground">Email</p>
+                            <p className="font-medium text-foreground">{profile.email}</p>
                           </div>
                         </div>
                         
                         {/* User ID - Unique identifier */}
                         <div className="flex items-center gap-3">
-                          <User className="w-5 h-5 text-gray-400" />
+                          <User className="w-5 h-5 text-muted-foreground" />
                           <div>
-                            <p className="text-sm text-gray-600">User ID</p>
-                            <p className="font-medium text-gray-900 font-mono">{profile.id}</p>
+                            <p className="text-sm text-muted-foreground">User ID</p>
+                            <p className="font-medium text-foreground font-mono">{profile.id}</p>
                           </div>
                         </div>
                       </div>
@@ -381,19 +381,19 @@ export default function ProfilePage() {
                       <div className="space-y-4">
                         {/* Team ID - Current team context */}
                         <div className="flex items-center gap-3">
-                          <Users className="w-5 h-5 text-gray-400" />
+                          <Users className="w-5 h-5 text-muted-foreground" />
                           <div>
-                            <p className="text-sm text-gray-600">Team ID</p>
-                            <p className="font-medium text-gray-900 font-mono">{profile.current_team_id}</p>
+                            <p className="text-sm text-muted-foreground">Team ID</p>
+                            <p className="font-medium text-foreground font-mono">{profile.current_team_id}</p>
                           </div>
                         </div>
                         
                         {/* Member Since - Account age */}
                         <div className="flex items-center gap-3">
-                          <Calendar className="w-5 h-5 text-gray-400" />
+                          <Calendar className="w-5 h-5 text-muted-foreground" />
                           <div>
-                            <p className="text-sm text-gray-600">Member Since</p>
-                            <p className="font-medium text-gray-900">{formatTimestamp(profile.created_at)}</p>
+                            <p className="text-sm text-muted-foreground">Member Since</p>
+                            <p className="font-medium text-foreground">{formatTimestamp(profile.created_at)}</p>
                           </div>
                         </div>
                       </div>
@@ -423,7 +423,7 @@ export default function ProfilePage() {
                           </Button>
                           
                           {/* API endpoint indicator for update */}
-                          <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded ml-2">
+                          <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded ml-2">
                             POST /user
                           </span>
                         </>
@@ -446,8 +446,8 @@ export default function ProfilePage() {
             {/* Account Details Card */}
             <Card className="p-6">
               <div className="flex items-start justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Account Details</h3>
-                <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+                <h3 className="text-lg font-semibold text-foreground">Account Details</h3>
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
                   GET /user
                 </span>
               </div>
@@ -455,24 +455,24 @@ export default function ProfilePage() {
               {/* Timestamp information grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
                     Account Created
                   </label>
-                  <p className="text-gray-900">{formatTimestamp(profile.created_at)}</p>
+                  <p className="text-foreground">{formatTimestamp(profile.created_at)}</p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
                     Last Updated
                   </label>
-                  <p className="text-gray-900">{formatTimestamp(profile.updated_at)}</p>
+                  <p className="text-foreground">{formatTimestamp(profile.updated_at)}</p>
                 </div>
               </div>
             </Card>
 
             {/* API Information Card */}
-            <Card className="p-6 bg-gray-50 border-gray-200">
-              <h4 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+            <Card className="p-6 bg-accent border-border">
+              <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
                 Available Profile Operations
               </h4>
@@ -480,18 +480,18 @@ export default function ProfilePage() {
               {/* API endpoint documentation */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Fetch profile data:</span>
-                  <code className="bg-white px-2 py-1 rounded border border-gray-200 text-xs font-mono text-gray-700">GET /user</code>
+                  <span className="text-muted-foreground">Fetch profile data:</span>
+                  <code className="bg-background px-2 py-1 rounded border border-border text-xs font-mono text-foreground">GET /user</code>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Update profile (name & photo):</span>
-                  <code className="bg-white px-2 py-1 rounded border border-gray-200 text-xs font-mono text-gray-700">POST /user</code>
+                  <span className="text-muted-foreground">Update profile (name & photo):</span>
+                  <code className="bg-background px-2 py-1 rounded border border-border text-xs font-mono text-foreground">POST /user</code>
                 </div>
               </div>
               
               {/* Platform limitations notice */}
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
-                <p className="text-blue-800">
+              <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded text-sm">
+                <p className="text-blue-600 dark:text-blue-400">
                   <strong>Note:</strong> This profile section only includes features supported by the CustomGPT API. 
                   You can update your name and profile photo. Email and other account settings are managed through the CustomGPT platform.
                 </p>
@@ -501,11 +501,11 @@ export default function ProfilePage() {
         ) : (
           // Empty state when no profile data is available
           <Card className="p-8 text-center">
-            <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <User className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               No Profile Data
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               Unable to load profile information from the CustomGPT API
             </p>
             <Button onClick={fetchProfile} disabled={loading}>

@@ -139,13 +139,13 @@ export const CitationFilePreview: React.FC<CitationFilePreviewProps> = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+          className="relative bg-background rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center justify-between p-4 border-b border-border">
             <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-gray-600" />
-              <h2 className="text-lg font-semibold text-gray-900">
+              <FileText className="h-5 w-5 text-muted-foreground" />
+              <h2 className="text-lg font-semibold text-foreground">
                 {fileName}
               </h2>
             </div>
@@ -192,18 +192,18 @@ export const CitationFilePreview: React.FC<CitationFilePreviewProps> = ({
           <div className="p-4 overflow-y-auto max-h-[calc(90vh-120px)]">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader className="h-8 w-8 animate-spin text-gray-400" />
+                <Loader className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : error ? (
               <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg">
                 <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-red-900">Error loading file</p>
-                  <p className="text-sm text-red-700 mt-1">{error}</p>
+                  <p className="text-sm font-medium text-destructive">Error loading file</p>
+                  <p className="text-sm text-destructive/90 mt-1">{error}</p>
                 </div>
               </div>
             ) : fileContent ? (
-              <div className="font-mono text-sm bg-gray-50 rounded-lg p-4">
+              <div className="font-mono text-sm bg-accent rounded-lg p-4 text-foreground">
                 <pre className="whitespace-pre-wrap break-words">
                   {fileContent}
                 </pre>
@@ -212,12 +212,12 @@ export const CitationFilePreview: React.FC<CitationFilePreviewProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t bg-gray-50">
+          <div className="p-4 border-t border-border bg-accent">
             <div className="flex items-center justify-between">
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 Citation ID: {citationId}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 {contentType}
               </div>
             </div>

@@ -482,8 +482,8 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Data Sources</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-foreground">Data Sources</h2>
+          <p className="text-muted-foreground mt-1">
             Manage files, URLs, and data sources for {project.project_name}
           </p>
         </div>
@@ -507,7 +507,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
               <Plus className="w-4 h-4 mr-2" />
               Add Source
             </Button>
-            <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+            <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
               POST /projects/{project.id}/sources
             </span>
           </div>
@@ -552,13 +552,13 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
       {/* Search */}
       <div className="mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search sources, URLs, or files..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -566,14 +566,14 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
         <Card className="p-4 relative">
-          <span className="absolute top-2 right-2 text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+          <span className="absolute top-2 right-2 text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
             GET /projects/{project.id}/sources
           </span>
           <div className="flex items-center">
             <Database className="w-8 h-8 text-blue-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Sources</p>
-              <p className="text-2xl font-bold text-gray-900">{sources.length}</p>
+              <p className="text-sm font-medium text-muted-foreground">Total Sources</p>
+              <p className="text-2xl font-bold text-foreground">{sources.length}</p>
             </div>
           </div>
         </Card>
@@ -582,8 +582,8 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
           <div className="flex items-center">
             <Globe className="w-8 h-8 text-green-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Sitemaps</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-muted-foreground">Sitemaps</p>
+              <p className="text-2xl font-bold text-foreground">
                 {sources.filter(s => s.type === 'sitemap').length}
               </p>
             </div>
@@ -594,8 +594,8 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
           <div className="flex items-center">
             <FileText className="w-8 h-8 text-blue-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">File Uploads</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-muted-foreground">File Uploads</p>
+              <p className="text-2xl font-bold text-foreground">
                 {sources.filter(s => s.type !== 'sitemap').length}
               </p>
             </div>
@@ -606,8 +606,8 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
           <div className="flex items-center">
             <File className="w-8 h-8 text-purple-600" />
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Pages</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-muted-foreground">Total Pages</p>
+              <p className="text-2xl font-bold text-foreground">
                 {sources.reduce((total, source) => total + (source.pages?.length || 0), 0)}
               </p>
             </div>
@@ -621,15 +621,15 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
           {...getRootProps()}
           className={cn(
             "text-center py-12 border-2 border-dashed rounded-lg transition-colors mb-6",
-            isDragActive ? "border-brand-500 bg-brand-50" : "border-gray-300"
+            isDragActive ? "border-brand-500 bg-brand-50" : "border-border"
           )}
         >
           <input {...getInputProps()} />
-          <Database className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <Database className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">
             {searchQuery ? 'No sources found' : 'No sources yet'}
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-muted-foreground mb-4">
             {searchQuery 
               ? 'Try adjusting your search or filters'
               : isDragActive
@@ -650,7 +650,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
       {filteredSources.length > 0 && (
         <div className="space-y-4">
           <div className="flex justify-end mb-4">
-            <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+            <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
               GET /projects/{project.id}/sources
             </span>
           </div>
@@ -672,10 +672,10 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
                       )}
                       
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 truncate">
+                        <h3 className="text-lg font-semibold text-foreground truncate">
                           {getSourceName(source)}
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           {source.type === 'sitemap' ? 'Sitemap' : 'File Upload'}
                         </p>
                       </div>
@@ -737,14 +737,14 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
 
                   {/* URL/Path Info */}
                   {source.type === 'sitemap' && source.settings.sitemap_path && (
-                    <div className="text-xs text-gray-500 truncate">
+                    <div className="text-xs text-muted-foreground truncate">
                       {source.settings.sitemap_path}
                     </div>
                   )}
 
                   {/* Pages Info */}
                   <div className="space-y-2">
-                    <div className="text-sm font-medium text-gray-700">
+                    <div className="text-sm font-medium text-muted-foreground">
                       {source.pageCount !== undefined ? source.pageCount : (source.pages?.length || 0)} {source.pageCount === 1 || source.pages?.length === 1 ? 'page' : 'pages'}
                     </div>
                     
@@ -778,7 +778,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
                   </div>
 
                   {/* Settings Summary */}
-                  <div className="pt-3 border-t text-xs text-gray-500 space-y-1">
+                  <div className="pt-3 border-t text-xs text-muted-foreground space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">Refresh:</span>
                       <span>{source.settings.data_refresh_frequency}</span>
@@ -792,7 +792,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
                   </div>
 
                   {/* Timestamps */}
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-muted-foreground">
                     <div>Created {formatTimestamp(source.created_at)}</div>
                     <div>Updated {formatTimestamp(source.updated_at)}</div>
                   </div>
@@ -819,14 +819,14 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
             <Card key={i} className="p-6 animate-pulse">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-gray-200 rounded" />
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="w-5 h-5 bg-muted rounded" />
+                  <div className="h-4 bg-muted rounded w-3/4" />
                 </div>
-                <div className="h-3 bg-gray-200 rounded w-full" />
-                <div className="h-3 bg-gray-200 rounded w-2/3" />
+                <div className="h-3 bg-muted rounded w-full" />
+                <div className="h-3 bg-muted rounded w-2/3" />
                 <div className="flex gap-2">
-                  <div className="h-8 bg-gray-200 rounded w-16" />
-                  <div className="h-8 bg-gray-200 rounded w-16" />
+                  <div className="h-8 bg-muted rounded w-16" />
+                  <div className="h-8 bg-muted rounded w-16" />
                 </div>
               </div>
             </Card>
@@ -890,12 +890,12 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
                 {...getRootProps()}
                 className={cn(
                   "border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
-                  isDragActive ? "border-brand-500 bg-brand-50" : "border-gray-300 hover:border-gray-400"
+                  isDragActive ? "border-brand-500 bg-brand-50" : "border-border hover:border-border"
                 )}
               >
                 <input {...getInputProps()} />
-                <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                <p className="text-sm text-gray-600">
+                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
                   {isDragActive
                     ? "Drop files here..."
                     : "Drag and drop files here, or click to select"}
@@ -910,7 +910,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
               <div className="flex items-center justify-between">
                 <Label htmlFor="executive-js" className="flex-1">
                   Execute JavaScript
-                  <p className="text-xs text-gray-500 font-normal mt-1">
+                  <p className="text-xs text-muted-foreground font-normal mt-1">
                     Enable JavaScript execution for dynamic content
                   </p>
                 </Label>
@@ -942,7 +942,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
               <div className="flex items-center justify-between">
                 <Label htmlFor="create-new" className="flex-1">
                   Create New Pages
-                  <p className="text-xs text-gray-500 font-normal mt-1">
+                  <p className="text-xs text-muted-foreground font-normal mt-1">
                     Add new pages found in the source
                   </p>
                 </Label>
@@ -956,7 +956,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
               <div className="flex items-center justify-between">
                 <Label htmlFor="remove-unexist" className="flex-1">
                   Remove Non-existent Pages
-                  <p className="text-xs text-gray-500 font-normal mt-1">
+                  <p className="text-xs text-muted-foreground font-normal mt-1">
                     Remove pages that no longer exist in the source
                   </p>
                 </Label>
@@ -1014,7 +1014,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
             <div className="flex items-center justify-between">
               <Label htmlFor="edit-executive-js" className="flex-1">
                 Execute JavaScript
-                <p className="text-xs text-gray-500 font-normal mt-1">
+                <p className="text-xs text-muted-foreground font-normal mt-1">
                   Enable JavaScript execution for dynamic content
                 </p>
               </Label>
@@ -1046,7 +1046,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
             <div className="flex items-center justify-between">
               <Label htmlFor="edit-create-new" className="flex-1">
                 Create New Pages
-                <p className="text-xs text-gray-500 font-normal mt-1">
+                <p className="text-xs text-muted-foreground font-normal mt-1">
                   Add new pages found in the source
                 </p>
               </Label>
@@ -1060,7 +1060,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
             <div className="flex items-center justify-between">
               <Label htmlFor="edit-remove-unexist" className="flex-1">
                 Remove Non-existent Pages
-                <p className="text-xs text-gray-500 font-normal mt-1">
+                <p className="text-xs text-muted-foreground font-normal mt-1">
                   Remove pages that no longer exist in the source
                 </p>
               </Label>

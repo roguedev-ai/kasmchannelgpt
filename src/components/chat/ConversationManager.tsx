@@ -126,7 +126,7 @@ export const ConversationManager: React.FC<ConversationManagerProps> = ({
       {/* Collapsed View */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors w-full"
+        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground hover:bg-accent rounded-lg transition-colors w-full"
       >
         <MessageCircle className="w-4 h-4" />
         <span className="truncate flex-1 text-left">
@@ -150,7 +150,7 @@ export const ConversationManager: React.FC<ConversationManagerProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-80 overflow-y-auto"
+            className="absolute top-full left-0 right-0 mt-2 bg-background rounded-lg shadow-lg border border-border z-50 max-h-80 overflow-y-auto"
           >
             {/* New Conversation Button */}
             <button
@@ -168,7 +168,7 @@ export const ConversationManager: React.FC<ConversationManagerProps> = ({
                 <div
                   key={conversation.id}
                   className={cn(
-                    'group flex items-center px-4 py-2 hover:bg-gray-50',
+                    'group flex items-center px-4 py-2 hover:bg-accent',
                     currentConversationId === conversation.id && 'bg-brand-50'
                   )}
                 >
@@ -194,7 +194,7 @@ export const ConversationManager: React.FC<ConversationManagerProps> = ({
                       </button>
                       <button
                         onClick={() => setEditingId(null)}
-                        className="p-1 text-gray-400 hover:bg-gray-100 rounded"
+                        className="p-1 text-muted-foreground hover:bg-accent rounded"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -206,23 +206,23 @@ export const ConversationManager: React.FC<ConversationManagerProps> = ({
                         onClick={() => handleSelectConversation(conversation)}
                         className="flex-1 text-left"
                       >
-                        <div className="text-sm font-medium text-gray-900 truncate">
+                        <div className="text-sm font-medium text-foreground truncate">
                           {conversation.title}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           {new Date(conversation.createdAt).toLocaleDateString()}
                         </div>
                       </button>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => handleEditStart(conversation)}
-                          className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                          className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded"
                         >
                           <Edit2 className="w-3 h-3" />
                         </button>
                         <button
                           onClick={() => handleDelete(conversation.id)}
-                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                          className="p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>

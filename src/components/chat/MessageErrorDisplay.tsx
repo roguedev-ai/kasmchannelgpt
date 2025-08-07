@@ -96,9 +96,9 @@ const getErrorDetails = (statusCode?: number, message?: string) => {
         icon: Search,
         title: 'Not Found',
         description: 'The requested agent or conversation was not found. It may have been deleted or you may not have access.',
-        className: 'border-gray-200 bg-gray-50',
-        iconClassName: 'text-gray-600',
-        textClassName: 'text-gray-800',
+        className: 'border-border bg-accent',
+        iconClassName: 'text-muted-foreground',
+        textClassName: 'text-foreground',
       };
       
     case 429:
@@ -206,7 +206,7 @@ export const MessageErrorDisplay: React.FC<MessageErrorDisplayProps> = ({
                 Technical Details
               </summary>
               <pre className={cn(
-                'mt-2 p-2 text-xs rounded bg-white bg-opacity-50 overflow-x-auto',
+                'mt-2 p-2 text-xs rounded bg-background bg-opacity-50 overflow-x-auto',
                 errorDetails.textClassName,
                 'opacity-80'
               )}>
