@@ -9,13 +9,15 @@ interface VoiceSettings {
   selectedVoice: VoiceOption;
   selectedPersona: PersonaOption;
   selectedColorScheme: ColorSchemeOption;
+  isVoiceModalOpen: boolean;
 }
 
 interface VoiceSettingsActions {
   setVoice: (voice: VoiceOption) => void;
   setPersona: (persona: PersonaOption) => void;
   setColorScheme: (colorScheme: ColorSchemeOption) => void;
-  getSettings: () => VoiceSettings;
+  setVoiceModalOpen: (isOpen: boolean) => void;
+  getSettings: () => Omit<VoiceSettings, 'isVoiceModalOpen'>;
 }
 
 export type VoiceSettingsStore = VoiceSettings & VoiceSettingsActions;
@@ -35,6 +37,7 @@ export const useVoiceSettingsStore = create<VoiceSettingsStore>()(
       selectedVoice: 'alloy',
       selectedPersona: 'assistant',
       selectedColorScheme: 'gemini',
+      isVoiceModalOpen: false,
 
       setVoice: (voice: VoiceOption) => {
         set({ selectedVoice: voice });
@@ -48,6 +51,10 @@ export const useVoiceSettingsStore = create<VoiceSettingsStore>()(
         set({ selectedColorScheme: colorScheme });
       },
 
+      setVoiceModalOpen: (isOpen: boolean) => {
+        set({ isVoiceModalOpen: isOpen });
+      },
+
       getSettings: () => {
         const state = get();
         return {
@@ -59,11 +66,12 @@ export const useVoiceSettingsStore = create<VoiceSettingsStore>()(
     }),
     {
       name: 'customgpt-voice-settings',
-      // Persist all voice settings
+      // Persist all voice settings except modal state
       partialize: (state) => ({
         selectedVoice: state.selectedVoice,
         selectedPersona: state.selectedPersona,
         selectedColorScheme: state.selectedColorScheme,
+        // Don't persist isVoiceModalOpen - always start as false
       }),
     }
   )

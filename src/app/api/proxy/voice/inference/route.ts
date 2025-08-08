@@ -185,122 +185,89 @@ async function getCustomGPTCompletion(userPrompt: string, conversation: any[], p
   console.log('🎯 [VOICE-API] Using CustomGPT proxy API', { projectId, sessionId });
   
   try {
-    // Build conversation history in CustomGPT format
-    // Start with a system message based on selected persona
-    const messages = [
-      {
-        role: 'system',
-        content: getPersonaSystemPrompt(persona)
-      }
-    ];
-    
-    // Add conversation history
-    conversation.forEach(msg => {
-      messages.push({
-        role: msg.role,
-        content: msg.content
-      });
-    });
-    
-    // Add the current user message
-    messages.push({ role: 'user', content: userPrompt });
-    
-    // Build request body matching the format used in the main chat
-    const requestBody: any = {
-      messages: messages,
-      stream: false,
-      lang: 'en',
-      is_inline_citation: false
-    };
-    
-    // Note: session_id is not yet supported by CustomGPT API (501 error)
-    // Commenting out until API supports it
-    // if (sessionId) {
-    //   requestBody.session_id = sessionId;
-    // }
-    
-    console.log('📝 [VOICE-API] Request body:', {
-      projectId,
-      messageCount: messages.length,
-      hasSessionId: !!sessionId,
-      sessionId: sessionId
-    });
-    
-    // Create a new request for the proxy
-    const mockRequest = new NextRequest(voiceRequest.url, {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    // Use the proxy handler to make the request
-    const proxyResponse = await proxyRequest(
-      `/projects/${projectId}/chat/completions`,
-      mockRequest,
-      { method: 'POST' }
-    );
-    
-    if (!proxyResponse.ok) {
-      const errorText = await proxyResponse.text();
-      console.error('❌ [VOICE-API] CustomGPT proxy error:', {
-        status: proxyResponse.status,
-        statusText: proxyResponse.statusText,
-        body: errorText,
-        projectId: projectId
-      });
+    // If we have a sessionId, use the session-aware endpoint for better conversation context
+    // This ensures proper knowledge base activation and conversation continuity
+    if (sessionId) {
+      console.log('📝 [VOICE-API] Using session-aware endpoint with sessionId:', sessionId);
       
-      // Check if it's a 403 (agent not active) or other known errors
-      if (proxyResponse.status === 403) {
-        console.error('🚫 [VOICE-API] Agent is inactive or not configured. Falling back to OpenAI.');
-        throw new Error('Agent is inactive - no documents uploaded');
+      // For session-aware endpoint, we use the standard message format
+      // Include persona context in the prompt if this is the first message in conversation
+      let enhancedPrompt = userPrompt;
+      if (conversation.length === 0) {
+        const personaPrompt = getPersonaSystemPrompt(persona);
+        enhancedPrompt = `${personaPrompt}\n\nUser: ${userPrompt}`;
+        console.log('🎭 [VOICE-API] Added persona context for new conversation');
       }
       
-      throw new Error(`CustomGPT API error (${proxyResponse.status}): ${errorText}`);
-    }
-    
-    const data = await proxyResponse.json();
-    console.log('✅ [VOICE-API] CustomGPT response structure:', {
-      hasChoices: !!data.choices,
-      hasResponse: !!data.response,
-      hasAnswer: !!data.answer,
-      hasData: !!data.data,
-      hasSessionId: !!data.session_id,
-      keys: Object.keys(data).slice(0, 10)
-    });
-    
-    // Extract session_id for future requests
-    // Note: Currently disabled due to API not supporting session_id parameter
-    let newSessionId = undefined;
-    // if (data.session_id) {
-    //   newSessionId = data.session_id;
-    //   console.log('📝 [VOICE-API] Got new session ID from response:', newSessionId);
-    // } else if (!sessionId) {
-    //   console.log('⚠️ [VOICE-API] No session ID in response and none provided - this might cause issues');
-    // }
-    
-    // Handle the response format from CustomGPT
-    let responseContent = '';
-    if (data.choices && data.choices[0] && data.choices[0].message) {
-      responseContent = data.choices[0].message.content;
-    } else if (data.data && data.data.openai_response) {
-      responseContent = data.data.openai_response;
-    } else if (data.response) {
-      responseContent = data.response;
-    } else if (data.answer) {
-      responseContent = data.answer;
+      const requestBody = {
+        prompt: enhancedPrompt,
+        stream: false,
+        source_ids: undefined // Let agent use all sources
+      };
+      
+      console.log('📝 [VOICE-API] Session-aware request:', {
+        projectId,
+        sessionId,
+        hasPersonaContext: conversation.length === 0,
+        promptLength: enhancedPrompt.length
+      });
+      
+      // Create a new request for the proxy
+      const mockRequest = new NextRequest(voiceRequest.url, {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      // Use the session-aware endpoint
+      const proxyResponse = await proxyRequest(
+        `/projects/${projectId}/conversations/${sessionId}/messages`,
+        mockRequest,
+        { method: 'POST' }
+      );
+      
+      if (!proxyResponse.ok) {
+        const errorText = await proxyResponse.text();
+        console.error('❌ [VOICE-API] Session-aware endpoint error:', {
+          status: proxyResponse.status,
+          statusText: proxyResponse.statusText,
+          body: errorText,
+          projectId: projectId,
+          sessionId: sessionId
+        });
+        
+        // If session-aware endpoint fails, fall back to OpenAI-style endpoint
+        console.log('⚠️ [VOICE-API] Falling back to OpenAI-style endpoint');
+        return getCustomGPTCompletionFallback(userPrompt, conversation, projectId, persona, voiceRequest);
+      }
+      
+      const data = await proxyResponse.json();
+      console.log('✅ [VOICE-API] Session-aware response structure:', {
+        hasData: !!data.data,
+        keys: Object.keys(data).slice(0, 10)
+      });
+      
+      // Handle session-aware response format
+      let responseContent = '';
+      if (data.data && data.data.openai_response) {
+        responseContent = data.data.openai_response;
+      } else if (data.data && data.data.user_query) {
+        // This is the message object format, get the response
+        responseContent = data.data.openai_response || 'No response available';
+      } else {
+        console.error('❌ [VOICE-API] Unexpected session-aware response format:', data);
+        responseContent = 'I couldn\'t understand the response format.';
+      }
+      
+      return { response: responseContent, sessionId: sessionId };
+      
     } else {
-      console.error('❌ [VOICE-API] Unexpected response format:', data);
-      responseContent = 'I couldn\'t understand the response format.';
+      // No sessionId - use OpenAI-style endpoint as fallback
+      console.log('⚠️ [VOICE-API] No sessionId provided, using OpenAI-style endpoint');
+      return getCustomGPTCompletionFallback(userPrompt, conversation, projectId, persona, voiceRequest);
     }
-    
-    // Log if we're getting a GPT-3 response instead of CustomGPT knowledge
-    if (responseContent.includes("I'm powered by OpenAI") || responseContent.includes("GPT-3")) {
-      console.warn('⚠️ [VOICE-API] Response indicates OpenAI fallback despite successful CustomGPT call');
-    }
-    
-    return { response: responseContent, sessionId: newSessionId };
   } catch (error) {
     console.error('❌ [VOICE-API] CustomGPT proxy error details:', error);
     console.error('📊 [VOICE-API] Error context:', { projectId, sessionId, errorMessage: error instanceof Error ? error.message : 'Unknown error' });
@@ -308,6 +275,110 @@ async function getCustomGPTCompletion(userPrompt: string, conversation: any[], p
     // Return error instead of falling back to OpenAI
     throw new Error(`CustomGPT API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+}
+
+// Fallback function for OpenAI-style endpoint (original logic)
+async function getCustomGPTCompletionFallback(userPrompt: string, conversation: any[], projectId: string, persona: PersonaOption, voiceRequest: NextRequest): Promise<{ response: string; sessionId?: string }> {
+  console.log('🔄 [VOICE-API] Using OpenAI-style endpoint fallback');
+  
+  // Build conversation history in CustomGPT format
+  // Start with a system message based on selected persona
+  const messages = [
+    {
+      role: 'system',
+      content: getPersonaSystemPrompt(persona)
+    }
+  ];
+  
+  // Add conversation history
+  conversation.forEach(msg => {
+    messages.push({
+      role: msg.role,
+      content: msg.content
+    });
+  });
+  
+  // Add the current user message
+  messages.push({ role: 'user', content: userPrompt });
+  
+  // Build request body matching the format used in the main chat
+  const requestBody: any = {
+    messages: messages,
+    stream: false,
+    lang: 'en',
+    is_inline_citation: false
+  };
+  
+  console.log('📝 [VOICE-API] Fallback request body:', {
+    projectId,
+    messageCount: messages.length
+  });
+  
+  // Create a new request for the proxy
+  const mockRequest = new NextRequest(voiceRequest.url, {
+    method: 'POST',
+    body: JSON.stringify(requestBody),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  // Use the proxy handler to make the request
+  const proxyResponse = await proxyRequest(
+    `/projects/${projectId}/chat/completions`,
+    mockRequest,
+    { method: 'POST' }
+  );
+  
+  if (!proxyResponse.ok) {
+    const errorText = await proxyResponse.text();
+    console.error('❌ [VOICE-API] CustomGPT fallback proxy error:', {
+      status: proxyResponse.status,
+      statusText: proxyResponse.statusText,
+      body: errorText,
+      projectId: projectId
+    });
+    
+    // Check if it's a 403 (agent not active) or other known errors
+    if (proxyResponse.status === 403) {
+      console.error('🚫 [VOICE-API] Agent is inactive or not configured.');
+      throw new Error('Agent is inactive - no documents uploaded');
+    }
+    
+    throw new Error(`CustomGPT API error (${proxyResponse.status}): ${errorText}`);
+  }
+  
+  const data = await proxyResponse.json();
+  console.log('✅ [VOICE-API] CustomGPT fallback response structure:', {
+    hasChoices: !!data.choices,
+    hasResponse: !!data.response,
+    hasAnswer: !!data.answer,
+    hasData: !!data.data,
+    hasSessionId: !!data.session_id,
+    keys: Object.keys(data).slice(0, 10)
+  });
+  
+  // Handle the response format from CustomGPT
+  let responseContent = '';
+  if (data.choices && data.choices[0] && data.choices[0].message) {
+    responseContent = data.choices[0].message.content;
+  } else if (data.data && data.data.openai_response) {
+    responseContent = data.data.openai_response;
+  } else if (data.response) {
+    responseContent = data.response;
+  } else if (data.answer) {
+    responseContent = data.answer;
+  } else {
+    console.error('❌ [VOICE-API] Unexpected fallback response format:', data);
+    responseContent = 'I couldn\'t understand the response format.';
+  }
+  
+  // Log if we're getting a GPT-3 response instead of CustomGPT knowledge
+  if (responseContent.includes("I'm powered by OpenAI") || responseContent.includes("GPT-3")) {
+    console.warn('⚠️ [VOICE-API] Response indicates OpenAI fallback despite successful CustomGPT call');
+  }
+  
+  return { response: responseContent, sessionId: undefined };
 }
 
 // OpenAI fallback function removed - only using CustomGPT now

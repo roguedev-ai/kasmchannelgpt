@@ -41,9 +41,10 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
   const { addMessage, messages } = useMessageStore();
   const { currentConversation, ensureConversation } = useConversationStore();
   const [currentUserMessageId, setCurrentUserMessageId] = useState<string | null>(null);
+  const [voiceConversation, setVoiceConversation] = useState<any>(null);
   
   // Voice settings integration
-  const { selectedVoice, selectedPersona, selectedColorScheme } = useVoiceSettingsStore();
+  const { selectedVoice, selectedPersona, selectedColorScheme, setVoiceModalOpen } = useVoiceSettingsStore();
 
   // Initialize VAD with error handling
   const vad = useMicVAD({
@@ -74,6 +75,11 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       speechManager.onMisfire();
     }
   });
+
+  // Control global voice modal state for hiding mobile navigation
+  useEffect(() => {
+    setVoiceModalOpen(isOpen);
+  }, [isOpen, setVoiceModalOpen]);
 
   // Set up speech manager when modal opens
   useEffect(() => {
@@ -164,6 +170,9 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           // Ensure we have a conversation
           const conversation = await ensureConversation(parseInt(projectId), transcript);
           
+          // Store conversation reference for voice messages to prevent race condition
+          setVoiceConversation(conversation);
+          
           // Update sessionId if we got a new conversation
           if (conversation.session_id && conversation.session_id !== speechManager.getSessionId()) {
             console.log('🔄 [VOICE-MODAL] Updating session ID:', conversation.session_id);
@@ -191,7 +200,11 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           // Display the agent's response in the voice window
           setAgentResponse(response);
           
-          if (currentConversation) {
+          // Use voiceConversation to ensure we're adding to the same conversation as the user message
+          // This prevents race condition where messages could be added out of order
+          const targetConversation = voiceConversation || currentConversation;
+          
+          if (targetConversation) {
             // Create and add assistant message to chat
             const assistantMessage = {
               id: generateId(),
@@ -202,10 +215,12 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
               citations: [], // Voice responses typically don't have citations
             };
             
-            addMessage(currentConversation.id.toString(), assistantMessage);
+            addMessage(targetConversation.id.toString(), assistantMessage);
             
             const debugMsg = `${new Date().toLocaleTimeString()} - Added AI response to chat: "${response.substring(0, 50)}..."`;
             setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
+          } else {
+            console.warn('⚠️ [VOICE-MODAL] No conversation available for adding assistant message');
           }
         }
       });
@@ -218,6 +233,7 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       setAgentResponse('');
       setDebugMessages([]);
       setIsAgentSpeaking(false);
+      setVoiceConversation(null); // Clear voice conversation reference
     }
   }, [isOpen, projectId, currentConversation, messages, selectedVoice, selectedPersona, selectedColorScheme]);
   
@@ -517,6 +533,7 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       setTranscript('');
       setAgentResponse('');
       setIsAgentSpeaking(false);
+      setVoiceConversation(null); // Reset voice conversation for new session
     }
   }, [isOpen]);
 
@@ -527,7 +544,7 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+        <div className="fixed inset-0 z-[9999] overflow-hidden">
           {/* Dynamic gradient background based on voice state */}
           <div className={`absolute inset-0 transition-all duration-1000 ${
             voiceState === 'idle' ? 'voice-gradient-idle' :
@@ -560,6 +577,15 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
               {/* Canvas for particle animation */}
               <Canvas draw={particleActions.draw} />
               
+              {/* Top-left settings display */}
+              <div className="absolute top-4 sm:top-6 md:top-8 left-4 sm:left-6 md:left-8 z-10">
+                <div className="bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 text-white/70 text-xs space-y-1">
+                  <div>Voice: {selectedVoice}</div>
+                  <div>Persona: {selectedPersona}</div>
+                  <div>Theme: {selectedColorScheme}</div>
+                </div>
+              </div>
+
               {/* Top-right controls - responsive */}
               <div className="absolute top-4 sm:top-6 md:top-8 right-4 sm:right-6 md:right-8 flex items-center gap-2 sm:gap-3 z-10">
                 {/* Settings button */}
@@ -581,33 +607,6 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
                 </button>
               </div>
               
-              {/* API Key Error Message */}
-              {apiKeyError && (
-                <div className="absolute top-24 left-1/2 transform -translate-x-1/2 bg-red-500/20 backdrop-blur-md border border-red-500/30 rounded-lg p-4 max-w-md">
-                  <p className="text-white text-center mb-2">
-                    <strong>Voice feature unavailable</strong>
-                  </p>
-                  <p className="text-white/80 text-sm text-center">
-                    OpenAI API key is required for voice transcription and text-to-speech. 
-                    Please add <code className="bg-white/20 px-1 rounded">OPENAI_API_KEY</code> to your <code className="bg-white/20 px-1 rounded">.env.local</code> file.
-                  </p>
-                </div>
-              )}
-              
-              {/* Agent Inactive Warning */}
-              {(() => {
-                const agent = useAgentStore.getState().agents.find(a => a.id === parseInt(projectId));
-                return agent && !agent.is_chat_active ? (
-                  <div className="absolute top-24 left-1/2 transform -translate-x-1/2 bg-yellow-500/20 backdrop-blur-md border border-yellow-500/30 rounded-lg p-4 max-w-md">
-                    <p className="text-white text-center mb-2">
-                      <strong>Agent Not Active</strong>
-                    </p>
-                    <p className="text-white/80 text-sm text-center">
-                      This agent has no knowledge base configured. Responses will use general OpenAI knowledge instead of your custom data.
-                    </p>
-                  </div>
-                ) : null;
-              })()}
               
 
               {/* Status display - responsive with animations */}
@@ -622,18 +621,16 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
                     'text-white/90'
                   }`}>
                     {isManualRecording 
-                      ? '🎤 Recording...' 
-                      : vad.errored 
-                      ? '💬 Click to speak' 
+                      ? 'Analyzing...' 
                       : voiceState === 'listening'
-                      ? '👂 Listening...'
+                      ? 'Listening...'
                       : voiceState === 'processing'
-                      ? '🧠 Thinking...'
+                      ? 'Thinking...'
                       : voiceState === 'speaking'
-                      ? '🗣️ Speaking...'
+                      ? 'Speaking...'
                       : vad.loading
-                      ? '⚡ Initializing...'
-                      : '✨ Ready to chat'}
+                      ? 'Initializing...'
+                      : 'Ready to chat'}
                   </p>
                   
                   {/* Animated dots for processing state */}
@@ -678,88 +675,111 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
                   </div>
                 )}
                 
-                {/* Voice control buttons */}
-                <div className="flex flex-col items-center gap-4">
-                  {/* Show start button when not recording and not listening */}
-                  {!vad.loading && !isManualRecording && (
-                    <>
-                      {!vad.errored ? (
-                        <button
-                          onClick={handleToggleListening}
-                          className={`px-6 sm:px-8 py-3 sm:py-4 rounded-full text-white backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 pointer-events-auto text-sm sm:text-base font-medium relative z-20 ${
-                            voiceState === 'listening' ? 'bg-blue-500/20 border-2 border-blue-500/50 voice-button-glow' : 
-                            'bg-white/10 hover:bg-white/20 active:bg-white/30'
-                          }`}
-                          style={{ pointerEvents: 'auto' }}
-                        >
-                          <span className="flex items-center gap-2">
-                            <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
-                            <span className="hidden sm:inline">{voiceState === 'listening' ? 'Listening...' : 'Start Listening'}</span>
-                            <span className="sm:hidden">{voiceState === 'listening' ? 'Listening' : 'Start'}</span>
-                          </span>
-                        </button>
-                      ) : (
-                        <button
-                          onClick={handleManualRecording}
-                          className="px-6 sm:px-8 py-3 sm:py-4 rounded-full bg-orange-600/80 hover:bg-orange-600 active:bg-orange-700 text-white backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 pointer-events-auto text-sm sm:text-base font-medium relative z-20"
-                          style={{ pointerEvents: 'auto' }}
-                        >
-                          <span className="flex items-center gap-2">
-                            <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
-                            <span className="hidden sm:inline">Start Recording</span>
-                            <span className="sm:hidden">Record</span>
-                          </span>
-                        </button>
-                      )}
-                      
-                      {vad.errored && (
-                        <p className="text-xs text-orange-400 dark:text-orange-300 text-center max-w-xs">
-                          Voice detection failed. Use the button above to record manually.
-                        </p>
-                      )}
-                    </>
-                  )}
-                  
-                  {/* Show stop button when manually recording */}
-                  {isManualRecording && (
+                
+              </div>
+
+              {/* Bottom control buttons - Mobile optimized */}
+              <div className="absolute bottom-6 sm:bottom-8 md:bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4 px-4 z-10">
+                
+                {/* Main voice control button */}
+                <div className="flex items-center justify-center">
+                  {/* Recording/Listening State */}
+                  {(isManualRecording || voiceState === 'listening') && (
                     <button
-                      onClick={handleManualRecording}
-                      className="px-6 sm:px-8 py-3 sm:py-4 rounded-full voice-button-recording shadow-lg shadow-red-500/50 text-white backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 pointer-events-auto text-sm sm:text-base font-medium relative z-20"
+                      onClick={isManualRecording ? handleManualRecording : handleToggleListening}
+                      className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-red-500/20 hover:bg-red-500/30 active:bg-red-500/40 backdrop-blur-sm transition-all transform active:scale-95 pointer-events-auto shadow-lg border-2 border-red-500/50"
                       style={{ pointerEvents: 'auto' }}
+                      aria-label={isManualRecording ? "Stop recording" : "Stop listening"}
                     >
-                      <span className="relative flex items-center gap-2">
-                        {/* Ripple effect */}
-                        <span className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"></span>
-                        <MicOff className="w-4 h-4 sm:w-5 sm:h-5 relative z-10" />
-                        <span className="hidden sm:inline relative z-10">Stop Recording</span>
-                        <span className="sm:hidden relative z-10">Stop</span>
-                      </span>
+                      {/* Pulsing animation ring */}
+                      <div className="absolute inset-0 rounded-full bg-red-500/30 animate-ping"></div>
+                      
+                      {/* Inner button content */}
+                      <div className="relative z-10 w-full h-full flex items-center justify-center">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-500 rounded-sm"></div>
+                      </div>
+                    </button>
+                  )}
+
+                  {/* Processing State */}
+                  {voiceState === 'processing' && (
+                    <button
+                      disabled
+                      className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-purple-500/20 backdrop-blur-sm shadow-lg border-2 border-purple-500/50"
+                      aria-label="Processing"
+                    >
+                      {/* Processing animation */}
+                      <div className="absolute inset-3 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"></div>
+                      <div className="absolute inset-6 border-2 border-purple-500/20 border-t-purple-500/60 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+                    </button>
+                  )}
+
+                  {/* Speaking State - Stop button */}
+                  {voiceState === 'speaking' && (
+                    <button
+                      onClick={handleStopSpeech}
+                      className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-orange-500/20 hover:bg-orange-500/30 active:bg-orange-500/40 backdrop-blur-sm transition-all transform active:scale-95 pointer-events-auto shadow-lg border-2 border-orange-500/50"
+                      style={{ pointerEvents: 'auto' }}
+                      aria-label="Stop response"
+                    >
+                      {/* Sound wave animation */}
+                      <div className="absolute inset-0 rounded-full">
+                        {[...Array(3)].map((_, i) => (
+                          <div
+                            key={i}
+                            className="absolute inset-0 rounded-full border border-orange-500/30 animate-ping"
+                            style={{
+                              animationDelay: `${i * 0.2}s`,
+                              animationDuration: '1.5s'
+                            }}
+                          />
+                        ))}
+                      </div>
+                      
+                      <div className="relative z-10 w-full h-full flex items-center justify-center">
+                        <StopCircle className="w-8 h-8 sm:w-10 sm:h-10 text-orange-500" />
+                      </div>
+                    </button>
+                  )}
+
+                  {/* Idle State - Start button */}
+                  {!vad.loading && !isManualRecording && voiceState !== 'speaking' && voiceState !== 'listening' && voiceState !== 'processing' && (
+                    <button
+                      onClick={vad.errored ? handleManualRecording : handleToggleListening}
+                      className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-blue-500/20 hover:bg-blue-500/30 active:bg-blue-500/40 backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 pointer-events-auto shadow-lg border-2 border-blue-500/50"
+                      style={{ pointerEvents: 'auto' }}
+                      aria-label="Start voice chat"
+                    >
+                      {/* Subtle glow effect */}
+                      <div className="absolute inset-0 rounded-full bg-blue-500/10 blur-sm"></div>
+                      
+                      <div className="relative z-10 w-full h-full flex items-center justify-center">
+                        <Mic className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500" />
+                      </div>
+                    </button>
+                  )}
+
+                  {/* Loading State */}
+                  {vad.loading && (
+                    <button
+                      disabled
+                      className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-500/20 backdrop-blur-sm shadow-lg border-2 border-gray-500/50"
+                      aria-label="Loading"
+                    >
+                      <div className="absolute inset-4 border-3 border-gray-500/30 border-t-gray-500 rounded-full animate-spin"></div>
                     </button>
                   )}
                 </div>
-                
-                {/* Debug info - show current VAD state */}
-                <div className="mt-4 text-xs text-white/50 text-center">
-                  <div>VAD State: {vad.loading ? 'Loading' : vad.listening ? 'Listening' : vad.errored ? 'Error' : 'Ready'}</div>
-                  <div>Manual Recording: {isManualRecording ? 'Active' : 'Inactive'}</div>
+
+                {/* State indicator text (subtle) */}
+                <div className="text-xs text-white/60 text-center">
+                  {vad.loading ? 'Initializing...' :
+                   isManualRecording ? 'Tap to stop' :
+                   voiceState === 'listening' ? 'Listening...' :
+                   voiceState === 'processing' ? 'Processing...' :
+                   voiceState === 'speaking' ? 'Tap to stop' :
+                   'Tap to speak'}
                 </div>
-              </div>
-
-              {/* Bottom control buttons - responsive */}
-              <div className="absolute bottom-6 sm:bottom-8 md:bottom-12 left-1/2 transform -translate-x-1/2 flex items-center gap-3 sm:gap-4 px-4 z-10">
-
-                {/* Stop button when agent is speaking */}
-                {isAgentSpeaking && (
-                  <button
-                    onClick={handleStopSpeech}
-                    className="group flex items-center gap-2 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-full bg-red-500/20 hover:bg-red-500/30 active:bg-red-500/40 text-white backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 text-sm sm:text-base font-medium"
-                    aria-label="Stop speaking"
-                  >
-                    <StopCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="font-medium hidden sm:inline">Stop Response</span>
-                    <span className="font-medium sm:hidden">Stop</span>
-                  </button>
-                )}
               </div>
 
             </>

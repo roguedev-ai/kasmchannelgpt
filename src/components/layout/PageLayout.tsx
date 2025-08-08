@@ -42,6 +42,7 @@ import { ConversationSidebar } from '@/components/chat/ConversationSidebar';
 import { AgentSelectorMobile } from '@/components/chat/AgentSelectorMobile';
 import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useVoiceSettingsStore } from '@/store/voice-settings';
 
 /**
  * Props for PageLayout component
@@ -89,6 +90,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 }) => {
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = useState(false);
   const { isMobile } = useBreakpoint();
+  const { isVoiceModalOpen } = useVoiceSettingsStore();
   const router = useRouter();
   const pathname = usePathname();
   const {
@@ -124,8 +126,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         <Navbar showBackButton={showBackButton} />
       )}
       
-      {/* Mobile Header */}
-      {isMobile && showNavbar && (
+      {/* Mobile Header - Hidden when voice modal is open */}
+      {isMobile && showNavbar && !isVoiceModalOpen && (
         <MobileHeader
           title={pageTitle}
           leftIcon={
@@ -151,8 +153,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         {children}
       </main>
       
-      {/* Mobile Navigation */}
-      {isMobile && showMobileNavigation && (
+      {/* Mobile Navigation - Hidden when voice modal is open */}
+      {isMobile && showMobileNavigation && !isVoiceModalOpen && (
         <MobileNavigation
           unreadCount={unreadCount}
           onHistoryClick={handleHistoryClick}
