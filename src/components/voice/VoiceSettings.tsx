@@ -10,6 +10,8 @@ interface VoiceSettingsProps {
 }
 
 export function VoiceSettings({ isOpen, onClose }: VoiceSettingsProps) {
+  console.log('🎛️ VoiceSettings render - isOpen:', isOpen);
+  
   // Use persisted settings from store
   const { selectedVoice, selectedPersona, selectedColorScheme, setVoice, setPersona, setColorScheme } = useVoiceSettingsStore();
   
@@ -71,7 +73,7 @@ export function VoiceSettings({ isOpen, onClose }: VoiceSettingsProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[10001] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-gray-900 rounded-2xl border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="p-6 border-b border-gray-700 flex items-center justify-between">

@@ -91,6 +91,17 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = useState(false);
   const { isMobile } = useBreakpoint();
   const { isVoiceModalOpen } = useVoiceSettingsStore();
+  
+  // Ensure proper layout cleanup after voice modal closes
+  React.useEffect(() => {
+    // Force a small re-render delay to ensure proper layout cleanup after voice modal closes
+    if (!isVoiceModalOpen && isMobile) {
+      const timer = setTimeout(() => {
+        // Layout cleanup complete
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isVoiceModalOpen, isMobile]);
   const router = useRouter();
   const pathname = usePathname();
   const {

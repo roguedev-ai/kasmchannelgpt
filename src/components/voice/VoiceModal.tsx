@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useMicVAD, utils } from '@ricky0123/vad-react';
 import RotateLoader from 'react-spinners/RotateLoader';
 import { X, StopCircle, Mic, MicOff, Settings } from 'lucide-react';
@@ -79,6 +79,14 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
   // Control global voice modal state for hiding mobile navigation
   useEffect(() => {
     setVoiceModalOpen(isOpen);
+    
+    // Extra cleanup when closing to ensure mobile navigation reappears
+    if (!isOpen) {
+      // Small delay to ensure the state change is processed
+      setTimeout(() => {
+        setVoiceModalOpen(false);
+      }, 100);
+    }
   }, [isOpen, setVoiceModalOpen]);
 
   // Set up speech manager when modal opens
@@ -234,6 +242,15 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       setDebugMessages([]);
       setIsAgentSpeaking(false);
       setVoiceConversation(null); // Clear voice conversation reference
+      setVoiceState('idle'); // Reset voice state to idle
+      
+      // Ensure VAD is stopped if it was running
+      if (vad.listening) {
+        vad.pause();
+      }
+      
+      // Ensure global state is properly reset
+      setVoiceModalOpen(false);
     }
   }, [isOpen, projectId, currentConversation, messages, selectedVoice, selectedPersona, selectedColorScheme]);
   
@@ -544,9 +561,48 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-[9999] overflow-hidden">
+        <>
+          {/* Settings and Close buttons - moved outside main container to avoid click issues */}
+          <div 
+            className="fixed top-4 sm:top-6 md:top-8 right-4 sm:right-6 md:right-8 flex items-center gap-2 sm:gap-3 z-[10000]"
+            style={{ pointerEvents: 'auto' }}
+          >
+            {/* Settings button */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔧 Settings button clicked, current state:', isSettingsOpen);
+                setIsSettingsOpen(true);
+                console.log('🔧 Settings state should now be true');
+              }}
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm flex items-center justify-center transition-all transform active:scale-95"
+              aria-label="Voice settings"
+            >
+              <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </button>
+            
+            {/* Close button */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('❌ Close button clicked');
+                onClose();
+              }}
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm flex items-center justify-center transition-all transform active:scale-95"
+              aria-label="Close voice mode"
+            >
+              <X className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </button>
+          </div>
+          
+          <div 
+            className="fixed inset-0 z-[9999] overflow-hidden"
+            style={{ pointerEvents: 'none' }}
+          >
           {/* Dynamic gradient background based on voice state */}
-          <div className={`absolute inset-0 transition-all duration-1000 ${
+          <div className={`absolute inset-0 transition-all duration-1000 pointer-events-none ${
             voiceState === 'idle' ? 'voice-gradient-idle' :
             voiceState === 'listening' ? 'voice-gradient-listening' :
             voiceState === 'recording' ? 'voice-gradient-recording' :
@@ -556,12 +612,12 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           
           {/* Wave overlay effect for processing and speaking states */}
           {(voiceState === 'processing' || voiceState === 'speaking') && (
-            <div className="absolute inset-0 voice-overlay-wave" />
+            <div className="absolute inset-0 voice-overlay-wave pointer-events-none" />
           )}
           
           {/* Pulse overlay for recording state */}
           {voiceState === 'recording' && (
-            <div className="absolute inset-0 bg-red-500/10 voice-overlay-pulse" />
+            <div className="absolute inset-0 bg-red-500/10 voice-overlay-pulse pointer-events-none" />
           )}
           {loading ? (
             <div className="flex items-center justify-center h-full relative z-10">
@@ -575,10 +631,12 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           ) : (
             <>
               {/* Canvas for particle animation */}
-              <Canvas draw={particleActions.draw} />
+              <div className="absolute inset-0 pointer-events-none z-0">
+                <Canvas draw={particleActions.draw} />
+              </div>
               
               {/* Top-left settings display */}
-              <div className="absolute top-4 sm:top-6 md:top-8 left-4 sm:left-6 md:left-8 z-10">
+              <div className="absolute top-4 sm:top-6 md:top-8 left-4 sm:left-6 md:left-8 z-20">
                 <div className="bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 text-white/70 text-xs space-y-1">
                   <div>Voice: {selectedVoice}</div>
                   <div>Persona: {selectedPersona}</div>
@@ -586,31 +644,11 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
                 </div>
               </div>
 
-              {/* Top-right controls - responsive */}
-              <div className="absolute top-4 sm:top-6 md:top-8 right-4 sm:right-6 md:right-8 flex items-center gap-2 sm:gap-3 z-10">
-                {/* Settings button */}
-                <button
-                  onClick={() => setIsSettingsOpen(true)}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm flex items-center justify-center transition-all transform active:scale-95 pointer-events-auto"
-                  aria-label="Voice settings"
-                >
-                  <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </button>
-                
-                {/* Close button */}
-                <button
-                  onClick={onClose}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm flex items-center justify-center transition-all transform active:scale-95 pointer-events-auto"
-                  aria-label="Close voice mode"
-                >
-                  <X className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </button>
-              </div>
               
               
 
               {/* Status display - responsive with animations */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center px-4 z-10">
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center px-4 z-10 pointer-events-none">
                 <div className="relative">
                   {/* Main status text with state-based colors - no blinking */}
                   <p className={`text-2xl sm:text-3xl md:text-4xl font-light mb-4 leading-tight transition-all duration-300 ${
@@ -679,7 +717,10 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
               </div>
 
               {/* Bottom control buttons - Mobile optimized */}
-              <div className="absolute bottom-6 sm:bottom-8 md:bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4 px-4 z-10">
+              <div 
+                className="absolute bottom-6 sm:bottom-8 md:bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4 px-4"
+                style={{ pointerEvents: 'auto', zIndex: 10000 }}
+              >
                 
                 {/* Main voice control button */}
                 <div className="flex items-center justify-center">
@@ -784,7 +825,8 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
 
             </>
           )}
-        </div>
+          </div>
+        </>
       )}
       
       {/* Voice Settings Modal */}
@@ -798,6 +840,13 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
 
 // Main component that conditionally renders the VAD component
 export function VoiceModal(props: VoiceModalProps) {
+  const { setVoiceModalOpen } = useVoiceSettingsStore();
+  
+  // Ensure global state is synchronized with props
+  React.useEffect(() => {
+    setVoiceModalOpen(props.isOpen);
+  }, [props.isOpen, setVoiceModalOpen]);
+  
   // Only render the content (and initialize VAD) when modal is open
   if (!props.isOpen) {
     return null;

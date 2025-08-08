@@ -216,41 +216,72 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
     }
   }, [isOpen, agents.length, fetchAgents]);
   
-  // Fetch settings for agents that don't have them
+  // Track agents that have had settings fetch attempted to prevent infinite loops
+  const settingsFetchAttempted = useRef(new Set<number>());
+  
+  // Fetch settings for agents that don't have them (ONE TIME ONLY)
   useEffect(() => {
     const fetchMissingSettings = async () => {
       if (!isOpen || agents.length === 0) return;
       
+      console.log('🔍 [AgentSelector] Checking for agents needing settings fetch');
+      
       const client = getClient();
-      const agentsWithoutSettings = agents.filter(agent => !agent.settings);
+      const agentsWithoutSettings = agents.filter(agent => 
+        !agent.settings && !settingsFetchAttempted.current.has(agent.id)
+      );
       
-      // Fetch settings for agents without them (limit to first 10 to avoid too many requests)
-      const agentsToFetch = agentsWithoutSettings.slice(0, 10);
+      if (agentsWithoutSettings.length === 0) {
+        console.log('✅ [AgentSelector] All agents have settings or fetch already attempted');
+        return;
+      }
       
-      for (const agent of agentsToFetch) {
+      // Limit to first 5 to avoid overwhelming the API
+      const agentsToFetch = agentsWithoutSettings.slice(0, 5);
+      console.log('📥 [AgentSelector] Fetching settings for agents:', agentsToFetch.map(a => a.id));
+      
+      // Mark these agents as attempted BEFORE fetching to prevent loops
+      agentsToFetch.forEach(agent => {
+        settingsFetchAttempted.current.add(agent.id);
+      });
+      
+      // Fetch settings in parallel for better performance
+      const settingsPromises = agentsToFetch.map(async (agent) => {
         try {
           const settingsResponse = await client.getAgentSettings(agent.id);
           if (settingsResponse && settingsResponse.data) {
-            // Update the agent in the store
-            const updatedAgent = { ...agent, settings: settingsResponse.data };
-            useAgentStore.setState(state => ({
-              agents: state.agents.map(a => 
-                a.id === agent.id ? updatedAgent : a
-              ),
-              // Also update current agent if it's the same
-              currentAgent: state.currentAgent?.id === agent.id 
-                ? updatedAgent 
-                : state.currentAgent
-            }));
+            return { agent, settings: settingsResponse.data };
           }
         } catch (error) {
           console.error(`Failed to fetch settings for agent ${agent.id}:`, error);
         }
+        return null;
+      });
+      
+      const settingsResults = await Promise.all(settingsPromises);
+      const validResults = settingsResults.filter(result => result !== null);
+      
+      if (validResults.length > 0) {
+        console.log('✅ [AgentSelector] Updating', validResults.length, 'agents with settings');
+        // Batch update all agents at once to minimize store updates
+        useAgentStore.setState(state => ({
+          agents: state.agents.map(a => {
+            const result = validResults.find(r => r!.agent.id === a.id);
+            return result ? { ...a, settings: result.settings } : a;
+          }),
+          // Also update current agent if it matches
+          currentAgent: state.currentAgent 
+            ? (() => {
+                const result = validResults.find(r => r!.agent.id === state.currentAgent!.id);
+                return result ? { ...state.currentAgent, settings: result.settings } : state.currentAgent;
+              })()
+            : state.currentAgent
+        }));
       }
     };
     
     fetchMissingSettings();
-  }, [isOpen, agents]);
+  }, [isOpen]); // FIXED: Remove agents from dependencies to prevent infinite loop
   
   // Focus search input when sheet opens
   useEffect(() => {

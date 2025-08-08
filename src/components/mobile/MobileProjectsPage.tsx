@@ -148,15 +148,20 @@ const MobileSettingsTab: React.FC<{
   tab: typeof settingsTabs[0];
   isActive: boolean;
   onClick: () => void;
-}> = ({ tab, isActive, onClick }) => {
+  disabled?: boolean;
+}> = ({ tab, isActive, onClick, disabled = false }) => {
   const Icon = tab.icon;
   
   return (
     <button
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       className={cn(
-        'w-full p-4 text-left border rounded-xl transition-all active:scale-[0.98]',
+        'w-full p-4 text-left border rounded-xl transition-all',
         'flex items-center gap-4',
+        disabled 
+          ? 'opacity-60 cursor-not-allowed' 
+          : 'active:scale-[0.98]',
         isActive 
           ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 shadow-sm' 
           : 'border-border hover:border-accent-foreground/20 bg-card'
@@ -166,10 +171,14 @@ const MobileSettingsTab: React.FC<{
         'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0',
         isActive ? 'bg-brand-100 dark:bg-brand-900/30' : 'bg-accent'
       )}>
-        <Icon className={cn(
-          'w-5 h-5', 
-          isActive ? 'text-brand-600 dark:text-brand-400' : 'text-muted-foreground'
-        )} />
+        {disabled ? (
+          <Spinner size="sm" />
+        ) : (
+          <Icon className={cn(
+            'w-5 h-5', 
+            isActive ? 'text-brand-600 dark:text-brand-400' : 'text-muted-foreground'
+          )} />
+        )}
       </div>
       
       <div className="flex-1 min-w-0">
@@ -205,15 +214,21 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [searchQuery, setSearchQuery] = useState('');
   const [recentlyLoaded, setRecentlyLoaded] = useState(false);
+  const [fromDirectNavigation, setFromDirectNavigation] = useState(false);
   
   // Get URL params
   const projectIdFromUrl = searchParams.get('id');
   const tabFromUrl = searchParams.get('tab') as SettingsTab;
   
-  // Initialize data
+  // Initialize data and detect direct navigation
   useEffect(() => {
+    // Detect if user came from direct navigation (settings button click)
+    if (projectIdFromUrl) {
+      console.log('🎯 [Mobile Projects] Direct navigation detected, bypassing interaction delays');
+      setFromDirectNavigation(true);
+    }
     fetchAgents();
-  }, []);
+  }, [projectIdFromUrl]);
   
   // Handle URL parameters
   useEffect(() => {
@@ -238,13 +253,17 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
   // Track recent loading to prevent unintended clicks on new elements
   useEffect(() => {
     if (agents.length > 0 && !loading && recentlyLoaded) {
-      // Reset recently loaded state after a brief delay
+      // Shorter delay for direct navigation, normal delay for organic loading
+      const delay = fromDirectNavigation ? 50 : 150; // Reduced from 500ms
+      console.log(`⏰ [Mobile Projects] Setting interaction delay: ${delay}ms (direct: ${fromDirectNavigation})`);
+      
       const timeout = setTimeout(() => {
+        console.log('✅ [Mobile Projects] Interaction protection lifted');
         setRecentlyLoaded(false);
-      }, 500);
+      }, delay);
       return () => clearTimeout(timeout);
     }
-  }, [loading, agents.length, recentlyLoaded]);
+  }, [loading, agents.length, recentlyLoaded, fromDirectNavigation]);
   
   // Filter projects
   const filteredProjects = agents.filter(project =>
@@ -264,6 +283,13 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
   };
   
   const goToSettings = (tab: SettingsTab) => {
+    // Allow tab navigation immediately when coming from direct navigation
+    if (!fromDirectNavigation && (loading || recentlyLoaded)) {
+      console.log('🔒 [Mobile Projects] Tab navigation blocked due to loading state');
+      return;
+    }
+    
+    console.log('🎯 [Mobile Projects] Navigating to settings tab:', tab);
     setActiveTab(tab);
     setCurrentScreen('settings');
   };
@@ -475,6 +501,7 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
                 tab={tab}
                 isActive={false}
                 onClick={() => goToSettings(tab.id)}
+                disabled={!fromDirectNavigation && (loading || recentlyLoaded)}
               />
             ))}
           </div>
