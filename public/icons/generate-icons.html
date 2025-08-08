@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Generate PWA Icons</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    canvas {
+      border: 1px solid #ddd;
+      margin: 10px;
+      background: white;
+    }
+    .icon-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .icon-item {
+      text-align: center;
+    }
+    .icon-item p {
+      margin: 5px 0;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>CustomGPT PWA Icons</h1>
+  <p>Right-click and save each icon with the specified filename in the /public/icons directory</p>
+  
+  <div class="icon-grid" id="icons"></div>
+
+  <script>
+    const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+    const container = document.getElementById('icons');
+
+    sizes.forEach(size => {
+      const div = document.createElement('div');
+      div.className = 'icon-item';
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      ctx.fillStyle = '#6366f1';
+      ctx.fillRect(0, 0, size, size);
+      
+      // Add rounded corners
+      ctx.globalCompositeOperation = 'destination-in';
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.roundRect(0, 0, size, size, size * 0.1);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      
+      // Draw "CG" text
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${size * 0.35}px -apple-system, system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('CG', size / 2, size / 2);
+      
+      const filename = `icon-${size}x${size}.png`;
+      const p = document.createElement('p');
+      p.textContent = filename;
+      
+      div.appendChild(canvas);
+      div.appendChild(p);
+      container.appendChild(div);
+      
+      // Convert to downloadable link
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.textContent = 'Download';
+        a.style.display = 'block';
+        a.style.marginTop = '5px';
+        div.appendChild(a);
+      });
+    });
+  </script>
+</body>
+</html>

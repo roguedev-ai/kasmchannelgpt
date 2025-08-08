@@ -1,4 +1,5 @@
 import { utils } from "@ricky0123/vad-react";
+import type { VoiceOption, PersonaOption } from '@/store/voice-settings';
 
 export interface VoiceCallbacks {
   onUserSpeaking?: () => void;
@@ -19,6 +20,7 @@ class SpeechManager {
   private callbacks: VoiceCallbacks = {};
   private projectId: string | null = null;
   private sessionId: string | null = null;
+  private voiceSettings: { voice: VoiceOption; persona: PersonaOption } | null = null;
 
   setCallbacks(callbacks: VoiceCallbacks) {
     this.callbacks = callbacks;
@@ -33,6 +35,11 @@ class SpeechManager {
   setSessionId(sessionId: string | null) {
     this.sessionId = sessionId;
     this.debug("Session ID set", { sessionId });
+  }
+
+  setVoiceSettings(voice: VoiceOption, persona: PersonaOption) {
+    this.voiceSettings = { voice, persona };
+    this.debug("Voice settings set", { voice, persona });
   }
 
   private debug(message: string, data?: any) {
@@ -81,6 +88,23 @@ class SpeechManager {
     this.debug("Audio stopped by user");
   };
 
+  // Public method to process manually recorded audio
+  public processManualAudio = async (audioBlob: Blob) => {
+    this.debug("Processing manual audio", { 
+      size: `${(audioBlob.size / 1024).toFixed(2)}KB`,
+      type: audioBlob.type
+    });
+    this.callbacks.onProcessing?.();
+    
+    try {
+      await this.validate(audioBlob);
+      await this.sendData(audioBlob);
+    } catch (error) {
+      this.error('Error processing manual audio', error);
+      this.callbacks.onReset?.();
+    }
+  };
+
   private processAudio = async (audio: Float32Array) => {
     this.debug("Processing audio started");
     this.callbacks.onProcessing?.();
@@ -121,6 +145,12 @@ class SpeechManager {
     formData.append("projectId", this.projectId);
     if (this.sessionId) {
       formData.append("sessionId", this.sessionId);
+    }
+    
+    // Add voice settings to the request
+    if (this.voiceSettings) {
+      formData.append("voice", this.voiceSettings.voice);
+      formData.append("persona", this.voiceSettings.persona);
     }
 
     this.debug("Sending request to voice API", {

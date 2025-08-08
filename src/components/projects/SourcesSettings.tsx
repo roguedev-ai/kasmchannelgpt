@@ -34,6 +34,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn, formatTimestamp, formatFileSize, handleApiError } from '@/lib/utils';
 import { getClient, isClientInitialized } from '@/lib/api/client';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 import type { Agent } from '@/types';
 import type { Source, SourcesListResponse } from '@/types/sources.types';
 import {
@@ -68,6 +69,7 @@ interface SourcesSettingsProps {
 }
 
 export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => {
+  const { isMobile } = useBreakpoint();
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -478,40 +480,66 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className={cn(
+      "max-w-6xl mx-auto",
+      isMobile ? "p-4 mobile-px" : "p-6"
+    )}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Data Sources</h2>
-          <p className="text-muted-foreground mt-1">
+      <div className={cn(
+        "mb-6",
+        isMobile ? "flex-col gap-4" : "flex items-center justify-between"
+      )}>
+        <div className={isMobile ? "w-full" : ""}>
+          <h2 className={cn(
+            "font-bold text-foreground",
+            isMobile ? "text-xl mobile-text-xl" : "text-2xl"
+          )}>Data Sources</h2>
+          <p className={cn(
+            "text-muted-foreground mt-1",
+            isMobile ? "text-sm mobile-text-sm" : ""
+          )}>
             Manage files, URLs, and data sources for {project.project_name}
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className={cn(
+          "flex gap-3",
+          isMobile ? "w-full grid grid-cols-2 gap-2 mt-4" : "items-center"
+        )}>
           <Button
             variant="outline"
             onClick={handleRefresh}
             disabled={loading}
             size="sm"
+            className={isMobile ? "h-9 px-3 text-sm" : ""}
           >
-            <RefreshCw className={cn('w-4 h-4 mr-2', refreshing && 'animate-spin')} />
+            <RefreshCw className={cn('w-4 h-4 mr-1.5', refreshing && 'animate-spin')} />
             Refresh
           </Button>
           
-          <div className="flex items-center gap-2">
-            <Button
-              variant="default"
-              onClick={() => setShowAddModal(true)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Source
-            </Button>
-            <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-              POST /projects/{project.id}/sources
-            </span>
-          </div>
+          <Button
+            variant="default"
+            onClick={() => setShowAddModal(true)}
+            size="sm"
+            className={isMobile ? "h-9 px-3 text-sm" : ""}
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            Add Source
+          </Button>
         </div>
+      </div>
+
+      {/* API Route Info */}
+      <div className={cn(
+        "mb-4",
+        isMobile ? "text-center" : "flex justify-end"
+      )}>
+        <span className={cn(
+          "text-muted-foreground font-mono bg-accent px-2 py-1 rounded",
+          isMobile ? "text-xs" : "text-xs"
+        )}>
+          POST /projects/{project.id}/sources
+        </span>
       </div>
 
       {/* Error State */}
@@ -564,11 +592,14 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4 relative">
-          <span className="absolute top-2 right-2 text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-            GET /projects/{project.id}/sources
-          </span>
+      <div className={cn(
+        "grid gap-4 mb-6",
+        isMobile ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-4"
+      )}>
+        <Card className={cn(
+          "p-4",
+          isMobile ? "mobile-px mobile-py" : ""
+        )}>
           <div className="flex items-center">
             <Database className="w-8 h-8 text-blue-600" />
             <div className="ml-4">
@@ -578,7 +609,10 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
           </div>
         </Card>
         
-        <Card className="p-4">
+        <Card className={cn(
+          "p-4",
+          isMobile ? "mobile-px mobile-py" : ""
+        )}>
           <div className="flex items-center">
             <Globe className="w-8 h-8 text-green-600" />
             <div className="ml-4">
@@ -590,7 +624,10 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
           </div>
         </Card>
         
-        <Card className="p-4">
+        <Card className={cn(
+          "p-4",
+          isMobile ? "mobile-px mobile-py" : ""
+        )}>
           <div className="flex items-center">
             <FileText className="w-8 h-8 text-blue-600" />
             <div className="ml-4">
@@ -602,7 +639,10 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
           </div>
         </Card>
         
-        <Card className="p-4">
+        <Card className={cn(
+          "p-4",
+          isMobile ? "mobile-px mobile-py" : ""
+        )}>
           <div className="flex items-center">
             <File className="w-8 h-8 text-purple-600" />
             <div className="ml-4">
@@ -649,11 +689,6 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
       {/* Sources Grid */}
       {filteredSources.length > 0 && (
         <div className="space-y-4">
-          <div className="flex justify-end mb-4">
-            <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-              GET /projects/{project.id}/sources
-            </span>
-          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredSources.map((source) => {
             const statusCounts = getStatusCounts(source);

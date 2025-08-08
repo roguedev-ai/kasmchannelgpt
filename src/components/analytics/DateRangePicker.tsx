@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface DateRangePickerProps {
   startDate: string;
@@ -25,6 +27,25 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [localStartDate, setLocalStartDate] = useState(startDate);
   const [localEndDate, setLocalEndDate] = useState(endDate);
+  const { isMobile } = useBreakpoint();
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Close on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handlePresetClick = (days: number) => {
     const end = new Date();
@@ -52,81 +73,153 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <Button
         variant="outline"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-64"
+        className={cn(
+          isMobile ? "w-full" : "w-64"
+        )}
       >
-        <Calendar className="w-4 h-4 mr-2" />
-        {formatDateRange()}
+        <Calendar className={cn(
+          "mr-2",
+          isMobile ? "w-4 h-4" : "w-4 h-4"
+        )} />
+        <span className={cn(
+          isMobile && "text-sm"
+        )}>
+          {formatDateRange()}
+        </span>
       </Button>
 
-      {isOpen && (
-        <div className="absolute top-full mt-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 w-80">
-          <div className="space-y-4">
-            {/* Preset Ranges */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-700">Quick Select</h4>
-              <div className="flex gap-2">
-                {presetRanges.map((range) => (
-                  <Button
-                    key={range.label}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePresetClick(range.days)}
-                  >
-                    {range.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Custom Range */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-700">Custom Range</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs text-gray-500">Start Date</label>
-                  <input
-                    type="date"
-                    value={localStartDate}
-                    onChange={(e) => setLocalStartDate(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500">End Date</label>
-                  <input
-                    type="date"
-                    value={localEndDate}
-                    onChange={(e) => setLocalEndDate(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button
-                variant="ghost"
-                size="sm"
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Mobile backdrop */}
+            {isMobile && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/30 z-40"
                 onClick={() => setIsOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleApply}
-              >
-                Apply
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+              />
+            )}
+            
+            {/* Picker */}
+            <motion.div
+              initial={{ opacity: 0, scale: isMobile ? 1 : 0.95, y: isMobile ? '100%' : 0 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: isMobile ? 1 : 0.95, y: isMobile ? '100%' : 0 }}
+              className={cn(
+                "bg-white border border-gray-200 rounded-lg shadow-lg z-50",
+                isMobile 
+                  ? "fixed bottom-0 left-0 right-0 rounded-t-xl rounded-b-none" 
+                  : "absolute top-full mt-2 right-0 w-80",
+                isMobile ? "p-4 pb-6 safe-area-pb" : "p-4"
+              )}
+            >
+              <div className="space-y-4">
+                {/* Preset Ranges */}
+                <div className="space-y-2">
+                  <h4 className={cn(
+                    "font-medium text-gray-700",
+                    isMobile ? "text-base" : "text-sm"
+                  )}>Quick Select</h4>
+                  <div className={cn(
+                    "flex gap-2",
+                    isMobile && "flex-col"
+                  )}>
+                    {presetRanges.map((range) => (
+                      <Button
+                        key={range.label}
+                        variant="outline"
+                        size={isMobile ? "default" : "sm"}
+                        onClick={() => handlePresetClick(range.days)}
+                        className={cn(
+                          isMobile && "h-11 touch-target"
+                        )}
+                      >
+                        {range.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom Range */}
+                <div className="space-y-2">
+                  <h4 className={cn(
+                    "font-medium text-gray-700",
+                    isMobile ? "text-base" : "text-sm"
+                  )}>Custom Range</h4>
+                  <div className={cn(
+                    "grid gap-2",
+                    isMobile ? "grid-cols-1" : "grid-cols-2"
+                  )}>
+                    <div>
+                      <label className={cn(
+                        "text-gray-500",
+                        isMobile ? "text-sm" : "text-xs"
+                      )}>Start Date</label>
+                      <input
+                        type="date"
+                        value={localStartDate}
+                        onChange={(e) => setLocalStartDate(e.target.value)}
+                        className={cn(
+                          "w-full border border-gray-200 rounded-lg",
+                          isMobile ? "px-3 py-3 text-base touch-target" : "px-3 py-2 text-sm"
+                        )}
+                      />
+                    </div>
+                    <div>
+                      <label className={cn(
+                        "text-gray-500",
+                        isMobile ? "text-sm" : "text-xs"
+                      )}>End Date</label>
+                      <input
+                        type="date"
+                        value={localEndDate}
+                        onChange={(e) => setLocalEndDate(e.target.value)}
+                        className={cn(
+                          "w-full border border-gray-200 rounded-lg",
+                          isMobile ? "px-3 py-3 text-base touch-target" : "px-3 py-2 text-sm"
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className={cn(
+                  "flex gap-2 pt-2 border-t",
+                  isMobile ? "flex-col-reverse" : "justify-end"
+                )}>
+                  <Button
+                    variant="ghost"
+                    size={isMobile ? "default" : "sm"}
+                    onClick={() => setIsOpen(false)}
+                    className={cn(
+                      isMobile && "w-full h-11 touch-target"
+                    )}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="default"
+                    size={isMobile ? "default" : "sm"}
+                    onClick={handleApply}
+                    className={cn(
+                      isMobile && "w-full h-11 touch-target"
+                    )}
+                  >
+                    Apply
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -71,6 +71,9 @@ export const useConversationStore = create<ConversationStore>()(
         order?: 'asc' | 'desc';
         orderBy?: string;
         userFilter?: 'all' | string;
+        searchQuery?: string;
+        searchMode?: 'name' | 'id' | 'session';
+        dateFilter?: 'today' | 'week' | 'month';
       }) => {
         logger.info('CONVERSATIONS', 'Fetching conversations', { projectId, params });
         set({ loading: true, error: null });
@@ -84,6 +87,9 @@ export const useConversationStore = create<ConversationStore>()(
             order: params?.order ?? get().sortOrder,
             orderBy: params?.orderBy ?? get().sortBy,
             userFilter: params?.userFilter ?? get().userFilter,
+            searchQuery: params?.searchQuery,
+            searchMode: params?.searchMode,
+            dateFilter: params?.dateFilter,
           };
           
           const response = await client.getConversations(projectId, queryParams);

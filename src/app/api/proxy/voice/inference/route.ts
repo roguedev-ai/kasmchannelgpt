@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { Readable } from 'stream';
 import { proxyRequest } from '@/lib/api/proxy-handler';
+import { getPersonaSystemPrompt, type VoiceOption, type PersonaOption } from '@/store/voice-settings';
 
 const VOICE_LANGUAGE = process.env.VOICE_LANGUAGE || 'en';
 
@@ -24,6 +25,8 @@ export async function POST(request: NextRequest) {
     const audioFile = formData.get('audio') as File;
     const projectId = formData.get('projectId') as string;
     const sessionId = formData.get('sessionId') as string | null;
+    const voice = (formData.get('voice') as VoiceOption) || 'alloy';
+    const persona = (formData.get('persona') as PersonaOption) || 'assistant';
     const conversationHeader = request.headers.get('conversation') || '';
     
     console.log('📦 [VOICE-API] Request data:', {
@@ -33,6 +36,8 @@ export async function POST(request: NextRequest) {
       audioName: audioFile?.name || 'unknown',
       projectId,
       sessionId,
+      voice,
+      persona,
       hasConversation: !!conversationHeader
     });
     
@@ -68,12 +73,12 @@ export async function POST(request: NextRequest) {
     
     console.log('💬 [VOICE-API] Conversation history length:', conversation.length);
     
-    const { response: aiResponse, sessionId: newSessionId } = await getCustomGPTCompletion(transcription, conversation, projectId, sessionId, request);
+    const { response: aiResponse, sessionId: newSessionId } = await getCustomGPTCompletion(transcription, conversation, projectId, sessionId, persona, request);
     console.log('✅ [VOICE-API] AI response received:', aiResponse, 'session:', newSessionId);
 
     // Step 3: Convert response to speech
-    console.log('🎯 [VOICE-API] Step 3: Converting to speech...');
-    const audioBuffer = await textToSpeech(aiResponse, openai);
+    console.log('🎯 [VOICE-API] Step 3: Converting to speech with voice:', voice);
+    const audioBuffer = await textToSpeech(aiResponse, voice, openai);
     console.log('✅ [VOICE-API] Speech synthesis complete, size:', `${(audioBuffer.length / 1024).toFixed(2)}KB`);
 
     // Construct response header with conversation (keep existing format for compatibility)
@@ -176,16 +181,16 @@ async function transcribeAudio(audioFile: File, openai: OpenAI): Promise<string>
   }
 }
 
-async function getCustomGPTCompletion(userPrompt: string, conversation: any[], projectId: string, sessionId: string | null, voiceRequest: NextRequest): Promise<{ response: string; sessionId?: string }> {
-  console.log('🎯 [VOICE-API] Using CustomGPT proxy API', { sessionId });
+async function getCustomGPTCompletion(userPrompt: string, conversation: any[], projectId: string, sessionId: string | null, persona: PersonaOption, voiceRequest: NextRequest): Promise<{ response: string; sessionId?: string }> {
+  console.log('🎯 [VOICE-API] Using CustomGPT proxy API', { projectId, sessionId });
   
   try {
     // Build conversation history in CustomGPT format
-    // Start with a system message for voice context
+    // Start with a system message based on selected persona
     const messages = [
       {
         role: 'system',
-        content: 'You are a helpful assistant with a voice interface. Keep your responses very succinct and limited to 1-2 sentences since the user is interacting through voice.'
+        content: getPersonaSystemPrompt(persona)
       }
     ];
     
@@ -208,12 +213,14 @@ async function getCustomGPTCompletion(userPrompt: string, conversation: any[], p
       is_inline_citation: false
     };
     
-    // Only add session_id if it exists
-    if (sessionId) {
-      requestBody.session_id = sessionId;
-    }
+    // Note: session_id is not yet supported by CustomGPT API (501 error)
+    // Commenting out until API supports it
+    // if (sessionId) {
+    //   requestBody.session_id = sessionId;
+    // }
     
     console.log('📝 [VOICE-API] Request body:', {
+      projectId,
       messageCount: messages.length,
       hasSessionId: !!sessionId,
       sessionId: sessionId
@@ -240,8 +247,16 @@ async function getCustomGPTCompletion(userPrompt: string, conversation: any[], p
       console.error('❌ [VOICE-API] CustomGPT proxy error:', {
         status: proxyResponse.status,
         statusText: proxyResponse.statusText,
-        body: errorText
+        body: errorText,
+        projectId: projectId
       });
+      
+      // Check if it's a 403 (agent not active) or other known errors
+      if (proxyResponse.status === 403) {
+        console.error('🚫 [VOICE-API] Agent is inactive or not configured. Falling back to OpenAI.');
+        throw new Error('Agent is inactive - no documents uploaded');
+      }
+      
       throw new Error(`CustomGPT API error (${proxyResponse.status}): ${errorText}`);
     }
     
@@ -256,13 +271,14 @@ async function getCustomGPTCompletion(userPrompt: string, conversation: any[], p
     });
     
     // Extract session_id for future requests
+    // Note: Currently disabled due to API not supporting session_id parameter
     let newSessionId = undefined;
-    if (data.session_id) {
-      newSessionId = data.session_id;
-      console.log('📝 [VOICE-API] Got new session ID from response:', newSessionId);
-    } else if (!sessionId) {
-      console.log('⚠️ [VOICE-API] No session ID in response and none provided - this might cause issues');
-    }
+    // if (data.session_id) {
+    //   newSessionId = data.session_id;
+    //   console.log('📝 [VOICE-API] Got new session ID from response:', newSessionId);
+    // } else if (!sessionId) {
+    //   console.log('⚠️ [VOICE-API] No session ID in response and none provided - this might cause issues');
+    // }
     
     // Handle the response format from CustomGPT
     let responseContent = '';
@@ -279,58 +295,35 @@ async function getCustomGPTCompletion(userPrompt: string, conversation: any[], p
       responseContent = 'I couldn\'t understand the response format.';
     }
     
+    // Log if we're getting a GPT-3 response instead of CustomGPT knowledge
+    if (responseContent.includes("I'm powered by OpenAI") || responseContent.includes("GPT-3")) {
+      console.warn('⚠️ [VOICE-API] Response indicates OpenAI fallback despite successful CustomGPT call');
+    }
+    
     return { response: responseContent, sessionId: newSessionId };
   } catch (error) {
-    console.error('❌ [VOICE-API] CustomGPT proxy error:', error);
+    console.error('❌ [VOICE-API] CustomGPT proxy error details:', error);
+    console.error('📊 [VOICE-API] Error context:', { projectId, sessionId, errorMessage: error instanceof Error ? error.message : 'Unknown error' });
     
-    // Fallback to OpenAI if CustomGPT fails
-    const openai = getOpenAIClient();
-    const openaiResponse = await getOpenAICompletion(userPrompt, conversation, openai);
-    return { response: openaiResponse, sessionId: sessionId || undefined };
+    // Return error instead of falling back to OpenAI
+    throw new Error(`CustomGPT API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
-async function getOpenAICompletion(userPrompt: string, conversation: any[], openai: OpenAI | null): Promise<string> {
-  if (!openai) {
-    // If no OpenAI client, return a simple message
-    return 'Voice chat requires OpenAI API key configuration.';
-  }
-  
-  try {
-    const messages = [
-      {
-        role: 'system',
-        content: 'You are a helpful assistant with a voice interface. Keep your responses very succinct and limited to a single sentence since the user is interacting with you through a voice interface.'
-      },
-      ...conversation,
-      { role: 'user', content: userPrompt }
-    ];
+// OpenAI fallback function removed - only using CustomGPT now
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: messages as any,
-      max_tokens: 100,
-    });
-
-    return completion.choices[0].message.content || 'I couldn\'t generate a response.';
-  } catch (error) {
-    console.error('OpenAI completion error:', error);
-    throw new Error('Failed to get AI completion');
-  }
-}
-
-async function textToSpeech(text: string, openai: OpenAI): Promise<Buffer> {
+async function textToSpeech(text: string, voice: VoiceOption, openai: OpenAI): Promise<Buffer> {
   // Always use OpenAI TTS for now
-  return await openaiTextToSpeech(text, openai);
+  return await openaiTextToSpeech(text, voice, openai);
 }
 
-async function openaiTextToSpeech(text: string, openai: OpenAI): Promise<Buffer> {
+async function openaiTextToSpeech(text: string, voice: VoiceOption, openai: OpenAI): Promise<Buffer> {
   try {
-    console.log('🔊 [VOICE-API] Starting text-to-speech conversion...');
+    console.log('🔊 [VOICE-API] Starting text-to-speech conversion with voice:', voice);
     
     const mp3 = await openai.audio.speech.create({
       model: 'tts-1',
-      voice: 'alloy',
+      voice: voice,
       input: text,
     });
 

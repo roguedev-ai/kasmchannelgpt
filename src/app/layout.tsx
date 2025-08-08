@@ -27,6 +27,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from 'sonner';
+import { PWAManager } from '@/components/pwa/PWAManager';
 import "./globals.css";
 
 /**
@@ -76,7 +77,31 @@ export const metadata: Metadata = {
   description: "A modern chat interface for CustomGPT.ai's RAG platform",
   icons: {
     icon: "/favicon.ico",
+    apple: "/icons/icon-192x192.png",
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "CustomGPT",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+    "apple-mobile-web-app-title": "CustomGPT",
+    "application-name": "CustomGPT",
+    "msapplication-TileColor": "#6366f1",
+    "msapplication-tap-highlight": "no",
+    "theme-color": "#6366f1",
+  },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 /**
@@ -104,15 +129,43 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Prevent flash of incorrect theme on page load
+              (function() {
+                try {
+                  const stored = localStorage.getItem('customgpt-config');
+                  const config = stored ? JSON.parse(stored) : null;
+                  const theme = config?.theme || 'light';
+                  document.documentElement.className = theme;
+                } catch (e) {
+                  // Default to light theme if there's an error
+                  document.documentElement.className = 'light';
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {/* Add global providers here */}
         {children}
+        {/* PWA Manager for install prompts and updates */}
+        <PWAManager />
         {/* Global toast notifications with close button */}
         <Toaster 
           position="top-center" 
           closeButton
           richColors
           theme="light"
+          gap={8}
+          toastOptions={{
+            style: {
+              marginTop: '8px'
+            }
+          }}
         />
       </body>
     </html>

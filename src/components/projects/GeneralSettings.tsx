@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 import type { Agent } from '@/types';
 
 interface GeneralSettingsProps {
@@ -47,6 +48,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
   const [isDeleting, setIsDeleting] = useState(false);
 
   const router = useRouter();
+  const { isMobile } = useBreakpoint();
 
   useEffect(() => {
     // Clear any previous errors when project changes
@@ -129,24 +131,40 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
 
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className={cn(
+      "max-w-4xl mx-auto",
+      isMobile ? "p-4 mobile-px" : "p-6"
+    )}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">General Settings</h2>
-          <p className="text-muted-foreground mt-1">
+      <div className={cn(
+        "mb-6",
+        isMobile ? "flex-col gap-4" : "flex items-center justify-between"
+      )}>
+        <div className={isMobile ? "w-full" : ""}>
+          <h2 className={cn(
+            "font-bold text-foreground",
+            isMobile ? "text-xl mobile-text-xl" : "text-2xl"
+          )}>General Settings</h2>
+          <p className={cn(
+            "text-muted-foreground mt-1",
+            isMobile ? "text-sm mobile-text-sm" : ""
+          )}>
             Configure basic project information and behavior
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className={cn(
+          "flex gap-3",
+          isMobile ? "w-full grid grid-cols-2 gap-2 mt-4" : "items-center"
+        )}>
           <Button
             variant="outline"
             onClick={handleRefresh}
             disabled={settingsLoading}
             size="sm"
+            className={isMobile ? "h-9 px-3 text-sm" : ""}
           >
-            <RefreshCw className={cn('w-4 h-4 mr-2', settingsLoading && 'animate-spin')} />
+            <RefreshCw className={cn('w-4 h-4 mr-1.5', settingsLoading && 'animate-spin')} />
             Refresh
           </Button>
           
@@ -154,8 +172,9 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
             onClick={handleSave}
             disabled={!isModified || settingsLoading}
             size="sm"
+            className={isMobile ? "h-9 px-3 text-sm" : ""}
           >
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-4 h-4 mr-1.5" />
             {settingsLoading ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
@@ -174,9 +193,15 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
 
       {/* Loading State */}
       {settingsLoading && !settings ? (
-        <div className="space-y-6">
+        <div className={cn(
+          "space-y-6",
+          isMobile && "space-y-4"
+        )}>
           {[...Array(3)].map((_, i) => (
-            <Card key={i} className="p-6 animate-pulse">
+            <Card key={i} className={cn(
+              "p-6 animate-pulse",
+              isMobile && "p-4 mobile-px mobile-py"
+            )}>
               <div className="h-4 bg-muted rounded w-1/4 mb-4" />
               <div className="h-10 bg-muted rounded mb-2" />
               <div className="h-3 bg-muted rounded w-3/4" />
@@ -184,17 +209,34 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
           ))}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className={cn(
+          "space-y-6",
+          isMobile && "space-y-4"
+        )}>
           {/* Project Info */}
-          <Card className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Project Information</h3>
-              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-                POST /projects/{project.id}
-              </span>
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <div className={cn(
+              "flex items-start justify-between mb-4",
+              isMobile && "flex-col gap-2"
+            )}>
+              <h3 className={cn(
+                "font-semibold text-foreground",
+                isMobile ? "text-base mobile-text-lg" : "text-lg"
+              )}>Project Information</h3>
+              {!isMobile && (
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                  POST /projects/{project.id}
+                </span>
+              )}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={cn(
+              "grid gap-6",
+              isMobile ? "grid-cols-1 gap-4" : "grid-cols-1 md:grid-cols-2"
+            )}>
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Project Name
@@ -205,7 +247,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
                   onChange={(e) => handleInputChange('project_name', e.target.value)}
                   placeholder="Enter project name"
                   maxLength={100}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
+                  className={cn(
+                    "w-full border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground",
+                    isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                  )}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   A descriptive name for your project ({formData.project_name.length}/100)
@@ -220,19 +265,33 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
                   type="text"
                   value={project.id}
                   disabled
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-accent text-muted-foreground cursor-not-allowed"
+                  className={cn(
+                    "w-full border border-border rounded-lg bg-accent text-muted-foreground cursor-not-allowed",
+                    isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                  )}
                 />
               </div>
             </div>
           </Card>
 
           {/* Default Prompt */}
-          <Card className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Default Prompt</h3>
-              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-                POST /projects/{project.id}/settings
-              </span>
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <div className={cn(
+              "flex items-start justify-between mb-4",
+              isMobile && "flex-col gap-2"
+            )}>
+              <h3 className={cn(
+                "font-semibold text-foreground",
+                isMobile ? "text-base mobile-text-lg" : "text-lg"
+              )}>Default Prompt</h3>
+              {!isMobile && (
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                  POST /projects/{project.id}/settings
+                </span>
+              )}
             </div>
             
             <div>
@@ -243,9 +302,12 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
                 value={formData.default_prompt}
                 onChange={(e) => handleInputChange('default_prompt', e.target.value)}
                 placeholder="How can I help you?"
-                rows={3}
+                rows={isMobile ? 4 : 3}
                 maxLength={255}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none bg-background text-foreground"
+                className={cn(
+                  "w-full border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none bg-background text-foreground",
+                  isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                )}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 This message is shown to users when they start a conversation ({formData.default_prompt.length}/255)
@@ -254,12 +316,23 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
           </Card>
 
           {/* Example Questions */}
-          <Card className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Example Questions</h3>
-              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-                GET /projects/{project.id}/settings
-              </span>
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <div className={cn(
+              "flex items-start justify-between mb-4",
+              isMobile && "flex-col gap-2"
+            )}>
+              <h3 className={cn(
+                "font-semibold text-foreground",
+                isMobile ? "text-base mobile-text-lg" : "text-lg"
+              )}>Example Questions</h3>
+              {!isMobile && (
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                  GET /projects/{project.id}/settings
+                </span>
+              )}
             </div>
             <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
               <p className="text-sm text-amber-600 dark:text-amber-400">
@@ -282,7 +355,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
                       readOnly
                       disabled
                       placeholder="No example question set"
-                      className="flex-1 px-3 py-2 border border-border rounded-lg bg-accent text-muted-foreground cursor-not-allowed"
+                      className={cn(
+                        "flex-1 border border-border rounded-lg bg-accent text-muted-foreground cursor-not-allowed",
+                        isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                      )}
                     />
                   </div>
                 ))
@@ -291,12 +367,23 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
           </Card>
 
           {/* Danger Zone */}
-          <Card className="p-6 border-red-500/20 bg-red-500/5">
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Danger Zone</h3>
-              <span className="text-xs text-red-600 dark:text-red-400 font-mono bg-red-500/10 px-2 py-1 rounded">
-                DELETE /projects/{project.id}
-              </span>
+          <Card className={cn(
+            "border-red-500/20 bg-red-500/5",
+            isMobile ? "p-4 mobile-px mobile-py" : "p-6"
+          )}>
+            <div className={cn(
+              "flex items-start justify-between mb-4",
+              isMobile && "flex-col gap-2"
+            )}>
+              <h3 className={cn(
+                "font-semibold text-red-600 dark:text-red-400",
+                isMobile ? "text-base mobile-text-lg" : "text-lg"
+              )}>Danger Zone</h3>
+              {!isMobile && (
+                <span className="text-xs text-red-600 dark:text-red-400 font-mono bg-red-500/10 px-2 py-1 rounded">
+                  DELETE /projects/{project.id}
+                </span>
+              )}
             </div>
             
             <div className="space-y-4">
@@ -311,6 +398,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
                   onClick={() => setShowDeleteDialog(true)}
                   disabled={isDeleting}
                   size="sm"
+                  className={isMobile ? "w-full h-9 px-3 text-sm" : ""}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete Project
@@ -320,11 +408,15 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
           </Card>
 
           {/* Save Button at Bottom */}
-          <div className="flex justify-end mt-6">
+          <div className={cn(
+            "flex mt-6",
+            isMobile ? "justify-center" : "justify-end"
+          )}>
             <Button
               onClick={handleSave}
               disabled={!isModified || settingsLoading}
               size="sm"
+              className={isMobile ? "h-9 px-6 text-sm" : ""}
             >
               <Save className="w-4 h-4 mr-2" />
               {settingsLoading ? 'Saving...' : 'Save Changes'}

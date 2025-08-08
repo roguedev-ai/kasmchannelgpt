@@ -76,6 +76,8 @@ import { Card } from '@/components/ui/card';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { PageLoading, ScreenLoading } from '@/components/ui/loading';
 import { AgentAvatar } from '@/components/ui/avatar';
+import { MobileProjectsPage } from '@/components/mobile/MobileProjectsPage';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 import { cn, formatTimestamp } from '@/lib/utils';
 import type { Agent } from '@/types';
 
@@ -136,7 +138,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, isSelected, onClick 
       className={cn(
         'w-full p-4 text-left border rounded-lg transition-all hover:shadow-sm',
         isSelected 
-          ? 'border-brand-500 bg-brand-50 shadow-sm' 
+          ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 shadow-sm' 
           : 'border-border hover:border-border/80'
       )}
     >
@@ -209,18 +211,18 @@ const SettingsTabButton: React.FC<SettingsTabProps> = ({ tab, isActive, onClick 
       data-tab={tab.id}
       className={cn(
         'w-full p-3 text-left border-b border-border transition-colors hover:bg-accent',
-        isActive && 'bg-brand-50 border-r-2 border-r-brand-500'
+        isActive && 'bg-brand-50 dark:bg-brand-900/20 border-r-2 border-r-brand-500 dark:border-r-brand-400'
       )}
     >
       <div className="flex items-center gap-3">
         <Icon className={cn(
           'w-4 h-4', 
-          isActive ? 'text-brand-600' : 'text-muted-foreground'
+          isActive ? 'text-brand-600 dark:text-brand-400' : 'text-muted-foreground'
         )} />
         <div>
           <h4 className={cn(
             'text-sm font-medium',
-            isActive ? 'text-brand-900' : 'text-foreground'
+            isActive ? 'text-brand-900 dark:text-brand-100' : 'text-foreground'
           )}>
             {tab.label}
           </h4>
@@ -240,6 +242,9 @@ const SettingsTabButton: React.FC<SettingsTabProps> = ({ tab, isActive, onClick 
  * This is separated to be wrapped in Suspense.
  */
 function ProjectsPageContent() {
+  // Hooks
+  const { isMobile } = useBreakpoint();
+  
   // Store hooks and local state
   const { agents, loading, fetchAgents, loadMoreAgents, paginationMeta } = useAgentStore();
   const [selectedProject, setSelectedProject] = useState<Agent | null>(null);
@@ -416,6 +421,18 @@ function ProjectsPageContent() {
         return null;
     }
   };
+
+  // Render mobile version on mobile devices
+  if (isMobile) {
+    console.log('🔍 [Projects Page] Rendering mobile version');
+    return (
+      <PageLayout showMobileNavigation={true}>
+        <MobileProjectsPage />
+      </PageLayout>
+    );
+  }
+  
+  console.log('🔍 [Projects Page] Rendering desktop version');
 
   return (
     <PageLayout>

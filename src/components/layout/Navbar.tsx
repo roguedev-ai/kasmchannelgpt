@@ -135,7 +135,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
                     className={cn(
                       'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                       active
-                        ? 'bg-brand-50 text-brand-600 border border-brand-200'
+                        ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800'
                         : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                     )}
                   >
@@ -161,7 +161,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
                       className={cn(
                         'p-2 rounded-lg transition-colors',
                         active
-                          ? 'bg-brand-50 text-brand-600'
+                          ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400'
                           : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                       )}
                       title={item.label}

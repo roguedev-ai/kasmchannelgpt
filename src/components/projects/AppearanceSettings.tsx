@@ -8,6 +8,7 @@ import { useProjectSettingsStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 import type { Agent } from '@/types';
 
 interface AppearanceSettingsProps {
@@ -23,6 +24,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
     updateSettings 
   } = useProjectSettingsStore();
 
+  const { isMobile } = useBreakpoint();
   const [formData, setFormData] = useState({
     chatbot_avatar: '',
     chatbot_background_type: 'image' as 'image' | 'color',
@@ -125,24 +127,40 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className={cn(
+      "max-w-4xl mx-auto",
+      isMobile ? "p-4 mobile-px" : "p-6"
+    )}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Appearance Settings</h2>
-          <p className="text-muted-foreground mt-1">
+      <div className={cn(
+        "mb-6",
+        isMobile ? "flex-col gap-4" : "flex items-center justify-between"
+      )}>
+        <div className={isMobile ? "w-full" : ""}>
+          <h2 className={cn(
+            "font-bold text-foreground",
+            isMobile ? "text-xl mobile-text-xl" : "text-2xl"
+          )}>Appearance Settings</h2>
+          <p className={cn(
+            "text-muted-foreground mt-1",
+            isMobile ? "text-sm mobile-text-sm" : ""
+          )}>
             Customize the visual appearance of your chatbot
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className={cn(
+          "flex gap-3",
+          isMobile ? "w-full grid grid-cols-2 gap-2 mt-4" : "items-center"
+        )}>
           <Button
             variant="outline"
             onClick={handleRefresh}
             disabled={settingsLoading}
             size="sm"
+            className={isMobile ? "h-9 px-3 text-sm" : ""}
           >
-            <RefreshCw className={cn('w-4 h-4 mr-2', settingsLoading && 'animate-spin')} />
+            <RefreshCw className={cn('w-4 h-4 mr-1.5', settingsLoading && 'animate-spin')} />
             Refresh
           </Button>
           
@@ -150,8 +168,9 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
             onClick={handleSave}
             disabled={!isModified || settingsLoading}
             size="sm"
+            className={isMobile ? "h-9 px-3 text-sm" : ""}
           >
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-4 h-4 mr-1.5" />
             {settingsLoading ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
@@ -170,9 +189,15 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
 
       {/* Loading State */}
       {settingsLoading && !settings ? (
-        <div className="space-y-6">
+        <div className={cn(
+          "space-y-6",
+          isMobile && "space-y-4"
+        )}>
           {[...Array(3)].map((_, i) => (
-            <Card key={i} className="p-6 animate-pulse">
+            <Card key={i} className={cn(
+              "p-6 animate-pulse",
+              isMobile && "p-4 mobile-px mobile-py"
+            )}>
               <div className="h-4 bg-muted rounded w-1/4 mb-4" />
               <div className="h-24 bg-muted rounded mb-2" />
               <div className="h-3 bg-muted rounded w-3/4" />
@@ -180,17 +205,34 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
           ))}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className={cn(
+          "space-y-6",
+          isMobile && "space-y-4"
+        )}>
           {/* Avatar Settings */}
-          <Card className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Chatbot Avatar</h3>
-              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-                POST /projects/{project.id}/settings
-              </span>
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <div className={cn(
+              "flex items-start justify-between mb-4",
+              isMobile && "flex-col gap-2"
+            )}>
+              <h3 className={cn(
+                "font-semibold text-foreground",
+                isMobile ? "text-base mobile-text-lg" : "text-lg"
+              )}>Chatbot Avatar</h3>
+              {!isMobile && (
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                  POST /projects/{project.id}/settings
+                </span>
+              )}
             </div>
             
-            <div className="flex items-start gap-6">
+            <div className={cn(
+              "flex items-start gap-6",
+              isMobile && "flex-col gap-4"
+            )}>
               <div className="flex-1">
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Current Avatar
@@ -219,7 +261,10 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                     id="avatar-upload"
                   />
                   <label htmlFor="avatar-upload" className="cursor-pointer">
-                    <div className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                    <div className={cn(
+                      "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2",
+                      isMobile ? "h-12 w-full mobile-btn touch-target" : "h-10"
+                    )}>
                       <Upload className="w-4 h-4 mr-2" />
                       Upload New Avatar
                     </div>
@@ -247,12 +292,23 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
           </Card>
 
           {/* Background Settings */}
-          <Card className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Chat Background</h3>
-              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-                POST /projects/{project.id}/settings
-              </span>
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <div className={cn(
+              "flex items-start justify-between mb-4",
+              isMobile && "flex-col gap-2"
+            )}>
+              <h3 className={cn(
+                "font-semibold text-foreground",
+                isMobile ? "text-base mobile-text-lg" : "text-lg"
+              )}>Chat Background</h3>
+              {!isMobile && (
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                  POST /projects/{project.id}/settings
+                </span>
+              )}
             </div>
             
             <div className="space-y-4">
@@ -262,7 +318,10 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                   Background Type
                 </label>
                 
-                <div className="flex gap-4">
+                <div className={cn(
+                  "flex gap-4",
+                  isMobile && "flex-col gap-3"
+                )}>
                   <label className="flex items-center gap-2">
                     <input
                       type="radio"
@@ -270,8 +329,12 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                       value="image"
                       checked={formData.chatbot_background_type === 'image'}
                       onChange={(e) => handleInputChange('chatbot_background_type', e.target.value)}
+                      className={isMobile ? "touch-target" : ""}
                     />
-                    <span className="text-sm">Background Image</span>
+                    <span className={cn(
+                      "text-sm",
+                      isMobile && "mobile-text-base"
+                    )}>Background Image</span>
                   </label>
                   
                   <label className="flex items-center gap-2">
@@ -281,15 +344,22 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                       value="color"
                       checked={formData.chatbot_background_type === 'color'}
                       onChange={(e) => handleInputChange('chatbot_background_type', e.target.value)}
+                      className={isMobile ? "touch-target" : ""}
                     />
-                    <span className="text-sm">Background Color</span>
+                    <span className={cn(
+                      "text-sm",
+                      isMobile && "mobile-text-base"
+                    )}>Background Color</span>
                   </label>
                 </div>
               </div>
 
               {/* Background Image */}
               {formData.chatbot_background_type === 'image' && (
-                <div className="flex items-start gap-6">
+                <div className={cn(
+                  "flex items-start gap-6",
+                  isMobile && "flex-col gap-4"
+                )}>
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Background Image
@@ -318,7 +388,10 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                         id="background-upload"
                       />
                       <label htmlFor="background-upload" className="cursor-pointer">
-                        <div className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                        <div className={cn(
+                          "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2",
+                          isMobile ? "h-12 w-full mobile-btn touch-target" : "h-10"
+                        )}>
                           <Upload className="w-4 h-4 mr-2" />
                           Upload Background
                         </div>
@@ -351,12 +424,18 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                     Background Color
                   </label>
                   
-                  <div className="flex items-center gap-4">
+                  <div className={cn(
+                    "flex items-center gap-4",
+                    isMobile && "flex-col gap-3"
+                  )}>
                     <input
                       type="color"
                       value={formData.chatbot_background_color}
                       onChange={(e) => handleInputChange('chatbot_background_color', e.target.value)}
-                      className="w-12 h-10 border border-border rounded cursor-pointer bg-background"
+                      className={cn(
+                        "border border-border rounded cursor-pointer bg-background",
+                        isMobile ? "w-16 h-12 touch-target" : "w-12 h-10"
+                      )}
                     />
                     
                     <input
@@ -364,7 +443,10 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                       value={formData.chatbot_background_color}
                       onChange={(e) => handleInputChange('chatbot_background_color', e.target.value)}
                       placeholder="#F5F5F5"
-                      className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
+                      className={cn(
+                        "border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground",
+                        isMobile ? "w-full px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                      )}
                     />
                   </div>
                 </div>
@@ -373,26 +455,46 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
           </Card>
 
           {/* Color Settings */}
-          <Card className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Color Theme</h3>
-              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-                POST /projects/{project.id}/settings
-              </span>
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <div className={cn(
+              "flex items-start justify-between mb-4",
+              isMobile && "flex-col gap-2"
+            )}>
+              <h3 className={cn(
+                "font-semibold text-foreground",
+                isMobile ? "text-base mobile-text-lg" : "text-lg"
+              )}>Color Theme</h3>
+              {!isMobile && (
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                  POST /projects/{project.id}/settings
+                </span>
+              )}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className={cn(
+              "grid gap-6",
+              isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
+            )}>
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Primary Color
                 </label>
                 
-                <div className="flex items-center gap-4">
+                <div className={cn(
+                  "flex items-center gap-4",
+                  isMobile && "flex-col gap-3"
+                )}>
                   <input
                     type="color"
                     value={formData.chatbot_color}
                     onChange={(e) => handleInputChange('chatbot_color', e.target.value)}
-                    className="w-12 h-10 border border-border rounded cursor-pointer"
+                    className={cn(
+                      "border border-border rounded cursor-pointer",
+                      isMobile ? "w-16 h-12 touch-target" : "w-12 h-10"
+                    )}
                   />
                   
                   <input
@@ -400,7 +502,10 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                     value={formData.chatbot_color}
                     onChange={(e) => handleInputChange('chatbot_color', e.target.value)}
                     placeholder="#000000"
-                    className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
+                    className={cn(
+                      "flex-1 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground",
+                      isMobile ? "w-full px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                    )}
                   />
                 </div>
                 
@@ -414,12 +519,18 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                   Toolbar Color
                 </label>
                 
-                <div className="flex items-center gap-4">
+                <div className={cn(
+                  "flex items-center gap-4",
+                  isMobile && "flex-col gap-3"
+                )}>
                   <input
                     type="color"
                     value={formData.chatbot_toolbar_color}
                     onChange={(e) => handleInputChange('chatbot_toolbar_color', e.target.value)}
-                    className="w-12 h-10 border border-border rounded cursor-pointer"
+                    className={cn(
+                      "border border-border rounded cursor-pointer",
+                      isMobile ? "w-16 h-12 touch-target" : "w-12 h-10"
+                    )}
                   />
                   
                   <input
@@ -427,7 +538,10 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                     value={formData.chatbot_toolbar_color}
                     onChange={(e) => handleInputChange('chatbot_toolbar_color', e.target.value)}
                     placeholder="#000000"
-                    className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
+                    className={cn(
+                      "flex-1 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground",
+                      isMobile ? "w-full px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                    )}
                   />
                 </div>
                 
@@ -439,8 +553,14 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
           </Card>
 
           {/* Preview */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Preview</h3>
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <h3 className={cn(
+              "font-semibold text-foreground mb-4",
+              isMobile ? "text-base mobile-text-lg" : "text-lg"
+            )}>Preview</h3>
             
             <div className="border border-border rounded-lg p-4 bg-accent">
               <div 
@@ -489,13 +609,17 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
           </Card>
 
           {/* Save Button at Bottom */}
-          <div className="flex justify-end mt-6">
+          <div className={cn(
+            "flex mt-6",
+            isMobile ? "justify-center" : "justify-end"
+          )}>
             <Button
               onClick={handleSave}
               disabled={!isModified || settingsLoading}
               size="sm"
+              className={isMobile ? "h-9 px-6 text-sm" : ""}
             >
-              <Save className="w-4 h-4 mr-2" />
+              <Save className="w-4 h-4 mr-1.5" />
               {settingsLoading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>

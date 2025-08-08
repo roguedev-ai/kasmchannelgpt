@@ -111,6 +111,28 @@ export const useAgentStore = create<AgentStore>()(
             // Auto-select first agent if none selected
             currentAgent: get().currentAgent || (agents.length > 0 ? agents[0] : null)
           });
+          
+          // Fetch settings for the current agent to get avatar
+          const currentAgent = get().currentAgent;
+          if (currentAgent && !currentAgent.settings) {
+            try {
+              const client = getClient();
+              const settingsResponse = await client.getAgentSettings(currentAgent.id);
+              if (settingsResponse && settingsResponse.data) {
+                const agentWithSettings = { ...currentAgent, settings: settingsResponse.data };
+                set({ currentAgent: agentWithSettings });
+                
+                // Also update in the agents list
+                set(state => ({
+                  agents: state.agents.map(a => 
+                    a.id === currentAgent.id ? agentWithSettings : a
+                  )
+                }));
+              }
+            } catch (error) {
+              console.error('Failed to fetch current agent settings:', error);
+            }
+          }
         } catch (error) {
           console.error('Failed to fetch agents:', error);
           set({ 
@@ -287,6 +309,27 @@ export const useAgentStore = create<AgentStore>()(
         
         // Clear all messages from the previous agent
         messageStore.clearMessages();
+        
+        // Fetch agent settings to get avatar and other details
+        try {
+          const client = getClient();
+          const settingsResponse = await client.getAgentSettings(agent.id);
+          if (settingsResponse && settingsResponse.data) {
+            // Update the agent with settings
+            const agentWithSettings = { ...agent, settings: settingsResponse.data };
+            set({ currentAgent: agentWithSettings });
+            
+            // Also update in the agents list
+            set(state => ({
+              agents: state.agents.map(a => 
+                a.id === agent.id ? agentWithSettings : a
+              )
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to fetch agent settings:', error);
+          // Continue without settings
+        }
         
         // Fetch conversations for the new agent
         try {

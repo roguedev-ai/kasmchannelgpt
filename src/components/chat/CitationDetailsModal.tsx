@@ -52,6 +52,7 @@ import { cn } from '@/lib/utils';
 import { getClient } from '@/lib/api/client';
 import { logger } from '@/lib/logger';
 import { useAgentStore } from '@/store/agents';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 
 /**
  * Open Graph data structure for citations
@@ -103,6 +104,7 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
   const [imageError, setImageError] = useState(false);
   
   const { currentAgent } = useAgentStore();
+  const { isMobile } = useBreakpoint();
   const effectiveProjectId = projectId || currentAgent?.id;
 
   /**
@@ -168,81 +170,135 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/50"
-        />
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 z-50"
+          />
 
-        {/* Modal */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="relative bg-background rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
-        >
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: isMobile ? '100%' : 0 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: isMobile ? '100%' : 0 }}
+            className={cn(
+              "fixed bg-background shadow-xl z-50",
+              isMobile 
+                ? "inset-x-0 bottom-0 top-20 rounded-t-xl flex flex-col" 
+                : "inset-x-0 top-[10%] mx-auto max-w-2xl rounded-lg max-h-[90vh] overflow-hidden"
+            )}
+          >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-lg font-semibold text-foreground">
+          <div className={cn(
+            "flex items-center justify-between border-b border-border bg-background/95 backdrop-blur-sm flex-shrink-0",
+            isMobile ? "px-4 py-4" : "p-4"
+          )}>
+            <h2 className={cn(
+              "font-semibold text-foreground",
+              isMobile ? "text-lg" : "text-lg"
+            )}>
               Citation Details
             </h2>
             <Button
               variant="ghost"
               size="icon"
               onClick={onClose}
-              className="h-8 w-8"
+              className={cn(
+                isMobile ? "h-9 w-9 touch-target" : "h-8 w-8"
+              )}
             >
-              <X className="h-4 w-4" />
+              <X className={cn(
+                isMobile ? "h-5 w-5" : "h-4 w-4"
+              )} />
             </Button>
           </div>
 
           {/* Content */}
-          <div className="p-4 overflow-y-auto max-h-[calc(90vh-120px)]">
+          <div className={cn(
+            "overflow-y-auto",
+            isMobile 
+              ? "flex-1 px-4 py-4 pb-6 safe-area-pb" 
+              : "p-4 max-h-[calc(90vh-120px)]"
+          )}>
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : error ? (
-              <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg">
-                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <div className={cn(
+                "flex items-center gap-3 p-4 bg-red-50 dark:bg-red-950/20 rounded-lg",
+                isMobile && "mx-0"
+              )}>
+                <AlertCircle className={cn(
+                  "text-red-600 flex-shrink-0",
+                  isMobile ? "h-5 w-5" : "h-5 w-5"
+                )} />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-red-900">Error loading citation</p>
-                  <p className="text-sm text-red-700 mt-1">{error}</p>
+                  <p className={cn(
+                    "font-medium text-red-900 dark:text-red-200",
+                    isMobile ? "text-sm" : "text-sm"
+                  )}>Error loading citation</p>
+                  <p className={cn(
+                    "text-red-700 dark:text-red-300 mt-1",
+                    isMobile ? "text-xs" : "text-sm"
+                  )}>{error}</p>
                 </div>
               </div>
             ) : citationData ? (
-              <div className="space-y-4">
+              <div className={cn(
+                "space-y-4",
+                isMobile && "space-y-5"
+              )}>
                 {/* Open Graph Image */}
                 {citationData.image && !imageError && (
-                  <div className="relative rounded-lg overflow-hidden bg-muted">
+                  <div className={cn(
+                    "relative rounded-lg overflow-hidden bg-muted",
+                    isMobile && "-mx-4 rounded-none"
+                  )}>
                     <img
                       src={citationData.image}
                       alt={citationData.title}
                       className="w-full h-auto"
                       onError={() => setImageError(true)}
                     />
+                    {isMobile && (
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                    )}
                   </div>
                 )}
 
                 {/* Title */}
                 <div>
-                  <h3 className="text-xl font-semibold text-foreground">
+                  <h3 className={cn(
+                    "font-semibold text-foreground",
+                    isMobile ? "text-lg leading-tight" : "text-xl"
+                  )}>
                     {citationData.title}
                   </h3>
                 </div>
 
                 {/* URL */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Globe className="h-4 w-4" />
+                <div className={cn(
+                  "flex items-center gap-2 text-muted-foreground",
+                  isMobile ? "text-sm" : "text-sm"
+                )}>
+                  <Globe className={cn(
+                    "flex-shrink-0",
+                    isMobile ? "h-4 w-4" : "h-4 w-4"
+                  )} />
                   <a
                     href={citationData.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-brand-600 transition-colors truncate"
+                    className={cn(
+                      "hover:text-brand-600 transition-colors",
+                      isMobile ? "break-all" : "truncate"
+                    )}
                   >
                     {citationData.url}
                   </a>
@@ -250,21 +306,39 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
 
                 {/* Description */}
                 {citationData.description && (
-                  <div className="prose prose-gray max-w-none">
-                    <p className="text-foreground">{citationData.description}</p>
+                  <div className="prose prose-gray dark:prose-invert max-w-none">
+                    <p className={cn(
+                      "text-foreground",
+                      isMobile ? "text-sm leading-relaxed" : ""
+                    )}>{citationData.description}</p>
                   </div>
                 )}
 
                 {/* Metadata */}
-                <div className="pt-4 border-t space-y-2">
-                  <div className="flex items-center justify-between text-sm">
+                <div className={cn(
+                  "pt-4 border-t border-border space-y-3",
+                  isMobile && "space-y-3"
+                )}>
+                  <div className={cn(
+                    "flex items-center justify-between",
+                    isMobile ? "text-sm" : "text-sm"
+                  )}>
                     <span className="text-muted-foreground">Citation ID</span>
-                    <span className="font-mono text-foreground">#{citationData.id}</span>
+                    <span className={cn(
+                      "font-mono text-foreground",
+                      isMobile ? "text-base" : ""
+                    )}>#{citationData.id}</span>
                   </div>
                   {citationData.image && (
-                    <div className="flex items-center justify-between text-sm">
+                    <div className={cn(
+                      "flex items-center justify-between",
+                      isMobile ? "text-sm" : "text-sm"
+                    )}>
                       <span className="text-muted-foreground">Has preview image</span>
-                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                      <ImageIcon className={cn(
+                        "text-muted-foreground",
+                        isMobile ? "h-4 w-4" : "h-4 w-4"
+                      )} />
                     </div>
                   )}
                 </div>
@@ -273,9 +347,18 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t bg-muted">
-            <div className="flex items-center justify-between">
-              <div className="text-xs text-muted-foreground">
+          <div className={cn(
+            "border-t bg-muted flex-shrink-0",
+            isMobile ? "p-4 safe-area-pb" : "p-4"
+          )}>
+            <div className={cn(
+              "flex items-center",
+              isMobile ? "flex-col gap-3" : "justify-between"
+            )}>
+              <div className={cn(
+                "text-muted-foreground",
+                isMobile ? "text-xs text-center" : "text-xs"
+              )}>
                 Open Graph data from cited source
               </div>
               {citationData && (
@@ -283,16 +366,24 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
                   href={citationData.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
+                  className={cn(
+                    "inline-flex items-center gap-2 font-medium text-brand-600 hover:text-brand-700 transition-colors",
+                    isMobile 
+                      ? "w-full justify-center bg-brand-600 text-white hover:bg-brand-700 hover:text-white rounded-lg px-4 py-3 text-base touch-target" 
+                      : "px-3 py-1.5 text-sm"
+                  )}
                 >
                   Visit source
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <ExternalLink className={cn(
+                    isMobile ? "h-4 w-4" : "h-3.5 w-3.5"
+                  )} />
                 </a>
               )}
             </div>
           </div>
-        </motion.div>
-      </div>
+          </motion.div>
+        </>
+      )}
     </AnimatePresence>
   );
 };

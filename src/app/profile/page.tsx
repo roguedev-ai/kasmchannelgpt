@@ -76,6 +76,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { cn, formatTimestamp } from '@/lib/utils';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 
 /**
  * Profile Page Component
@@ -98,6 +99,9 @@ export default function ProfilePage() {
     fetchProfile,
     updateProfile
   } = useProfileStore();
+
+  // Mobile responsiveness hook
+  const { isMobile } = useBreakpoint();
 
   /**
    * Load profile data on component mount
@@ -234,66 +238,92 @@ export default function ProfilePage() {
   };
 
   return (
-    <PageLayout>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Profile</h1>
-            <p className="text-muted-foreground mt-1">Manage your account information</p>
+    <PageLayout showMobileNavigation={isMobile}>
+      <div className={cn(
+        "max-w-4xl mx-auto min-h-screen",
+        isMobile ? "p-3" : "px-4 sm:px-6 lg:px-8 py-8"
+      )}>
+        {/* Compact Mobile Header */}
+        {isMobile ? (
+          <div className="flex items-center justify-between py-3 mb-4">
+            <h1 className="text-lg font-semibold text-foreground">Profile</h1>
+            <Button
+              variant="ghost"
+              onClick={fetchProfile}
+              disabled={loading}
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
+            </Button>
           </div>
-          
-          {/* Refresh button for manual data reload */}
-          <Button
-            variant="outline"
-            onClick={fetchProfile}
-            disabled={loading}
-            size="sm"
-          >
-            <RefreshCw className={cn('w-4 h-4 mr-2', loading && 'animate-spin')} />
-            Refresh
-          </Button>
-        </div>
+        ) : (
+          // Desktop Header
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Profile</h1>
+              <p className="text-muted-foreground mt-1">Manage your account information</p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={fetchProfile}
+              disabled={loading}
+              size="sm"
+            >
+              <RefreshCw className={cn('w-4 h-4 mr-2', loading && 'animate-spin')} />
+              Refresh
+            </Button>
+          </div>
+        )}
 
         {/* Error State Display */}
         {error && (
-          <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+          <div className={cn(
+            "mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg",
+            isMobile ? "text-sm" : ""
+          )}>
             <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
-              <AlertCircle className="w-5 h-5" />
-              <span className="font-medium">Error</span>
+              <AlertCircle className="w-4 h-4" />
+              <span className="font-medium text-sm">Error</span>
             </div>
-            <p className="text-yellow-600 dark:text-yellow-400 mt-1 text-sm">{error}</p>
+            <p className="text-yellow-600 dark:text-yellow-400 mt-1 text-xs">{error}</p>
           </div>
         )}
 
         {/* Loading State Skeleton */}
         {loading && !profile ? (
-          <Card className="p-8">
-            <div className="animate-pulse space-y-4">
-              <div className="flex items-center gap-6">
-                <div className="w-24 h-24 bg-muted rounded-full" />
-                <div className="space-y-2">
-                  <div className="h-6 bg-muted rounded w-48" />
-                  <div className="h-4 bg-muted rounded w-32" />
-                  <div className="h-4 bg-muted rounded w-40" />
+          <Card className="p-4">
+            <div className="animate-pulse">
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 bg-muted rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 bg-muted rounded w-3/4" />
+                  <div className="h-4 bg-muted rounded w-1/2" />
+                  <div className="h-8 bg-muted rounded w-20" />
                 </div>
               </div>
             </div>
           </Card>
         ) : profile ? (
-          <div className="space-y-6">
-            {/* Main Profile Card */}
-            <Card className="p-8">
-              {/* API Endpoint Indicator */}
-              <div className="flex justify-end mb-4">
-                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-                  GET /user
-                </span>
-              </div>
-              <div className="flex items-start gap-8">
-                {/* Avatar Section with Upload */}
+          <div className="space-y-4">
+            {/* Instagram-style Profile Card */}
+            <Card className="p-4">
+              {!isMobile && (
+                <div className="flex justify-end mb-4">
+                  <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                    GET /user
+                  </span>
+                </div>
+              )}
+              
+              {/* Profile Header - Instagram Style */}
+              <div className="flex items-start gap-4 mb-4">
+                {/* Avatar Section */}
                 <div className="relative">
-                  <div className="w-32 h-32 rounded-full overflow-hidden bg-muted">
+                  <div className={cn(
+                    "rounded-full overflow-hidden bg-muted",
+                    isMobile ? "w-20 h-20" : "w-24 h-24"
+                  )}>
                     {getDisplayAvatar() ? (
                       <img
                         src={getDisplayAvatar()!}
@@ -301,215 +331,164 @@ export default function ProfilePage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      // Default avatar with initials
-                      <div className="w-full h-full flex items-center justify-center bg-brand-100 text-brand-600 text-3xl font-semibold">
+                      <div className={cn(
+                        "w-full h-full flex items-center justify-center bg-brand-100 text-brand-600 font-semibold",
+                        isMobile ? "text-lg" : "text-xl"
+                      )}>
                         {profile.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                       </div>
                     )}
                   </div>
                   
-                  {/* Photo upload button - only shown in edit mode */}
                   {isEditing && (
                     <>
                       <button
                         onClick={() => document.getElementById('photo-upload')?.click()}
-                        className="absolute -bottom-2 -right-2 w-10 h-10 bg-brand-600 text-white rounded-full flex items-center justify-center hover:bg-brand-700 transition-colors shadow-lg"
+                        className="absolute -bottom-1 -right-1 w-7 h-7 bg-brand-600 text-white rounded-full flex items-center justify-center hover:bg-brand-700 transition-colors shadow-lg"
                         aria-label="Upload profile photo"
                       >
-                        <Camera className="w-5 h-5" />
+                        <Camera className="w-4 h-4" />
                       </button>
-                      
-                      {/* Hidden file input for photo upload */}
                       <input
                         id="photo-upload"
                         type="file"
                         accept="image/*"
                         onChange={handleFileSelect}
                         className="hidden"
-                        aria-label="Profile photo file input"
                       />
                     </>
                   )}
                 </div>
 
-                {/* Profile Information Section */}
-                <div className="flex-1">
-                  <div className="space-y-6">
-                    {/* Name Field - Editable */}
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        Full Name
-                      </label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-lg bg-background text-foreground"
-                          placeholder="Enter your name"
-                          aria-label="Edit full name"
-                        />
-                      ) : (
-                        <p className="text-2xl font-bold text-foreground">{profile.name}</p>
-                      )}
-                    </div>
+                {/* Profile Info */}
+                <div className="flex-1 min-w-0">
+                  {/* Name and Edit */}
+                  <div className="flex items-center gap-3 mb-2">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="flex-1 px-3 py-1 text-lg font-semibold border border-border rounded focus:outline-none focus:ring-2 focus:ring-brand-500 bg-background text-foreground"
+                        placeholder="Enter your name"
+                      />
+                    ) : (
+                      <h2 className={cn(
+                        "font-semibold text-foreground truncate",
+                        isMobile ? "text-lg" : "text-xl"
+                      )}>{profile.name}</h2>
+                    )}
+                  </div>
 
-                    {/* Profile Details Grid - Read-only fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Left Column */}
-                      <div className="space-y-4">
-                        {/* Email - Read-only from CustomGPT */}
-                        <div className="flex items-center gap-3">
-                          <Mail className="w-5 h-5 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm text-muted-foreground">Email</p>
-                            <p className="font-medium text-foreground">{profile.email}</p>
-                          </div>
-                        </div>
-                        
-                        {/* User ID - Unique identifier */}
-                        <div className="flex items-center gap-3">
-                          <User className="w-5 h-5 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm text-muted-foreground">User ID</p>
-                            <p className="font-medium text-foreground font-mono">{profile.id}</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Right Column */}
-                      <div className="space-y-4">
-                        {/* Team ID - Current team context */}
-                        <div className="flex items-center gap-3">
-                          <Users className="w-5 h-5 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm text-muted-foreground">Team ID</p>
-                            <p className="font-medium text-foreground font-mono">{profile.current_team_id}</p>
-                          </div>
-                        </div>
-                        
-                        {/* Member Since - Account age */}
-                        <div className="flex items-center gap-3">
-                          <Calendar className="w-5 h-5 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm text-muted-foreground">Member Since</p>
-                            <p className="font-medium text-foreground">{formatTimestamp(profile.created_at)}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  {/* Email */}
+                  <p className={cn(
+                    "text-muted-foreground mb-3",
+                    isMobile ? "text-sm" : ""
+                  )}>{profile.email}</p>
 
-                    {/* Action Buttons Section */}
-                    <div className="flex items-center gap-2 pt-4 border-t">
-                      {isEditing ? (
-                        <>
-                          {/* Cancel edit button */}
-                          <Button
-                            variant="outline"
-                            onClick={handleCancel}
-                            disabled={loading}
-                          >
-                            <X className="w-4 h-4 mr-2" />
-                            Cancel
-                          </Button>
-                          
-                          {/* Save changes button */}
-                          <Button
-                            onClick={handleSave}
-                            disabled={loading || !editName.trim()}
-                          >
-                            <Save className="w-4 h-4 mr-2" />
-                            Save Changes
-                          </Button>
-                          
-                          {/* API endpoint indicator for update */}
-                          <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded ml-2">
-                            POST /user
-                          </span>
-                        </>
-                      ) : (
-                        // Edit profile button
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    {isEditing ? (
+                      <>
                         <Button
                           variant="outline"
-                          onClick={handleEdit}
+                          size="sm"
+                          onClick={handleCancel}
+                          disabled={loading}
+                          className="h-8 px-3 text-sm"
                         >
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit Profile
+                          Cancel
                         </Button>
-                      )}
-                    </div>
+                        <Button
+                          size="sm"
+                          onClick={handleSave}
+                          disabled={loading || !editName.trim()}
+                          className="h-8 px-3 text-sm"
+                        >
+                          <Save className="w-3 h-3 mr-1" />
+                          Save
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleEdit}
+                        className="h-8 px-3 text-sm"
+                      >
+                        <Edit className="w-3 h-3 mr-1" />
+                        Edit Profile
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Account Stats/Info - Instagram Style */}
+              <div className="border-t pt-4">
+                <div className={cn(
+                  "grid gap-4",
+                  isMobile ? "grid-cols-2" : "grid-cols-4"
+                )}>
+                  <div className="text-center">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">User ID</div>
+                    <div className="text-xs font-mono mt-1 truncate">{profile.id}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Team</div>
+                    <div className="text-xs font-mono mt-1 truncate">{profile.current_team_id}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Member Since</div>
+                    <div className="text-xs mt-1">{formatTimestamp(profile.created_at)}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Updated</div>
+                    <div className="text-xs mt-1">{formatTimestamp(profile.updated_at)}</div>
                   </div>
                 </div>
               </div>
             </Card>
 
-            {/* Account Details Card */}
-            <Card className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-lg font-semibold text-foreground">Account Details</h3>
-                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-                  GET /user
-                </span>
-              </div>
-              
-              {/* Timestamp information grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">
-                    Account Created
-                  </label>
-                  <p className="text-foreground">{formatTimestamp(profile.created_at)}</p>
+            {/* API Info - Compact Footer */}
+            {!isMobile && (
+              <div className="text-center py-2">
+                <div className="inline-flex items-center gap-4 text-xs text-muted-foreground">
+                  <code className="bg-accent px-2 py-1 rounded">GET /user</code>
+                  <code className="bg-accent px-2 py-1 rounded">POST /user</code>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">
-                    Last Updated
-                  </label>
-                  <p className="text-foreground">{formatTimestamp(profile.updated_at)}</p>
-                </div>
-              </div>
-            </Card>
-
-            {/* API Information Card */}
-            <Card className="p-6 bg-accent border-border">
-              <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                Available Profile Operations
-              </h4>
-              
-              {/* API endpoint documentation */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Fetch profile data:</span>
-                  <code className="bg-background px-2 py-1 rounded border border-border text-xs font-mono text-foreground">GET /user</code>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Update profile (name & photo):</span>
-                  <code className="bg-background px-2 py-1 rounded border border-border text-xs font-mono text-foreground">POST /user</code>
-                </div>
-              </div>
-              
-              {/* Platform limitations notice */}
-              <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded text-sm">
-                <p className="text-blue-600 dark:text-blue-400">
-                  <strong>Note:</strong> This profile section only includes features supported by the CustomGPT API. 
-                  You can update your name and profile photo. Email and other account settings are managed through the CustomGPT platform.
+                <p className="text-xs text-muted-foreground mt-2 max-w-md mx-auto">
+                  Profile features are limited to those supported by the CustomGPT API
                 </p>
               </div>
-            </Card>
+            )}
           </div>
         ) : (
           // Empty state when no profile data is available
-          <Card className="p-8 text-center">
-            <User className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">
+          <Card className="p-6 text-center">
+            <User className={cn(
+              "text-muted-foreground mx-auto mb-3",
+              isMobile ? "w-8 h-8" : "w-10 h-10"
+            )} />
+            <h3 className={cn(
+              "font-medium text-foreground mb-2",
+              isMobile ? "text-base" : "text-lg"
+            )}>
               No Profile Data
             </h3>
-            <p className="text-muted-foreground mb-4">
-              Unable to load profile information from the CustomGPT API
+            <p className={cn(
+              "text-muted-foreground mb-4",
+              isMobile ? "text-sm" : ""
+            )}>
+              Unable to load profile information
             </p>
-            <Button onClick={fetchProfile} disabled={loading}>
-              <RefreshCw className={cn('w-4 h-4 mr-2', loading && 'animate-spin')} />
+            <Button 
+              onClick={fetchProfile} 
+              disabled={loading}
+              size="sm"
+              className="h-8 px-3 text-sm"
+            >
+              <RefreshCw className={cn('w-3 h-3 mr-2', loading && 'animate-spin')} />
               Try Again
             </Button>
           </Card>

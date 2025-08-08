@@ -62,6 +62,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAgentStore } from '@/store/agents';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 
 /**
  * Props for AgentCreationForm
@@ -131,6 +132,7 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   
   const { createAgent } = useAgentStore();
+  const { isMobile } = useBreakpoint();
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -223,29 +225,44 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
   };
 
   const renderBasicInfoStep = () => (
-    <div className="space-y-6">
+    <div className={cn(
+      "space-y-6",
+      isMobile && "space-y-5"
+    )}>
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">
+        <label className={cn(
+          "block font-medium text-gray-900 mb-2",
+          isMobile ? "text-sm" : "text-sm"
+        )}>
           Agent Name <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
           value={formData.project_name}
           onChange={(e) => handleInputChange('project_name', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+          className={cn(
+            "w-full border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent",
+            isMobile ? "px-3 py-3 text-base touch-target" : "px-3 py-2"
+          )}
           placeholder="e.g., Customer Support Bot, Sales Assistant"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">
+        <label className={cn(
+          "block font-medium text-gray-900 mb-2",
+          isMobile ? "text-sm" : "text-sm"
+        )}>
           Description
         </label>
         <textarea
           value={formData.description}
           onChange={(e) => handleInputChange('description', e.target.value)}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+          className={cn(
+            "w-full border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent",
+            isMobile ? "px-3 py-3 text-base" : "px-3 py-2"
+          )}
           placeholder="Describe what this agent will help with..."
         />
       </div>
@@ -256,9 +273,15 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
           id="is_shared"
           checked={formData.is_shared}
           onChange={(e) => handleInputChange('is_shared', e.target.checked)}
-          className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+          className={cn(
+            "rounded border-gray-300 text-brand-600 focus:ring-brand-500",
+            isMobile && "h-5 w-5"
+          )}
         />
-        <label htmlFor="is_shared" className="text-sm text-gray-700">
+        <label htmlFor="is_shared" className={cn(
+          "text-gray-700",
+          isMobile ? "text-sm" : "text-sm"
+        )}>
           Make this agent publicly accessible
         </label>
       </div>
@@ -266,23 +289,38 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
   );
 
   const renderDataSourcesStep = () => (
-    <div className="space-y-6">
+    <div className={cn(
+      "space-y-6",
+      isMobile && "space-y-5"
+    )}>
       {/* Sitemap */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">
+        <label className={cn(
+          "block font-medium text-gray-900 mb-2",
+          isMobile ? "text-sm" : "text-sm"
+        )}>
           Website Sitemap URL
         </label>
         <div className="relative">
-          <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Globe className={cn(
+            "absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400",
+            isMobile ? "h-4 w-4" : "h-4 w-4"
+          )} />
           <input
             type="url"
             value={formData.sitemap_path}
             onChange={(e) => handleInputChange('sitemap_path', e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className={cn(
+              "w-full pr-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent",
+              isMobile ? "pl-10 py-3 text-base touch-target" : "pl-10 py-2"
+            )}
             placeholder="https://example.com/sitemap.xml"
           />
         </div>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className={cn(
+          "text-gray-500 mt-1",
+          isMobile ? "text-xs" : "text-xs"
+        )}>
           The agent will crawl and learn from your website
         </p>
       </div>

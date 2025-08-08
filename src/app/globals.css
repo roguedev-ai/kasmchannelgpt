@@ -39,7 +39,13 @@
 :root {
   /* Base colors */
   --background: #ffffff;
+  --background-rgb: 255, 255, 255;
   --foreground: #171717;
+  
+  /* Gradient colors for voice UI */
+  --voice-gradient-from: 147, 51, 234; /* purple-600 */
+  --voice-gradient-via: 236, 72, 153; /* pink-500 */
+  --voice-gradient-to: 251, 146, 60; /* orange-400 */
   --muted: #f8fafc;
   --muted-foreground: #64748b;
   --popover: #ffffff;
@@ -92,7 +98,13 @@
 .dark {
   /* Base colors */
   --background: #0a0a0a;
+  --background-rgb: 10, 10, 10;
   --foreground: #fafafa;
+  
+  /* Gradient colors for voice UI (darker for dark theme) */
+  --voice-gradient-from: 88, 28, 135; /* purple-900 */
+  --voice-gradient-via: 157, 23, 77; /* pink-800 */
+  --voice-gradient-to: 154, 52, 18; /* orange-700 */
   --muted: #1a1a1a;
   --muted-foreground: #a1a1aa;
   --popover: #1a1a1a;
@@ -430,6 +442,92 @@ body {
   animation: fade-in 0.5s ease-out;
 }
 
+/* Voice UI Gradient Animations */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes gradient-rotate {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes gradient-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes gradient-wave {
+  0% {
+    transform: translateX(-100%) translateY(0);
+  }
+  50% {
+    transform: translateX(0) translateY(-10%);
+  }
+  100% {
+    transform: translateX(100%) translateY(0);
+  }
+}
+
+/* Voice state-specific gradient classes - darker and more subtle */
+.voice-gradient-idle {
+  background: linear-gradient(-45deg, #0d0d0d, #1a1a1a, #0f0f0f, #0d0d0d);
+  background-size: 400% 400%;
+  animation: gradient-shift 20s ease infinite;
+}
+
+.voice-gradient-listening {
+  background: linear-gradient(-45deg, #0d0d0d, #1a1a2e, #0f0f0f, #0d0d0d);
+  background-size: 400% 400%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+.voice-gradient-recording {
+  background: linear-gradient(-45deg, #1a0d0d, #2d1b1b, #1a0d0d, #0d0d0d);
+  background-size: 400% 400%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+.voice-gradient-processing {
+  background: linear-gradient(-45deg, #1a1a2e, #2d1b69, #1a1a2e, #0d0d0d);
+  background-size: 400% 400%;
+  animation: gradient-shift 4s ease infinite, gradient-rotate 8s ease infinite;
+}
+
+.voice-gradient-speaking {
+  background: linear-gradient(-45deg, #0d1a0d, #1b2d1b, #0d1a0d, #0d0d0d);
+  background-size: 400% 400%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+/* Overlay effects */
+.voice-overlay-pulse {
+  animation: gradient-pulse 2s ease infinite;
+}
+
+.voice-overlay-wave {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  animation: gradient-wave 3s linear infinite;
+}
+
 /* Slide up animation */
 @keyframes slideUp {
   from {
@@ -453,6 +551,59 @@ body {
   100% {
     opacity: 1;
   }
+}
+
+/* Voice UI specific animations */
+@keyframes voice-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255,255,255,0.5), 0 0 40px rgba(255,255,255,0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255,255,255,0.7), 0 0 60px rgba(255,255,255,0.5);
+  }
+}
+
+@keyframes voice-ripple {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes audio-wave {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.5);
+  }
+}
+
+/* Voice button effects - removed blinking animations */
+.voice-button-glow {
+  box-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+
+.voice-button-recording {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border: 2px solid rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.voice-button-processing {
+  background: rgba(124, 58, 237, 0.2) !important;
+  border: 2px solid rgba(124, 58, 237, 0.5);
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.3);
+}
+
+/* Audio wave visualization */
+.audio-wave-bar {
+  animation: audio-wave 0.5s ease-in-out infinite;
+  transform-origin: bottom;
 }
 
 /**
@@ -500,4 +651,98 @@ body {
 [data-sonner-toaster] [data-sonner-toast] {
   position: relative !important;
   padding-right: 40px !important;
+}
+
+/**
+ * Mobile-Specific Utilities
+ * 
+ * Safe area padding for iOS devices with notches
+ * Touch-optimized interactions
+ * Mobile typography scaling
+ */
+
+/* Safe area utilities for iOS devices */
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-pl {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-pr {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Mobile touch targets */
+.touch-target {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Mobile typography scaling */
+@media (max-width: 767px) {
+  body {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  .mobile-text-sm {
+    font-size: 14px;
+  }
+  
+  .mobile-text-base {
+    font-size: 16px;
+  }
+  
+  .mobile-text-lg {
+    font-size: 18px;
+  }
+  
+  .mobile-text-xl {
+    font-size: 20px;
+  }
+  
+  .mobile-text-2xl {
+    font-size: 24px;
+  }
+  
+  /* Better spacing for mobile */
+  .mobile-px {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  .mobile-py {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  
+  /* Mobile button sizing */
+  .mobile-btn {
+    min-height: 48px;
+    padding: 12px 24px;
+    font-size: 16px;
+  }
+  
+  /* Mobile form inputs */
+  .mobile-input {
+    min-height: 48px;
+    padding: 12px 16px;
+    font-size: 16px;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .tablet-text-sm {
+    font-size: 15px;
+  }
+  
+  .tablet-text-base {
+    font-size: 17px;
+  }
 }

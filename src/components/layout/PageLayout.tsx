@@ -31,8 +31,17 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { Navbar } from './Navbar';
+import { MobileNavigation, MobileHeader } from '@/components/mobile/MobileNavigation';
+import { MobileDrawer, MobileBottomSheet } from '@/components/mobile/MobileDrawer';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
+import { useMobileNavigation } from '@/hooks/useTouchGestures';
+import { ConversationSidebar } from '@/components/chat/ConversationSidebar';
+import { AgentSelectorMobile } from '@/components/chat/AgentSelectorMobile';
+import { Menu } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 /**
  * Props for PageLayout component
@@ -40,11 +49,20 @@ import { Navbar } from './Navbar';
  * @property children - Page content to render
  * @property showNavbar - Whether to show the navigation bar (default: true)
  * @property showBackButton - Whether to show back button in navbar (default: true)
+ * @property pageTitle - Title for mobile header (default: 'CustomGPT')
+ * @property showMobileNavigation - Whether to show mobile bottom navigation (default: true)
+ * @property unreadCount - Number of unread messages for mobile navigation badge
+ * @property onAgentSelect - Callback for agent selection on mobile
  */
 interface PageLayoutProps {
   children: React.ReactNode;
   showNavbar?: boolean;
   showBackButton?: boolean;
+  // Mobile-specific props
+  pageTitle?: string;
+  showMobileNavigation?: boolean;
+  unreadCount?: number;
+  onAgentSelect?: () => void;
 }
 
 /**
@@ -63,17 +81,115 @@ interface PageLayoutProps {
 export const PageLayout: React.FC<PageLayoutProps> = ({ 
   children, 
   showNavbar = true, 
-  showBackButton = true 
+  showBackButton = true,
+  pageTitle = 'CustomGPT',
+  showMobileNavigation = true,
+  unreadCount = 0,
+  onAgentSelect
 }) => {
+  const [isAgentSelectorOpen, setIsAgentSelectorOpen] = useState(false);
+  const { isMobile } = useBreakpoint();
+  const router = useRouter();
+  const pathname = usePathname();
+  const {
+    isDrawerOpen,
+    openDrawer,
+    closeDrawer,
+    openBottomSheet,
+    activeBottomSheet,
+    closeBottomSheet
+  } = useMobileNavigation();
+
+  // Handle mobile navigation actions
+  const handleHistoryClick = () => {
+    openDrawer();
+  };
+
+  const handleAgentClick = () => {
+    if (onAgentSelect) {
+      onAgentSelect();
+    } else {
+      setIsAgentSelectorOpen(true);
+    }
+  };
+
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Conditional navbar rendering */}
-      {showNavbar && <Navbar showBackButton={showBackButton} />}
+    <div className={cn(
+      "min-h-screen bg-background",
+      isMobile && "h-screen flex flex-col"
+    )}>
+      {/* Desktop Navigation */}
+      {!isMobile && showNavbar && (
+        <Navbar showBackButton={showBackButton} />
+      )}
       
-      {/* Main content area with conditional padding */}
-      <main className={showNavbar ? '' : 'pt-0'}>
+      {/* Mobile Header */}
+      {isMobile && showNavbar && (
+        <MobileHeader
+          title={pageTitle}
+          leftIcon={
+            <div className="flex items-center gap-2">
+              <img 
+                src="/logo.png" 
+                alt="CustomGPT" 
+                className="w-6 h-6 rounded"
+              />
+            </div>
+          }
+          rightIcon={<Menu className="w-6 h-6" />}
+          onRightClick={handleHistoryClick}
+        />
+      )}
+      
+      {/* Main content area */}
+      <main className={cn(
+        'flex-1 overflow-hidden',
+        showNavbar && !isMobile ? '' : 'pt-0',
+        isMobile && showMobileNavigation ? 'pb-16' : ''
+      )}>
         {children}
       </main>
+      
+      {/* Mobile Navigation */}
+      {isMobile && showMobileNavigation && (
+        <MobileNavigation
+          unreadCount={unreadCount}
+          onHistoryClick={handleHistoryClick}
+          onAgentClick={handleAgentClick}
+        />
+      )}
+      
+      {/* Mobile Drawer for Chat History */}
+      {isMobile && (
+        <MobileDrawer
+          isOpen={isDrawerOpen}
+          onClose={closeDrawer}
+          title="Chat History"
+          side="left"
+          width="xl"
+        >
+          <ConversationSidebar 
+            isMobile={true}
+            onConversationSelect={() => {
+              closeDrawer();
+              // Navigate to chat page if not already there
+              if (pathname !== '/') {
+                router.push('/');
+              }
+            }}
+          />
+        </MobileDrawer>
+      )}
+      
+      {/* Mobile Agent Selector */}
+      {isMobile && (
+        <AgentSelectorMobile
+          isOpen={isAgentSelectorOpen}
+          onClose={() => setIsAgentSelectorOpen(false)}
+        />
+      )}
+      
     </div>
   );
 };

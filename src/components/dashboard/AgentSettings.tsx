@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Settings,
@@ -34,7 +34,8 @@ import {
   Type,
   User,
   DollarSign,
-  BarChart3
+  BarChart3,
+  ArrowLeft
 } from 'lucide-react';
 import { LicenseManager } from '@/components/licenses/LicenseManager';
 import { getClient } from '@/lib/api/client';
@@ -58,10 +59,12 @@ import { Button } from '@/components/ui/button';
 import { AgentAvatar } from '@/components/ui/avatar';
 import type { Agent } from '@/types';
 import { useAgentStore } from '@/store/agents';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 
 interface AgentSettingsProps {
   agentId: number;
   agentName: string;
+  onBack?: () => void;
 }
 
 interface TabContentProps {
@@ -168,12 +171,14 @@ const LanguageSelector: React.FC<{
   );
 };
 
-export const AgentSettings: React.FC<AgentSettingsProps> = ({ agentId, agentName }) => {
+export const AgentSettings: React.FC<AgentSettingsProps> = ({ agentId, agentName, onBack }) => {
   const { agents } = useAgentStore();
   const currentAgent = agents.find(a => a.id === agentId);
+  const { isMobile } = useBreakpoint();
   
   const [activeTab, setActiveTab] = useState('general');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isChangingTab, setIsChangingTab] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -251,6 +256,19 @@ export const AgentSettings: React.FC<AgentSettingsProps> = ({ agentId, agentName
   useEffect(() => {
     fetchSettings();
   }, [agentId]);
+  
+  // Debounce tab changes to prevent multiple clicks
+  const handleTabChange = useCallback((tabId: string) => {
+    if (isChangingTab || tabId === activeTab) return;
+    
+    setIsChangingTab(true);
+    setActiveTab(tabId);
+    
+    // Reset the flag after a short delay
+    setTimeout(() => {
+      setIsChangingTab(false);
+    }, 300);
+  }, [activeTab, isChangingTab]);
   
   const fetchSettings = async () => {
     try {
@@ -404,7 +422,7 @@ export const AgentSettings: React.FC<AgentSettingsProps> = ({ agentId, agentName
     setSpotlightAvatarFile(null);
   };
 
-  if (loading && !hasUnsavedChanges) {
+  if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
@@ -415,7 +433,7 @@ export const AgentSettings: React.FC<AgentSettingsProps> = ({ agentId, agentName
     );
   }
   
-  if (error && !hasUnsavedChanges) {
+  if (error) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center max-w-md">
@@ -645,24 +663,55 @@ export const AgentSettings: React.FC<AgentSettingsProps> = ({ agentId, agentName
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-950">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <div className={cn(
+        "bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700",
+        isMobile ? "px-4 py-3" : "px-6 py-4"
+      )}>
+        <div className={cn(
+          "flex items-center justify-between",
+          isMobile && "flex-col gap-3"
+        )}>
+          <div className="flex items-center gap-3">
+            {/* Back Button */}
+            {onBack && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onBack}
+                className={cn(
+                  "flex-shrink-0",
+                  isMobile ? "h-9 w-9" : "h-10 w-10"
+                )}
+              >
+                <ArrowLeft className={cn(
+                  isMobile ? "h-4 w-4" : "h-5 w-5"
+                )} />
+              </Button>
+            )}
             {/* Agent Avatar */}
             <AgentAvatar 
               agent={currentAgent}
-              size="lg"
+              size={isMobile ? "md" : "lg"}
               className="flex-shrink-0"
             />
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Agent Settings</h1>
-              <p className="text-sm text-gray-600 mt-1">{agentName}</p>
+              <h1 className={cn(
+                "font-semibold text-gray-900",
+                isMobile ? "text-base" : "text-xl"
+              )}>Agent Settings</h1>
+              <p className={cn(
+                "text-gray-600 mt-1",
+                isMobile ? "text-xs" : "text-sm"
+              )}>{agentName}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {hasUnsavedChanges && (
+          <div className={cn(
+            "flex items-center gap-3",
+            isMobile && "w-full justify-end"
+          )}>
+            {hasUnsavedChanges && !isMobile && (
               <div className="flex items-center gap-2 text-amber-600">
                 <AlertCircle className="h-4 w-4" />
                 <span className="text-sm">Unsaved changes</span>
@@ -672,50 +721,107 @@ export const AgentSettings: React.FC<AgentSettingsProps> = ({ agentId, agentName
               variant="outline"
               onClick={handleReset}
               disabled={!hasUnsavedChanges}
+              size={isMobile ? "sm" : "default"}
             >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset
+              <RotateCcw className={cn(
+                "mr-2",
+                isMobile ? "h-3.5 w-3.5" : "h-4 w-4"
+              )} />
+              {!isMobile && "Reset"}
             </Button>
             <Button
               onClick={handleSave}
               disabled={!hasUnsavedChanges}
+              size={isMobile ? "sm" : "default"}
             >
-              <Save className="h-4 w-4 mr-2" />
-              Save Changes
+              <Save className={cn(
+                "mr-2",
+                isMobile ? "h-3.5 w-3.5" : "h-4 w-4"
+              )} />
+              {!isMobile && "Save Changes"}
             </Button>
           </div>
         </div>
+        {hasUnsavedChanges && isMobile && (
+          <div className="flex items-center gap-2 text-amber-600 mt-2">
+            <AlertCircle className="h-3.5 w-3.5" />
+            <span className="text-xs">Unsaved changes</span>
+          </div>
+        )}
       </div>
 
-      <div className="flex-1 flex">
-        {/* Sidebar Tabs */}
-        <div className="w-64 bg-white border-r border-gray-200 p-4">
-          <nav className="space-y-1">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  data-tab={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left',
-                    activeTab === tab.id
-                      ? 'bg-brand-50 text-brand-700 border-r-2 border-brand-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
+      <div className={cn(
+        "flex-1",
+        isMobile ? "flex flex-col" : "flex"
+      )}>
+        {/* Mobile Tab Scrollable Header */}
+        {isMobile && (
+          <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+            <nav className="flex min-w-full px-2 py-2">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    data-tab={tab.id}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleTabChange(tab.id);
+                    }}
+                    className={cn(
+                      'flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium transition-colors whitespace-nowrap min-w-fit',
+                      activeTab === tab.id
+                        ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        )}
+
+        {/* Desktop Sidebar Tabs */}
+        {!isMobile && (
+          <div className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 p-4">
+            <nav className="space-y-1">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    data-tab={tab.id}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleTabChange(tab.id);
+                    }}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left',
+                      activeTab === tab.id
+                        ? 'bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400 border-r-2 border-brand-600 dark:border-brand-400'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        )}
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          <div className="p-6 max-w-4xl">
+          <div className={cn(
+            "max-w-4xl",
+            isMobile ? "p-4" : "p-6"
+          )}>
             {renderTabContent()}
           </div>
         </div>

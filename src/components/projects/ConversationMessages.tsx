@@ -267,7 +267,7 @@ export const ConversationMessages: React.FC<ConversationMessagesProps> = ({
           <div className="max-w-4xl mx-auto">
             <div className="mb-4">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Conversation Messages</h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 View and manage messages for conversation #{conversationId}
               </p>
             </div>
@@ -348,7 +348,7 @@ export const ConversationMessages: React.FC<ConversationMessagesProps> = ({
               <Card className="p-8 text-center">
                 <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                 <h3 className="text-lg font-medium text-gray-900 mb-1">No messages found</h3>
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   {searchQuery || filterFeedback !== 'all' 
                     ? 'Try adjusting your filters'
                     : 'This conversation has no messages yet'}

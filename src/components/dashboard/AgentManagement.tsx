@@ -358,9 +358,13 @@ const AgentCard: React.FC<AgentCardProps> = ({
   );
 };
 
-export const AgentManagement: React.FC = () => {
+interface AgentManagementProps {
+  onEditAgent?: (agentId: number) => void;
+}
+
+export const AgentManagement: React.FC<AgentManagementProps> = ({ onEditAgent }) => {
   const router = useRouter();
-  const { agents, loading, error, fetchAgents, deleteAgent, replicateAgent, updateAgent, getAgentStats } = useAgentStore();
+  const { agents, loading, error, fetchAgents, deleteAgent, replicateAgent, updateAgent, getAgentStats, loadMoreAgents, paginationMeta } = useAgentStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'processing'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'created' | 'id'>('created');
@@ -368,10 +372,19 @@ export const AgentManagement: React.FC = () => {
   const [extendedAgents, setExtendedAgents] = useState<ExtendedAgent[]>([]);
   const [showShareModal, setShowShareModal] = useState<ExtendedAgent | null>(null);
   const [showEmbedModal, setShowEmbedModal] = useState<ExtendedAgent | null>(null);
+  const [isAutoLoading, setIsAutoLoading] = useState(false);
+  const [hasLoadedAllForSearch, setHasLoadedAllForSearch] = useState(false);
   
   useEffect(() => {
     fetchAgents();
+    // Reset search state when component mounts
+    setHasLoadedAllForSearch(false);
   }, []);
+  
+  // Reset search state when agents are refetched
+  useEffect(() => {
+    setHasLoadedAllForSearch(false);
+  }, [agents.length === 0]); // Only reset when agents list is empty (after refetch)
   
   // Load stats for each agent
   useEffect(() => {
@@ -395,6 +408,65 @@ export const AgentManagement: React.FC = () => {
     }
   }, [agents]);
 
+  // Auto-load all agents when searching to ensure comprehensive search results
+  const loadAllAgentsForSearch = async () => {
+    if (isAutoLoading || hasLoadedAllForSearch) return;
+    
+    console.log('🔍 [AGENT-SEARCH] Auto-loading all agents for search...', {
+      currentCount: agents.length,
+      hasMore: paginationMeta?.hasMore,
+      totalCount: paginationMeta?.totalCount
+    });
+    
+    setIsAutoLoading(true);
+    
+    try {
+      // Keep loading until all agents are loaded
+      let hasMore = paginationMeta?.hasMore ?? true;
+      let attempts = 0;
+      const maxAttempts = 50; // Safety limit to prevent infinite loops
+      
+      while (hasMore && attempts < maxAttempts) {
+        attempts++;
+        console.log(`🔍 [AGENT-SEARCH] Loading more agents, attempt ${attempts}...`);
+        
+        await loadMoreAgents();
+        
+        // Get updated pagination meta
+        const store = useAgentStore.getState();
+        hasMore = store.paginationMeta?.hasMore ?? false;
+        
+        console.log(`🔍 [AGENT-SEARCH] Loaded batch ${attempts}`, {
+          currentCount: store.agents.length,
+          hasMore: hasMore,
+          totalCount: store.paginationMeta?.totalCount
+        });
+        
+        // Small delay to prevent overwhelming the API
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      setHasLoadedAllForSearch(true);
+      console.log('✅ [AGENT-SEARCH] Finished loading all agents for search');
+      
+    } catch (error) {
+      console.error('❌ [AGENT-SEARCH] Failed to load all agents:', error);
+      toast.error('Failed to load all agents for search. Some results may be missing.');
+    } finally {
+      setIsAutoLoading(false);
+    }
+  };
+
+  // Handle search input change with auto-loading
+  const handleSearchChange = async (query: string) => {
+    setSearchQuery(query);
+    
+    // If user is searching and we haven't loaded all agents yet, auto-load them
+    if (query.trim() && !hasLoadedAllForSearch && paginationMeta?.hasMore) {
+      await loadAllAgentsForSearch();
+    }
+  };
+
   const getAgentStatus = (agent: ExtendedAgent) => {
     if (!agent.is_chat_active) return 'inactive';
     if (agent.type === 'SITEMAP' && agent.stats && agent.stats.pages_crawled < agent.stats.pages_found) {
@@ -414,7 +486,12 @@ export const AgentManagement: React.FC = () => {
   };
 
   const handleEditAgent = (agent: ExtendedAgent) => {
-    router.push(`/dashboard/projects/${agent.id}/settings`);
+    if (onEditAgent) {
+      onEditAgent(agent.id);
+    } else {
+      // Fallback to router navigation if no callback provided
+      router.push(`/dashboard/projects/${agent.id}/settings`);
+    }
   };
 
   const handleDeleteAgent = async (agent: ExtendedAgent) => {
@@ -481,10 +558,32 @@ export const AgentManagement: React.FC = () => {
               type="text"
               placeholder="Search agents..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-80 bg-background text-foreground"
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pl-10 pr-12 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-80 bg-background text-foreground"
             />
+            {/* Auto-loading indicator */}
+            {isAutoLoading && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-600"></div>
+              </div>
+            )}
           </div>
+          
+          {/* Search status indicator */}
+          {searchQuery && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {isAutoLoading ? (
+                <span>Loading all agents for search...</span>
+              ) : (
+                <span>
+                  Searching {agents.length} {hasLoadedAllForSearch ? 'of all' : 'loaded'} agents
+                  {paginationMeta?.totalCount && !hasLoadedAllForSearch && (
+                    <span> ({paginationMeta.totalCount} total)</span>
+                  )}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Status Filter */}
           <select
@@ -580,7 +679,7 @@ export const AgentManagement: React.FC = () => {
       </div>
 
       {/* Agent Grid/List */}
-      {loading ? (
+      {loading && !isAutoLoading ? (
         <div className="text-center py-12">
           <div className="inline-flex items-center gap-2">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-600"></div>
@@ -630,6 +729,34 @@ export const AgentManagement: React.FC = () => {
               onViewEmbed={handleViewEmbed}
             />
           ))}
+        </div>
+      )}
+      
+      {/* Load More Button - shown when there are more agents to load and user is not searching */}
+      {!loading && !isAutoLoading && paginationMeta?.hasMore && !searchQuery && (
+        <div className="text-center py-8">
+          <Button
+            onClick={() => loadMoreAgents()}
+            variant="outline"
+            className="flex items-center gap-2"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                Loading...
+              </>
+            ) : (
+              <>
+                Load More Agents
+                {paginationMeta?.totalCount && (
+                  <span className="text-muted-foreground">
+                    ({agents.length} of {paginationMeta.totalCount})
+                  </span>
+                )}
+              </>
+            )}
+          </Button>
         </div>
       )}
       

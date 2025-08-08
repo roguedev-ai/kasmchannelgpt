@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import type { Conversation } from '@/types';
 import { Button } from '@/components/ui/button';
-import { formatTimestamp } from '@/lib/utils';
+import { formatTimestamp, cn } from '@/lib/utils';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 
 interface ConversationDetailsModalProps {
   conversation: Conversation | null;
@@ -21,6 +22,8 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
   onExport,
   onShare,
 }) => {
+  const { isMobile } = useBreakpoint();
+  
   if (!isOpen || !conversation) return null;
 
   const copyToClipboard = (text: string, label: string) => {
@@ -57,136 +60,296 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-x-0 top-[10%] mx-auto max-w-2xl bg-background rounded-lg shadow-xl z-50 max-h-[80vh] overflow-hidden"
+            initial={{ opacity: 0, scale: 0.95, y: isMobile ? '100%' : 0 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: isMobile ? '100%' : 0 }}
+            className={cn(
+              "fixed bg-background shadow-xl z-50",
+              isMobile 
+                ? "inset-x-0 bottom-0 top-20 rounded-t-xl flex flex-col" 
+                : "inset-x-0 top-[10%] mx-auto max-w-2xl rounded-lg max-h-[80vh] overflow-hidden"
+            )}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border">
-              <h2 className="text-xl font-semibold text-foreground">Conversation Details</h2>
+            <div className={cn(
+              "flex items-center justify-between border-b border-border bg-background/95 backdrop-blur-sm flex-shrink-0",
+              isMobile ? "px-4 py-4" : "p-6"
+            )}>
+              <h2 className={cn(
+                "font-semibold text-foreground",
+                isMobile ? "text-base" : "text-xl"
+              )}>Conversation Details</h2>
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={onClose}
-                className="h-8 w-8"
+                className={cn(
+                  isMobile ? "h-9 w-9 touch-target" : "h-8 w-8"
+                )}
               >
-                <X className="h-4 w-4" />
+                <X className={cn(
+                  isMobile ? "h-5 w-5" : "h-4 w-4"
+                )} />
               </Button>
             </div>
 
             {/* Content */}
-            <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(80vh-200px)]">
+            <div className={cn(
+              "overflow-y-auto",
+              isMobile 
+                ? "flex-1 px-4 py-4 pb-6 safe-area-pb space-y-6" 
+                : "p-6 space-y-6 max-h-[calc(80vh-200px)]"
+            )}>
               {/* Basic Information */}
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                <h3 className={cn(
+                  "font-medium text-muted-foreground uppercase tracking-wider mb-4",
+                  isMobile ? "text-xs" : "text-sm"
+                )}>
                   Basic Information
                 </h3>
-                <div className="bg-muted rounded-lg p-4 space-y-3">
-                  <div className="flex items-start justify-between">
+                <div className={cn(
+                  "bg-muted rounded-lg space-y-4",
+                  isMobile ? "p-4" : "p-4 space-y-3"
+                )}>
+                  {/* Conversation Name */}
+                  <div className={cn(
+                    isMobile ? "space-y-2" : "flex items-start justify-between"
+                  )}>
                     <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">Conversation Name</span>
+                      <Hash className={cn(
+                        "text-muted-foreground",
+                        isMobile ? "h-4 w-4" : "h-4 w-4"
+                      )} />
+                      <span className={cn(
+                        "font-medium text-foreground",
+                        isMobile ? "text-sm" : "text-sm"
+                      )}>Conversation Name</span>
                     </div>
-                    <span className="text-sm text-foreground font-medium">{conversation.name}</span>
+                    <span className={cn(
+                      "text-foreground font-medium break-words",
+                      isMobile ? "text-sm ml-6 block" : "text-sm"
+                    )}>{conversation.name}</span>
                   </div>
 
-                  <div className="flex items-start justify-between">
+                  {/* Conversation ID */}
+                  <div className={cn(
+                    isMobile ? "space-y-2" : "flex items-start justify-between"
+                  )}>
                     <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">Conversation ID</span>
+                      <Hash className={cn(
+                        "text-muted-foreground",
+                        isMobile ? "h-4 w-4" : "h-4 w-4"
+                      )} />
+                      <span className={cn(
+                        "font-medium text-foreground",
+                        isMobile ? "text-sm" : "text-sm"
+                      )}>Conversation ID</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-foreground font-mono">{conversation.id}</span>
+                    <div className={cn(
+                      "flex items-center gap-2",
+                      isMobile ? "ml-6" : ""
+                    )}>
+                      <span className={cn(
+                        "text-foreground font-mono",
+                        isMobile ? "text-xs" : "text-sm"
+                      )}>{conversation.id}</span>
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-6 w-6"
+                        className={cn(
+                          isMobile ? "h-8 w-8 touch-target" : "h-6 w-6"
+                        )}
                         onClick={() => copyToClipboard(conversation.id.toString(), 'Conversation ID')}
                       >
-                        <Copy className="h-3 w-3" />
+                        <Copy className={cn(
+                          isMobile ? "h-4 w-4" : "h-3 w-3"
+                        )} />
                       </Button>
                     </div>
                   </div>
 
-                  <div className="flex items-start justify-between">
+                  {/* Session ID */}
+                  <div className={cn(
+                    isMobile ? "space-y-2" : "flex items-start justify-between"
+                  )}>
                     <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">Session ID</span>
+                      <Hash className={cn(
+                        "text-muted-foreground",
+                        isMobile ? "h-4 w-4" : "h-4 w-4"
+                      )} />
+                      <span className={cn(
+                        "font-medium text-foreground",
+                        isMobile ? "text-sm" : "text-sm"
+                      )}>Session ID</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-foreground font-mono truncate max-w-[300px]" title={conversation.session_id}>
+                    <div className={cn(
+                      "flex items-center gap-2",
+                      isMobile ? "ml-6" : ""
+                    )}>
+                      <span 
+                        className={cn(
+                          "text-foreground font-mono break-all",
+                          isMobile ? "text-sm" : "text-sm truncate max-w-[300px]"
+                        )} 
+                        title={conversation.session_id}
+                      >
                         {conversation.session_id}
                       </span>
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-6 w-6"
+                        className={cn(
+                          isMobile ? "h-8 w-8 touch-target flex-shrink-0" : "h-6 w-6"
+                        )}
                         onClick={() => copyToClipboard(conversation.session_id, 'Session ID')}
                       >
-                        <Copy className="h-3 w-3" />
+                        <Copy className={cn(
+                          isMobile ? "h-4 w-4" : "h-3 w-3"
+                        )} />
                       </Button>
                     </div>
                   </div>
 
-                  <div className="flex items-start justify-between">
+                  {/* Project ID */}
+                  <div className={cn(
+                    isMobile ? "space-y-2" : "flex items-start justify-between"
+                  )}>
                     <div className="flex items-center gap-2">
-                      <Hash className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">Project ID</span>
+                      <Hash className={cn(
+                        "text-muted-foreground",
+                        isMobile ? "h-4 w-4" : "h-4 w-4"
+                      )} />
+                      <span className={cn(
+                        "font-medium text-foreground",
+                        isMobile ? "text-sm" : "text-sm"
+                      )}>Project ID</span>
                     </div>
-                    <span className="text-sm text-foreground">{conversation.project_id}</span>
+                    <span className={cn(
+                      "text-foreground",
+                      isMobile ? "text-sm ml-6 block" : "text-sm"
+                    )}>{conversation.project_id}</span>
                   </div>
 
+                  {/* Message Count */}
                   {conversation.message_count !== undefined && (
-                    <div className="flex items-start justify-between">
+                    <div className={cn(
+                      isMobile ? "space-y-2" : "flex items-start justify-between"
+                    )}>
                       <div className="flex items-center gap-2">
-                        <Hash className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium text-foreground">Message Count</span>
+                        <Hash className={cn(
+                          "text-muted-foreground",
+                          isMobile ? "h-4 w-4" : "h-4 w-4"
+                        )} />
+                        <span className={cn(
+                          "font-medium text-foreground",
+                          isMobile ? "text-sm" : "text-sm"
+                        )}>Message Count</span>
                       </div>
-                      <span className="text-sm text-foreground">{conversation.message_count} messages</span>
+                      <span className={cn(
+                        "text-foreground",
+                        isMobile ? "text-sm ml-6 block" : "text-sm"
+                      )}>{conversation.message_count} messages</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Timestamps */}
+              {/* Timeline */}
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                <h3 className={cn(
+                  "font-medium text-muted-foreground uppercase tracking-wider mb-4",
+                  isMobile ? "text-xs" : "text-sm"
+                )}>
                   Timeline
                 </h3>
-                <div className="bg-muted rounded-lg p-4 space-y-3">
-                  <div className="flex items-start justify-between">
+                <div className={cn(
+                  "bg-muted rounded-lg space-y-4",
+                  isMobile ? "p-4" : "p-4 space-y-3"
+                )}>
+                  {/* Created At */}
+                  <div className={cn(
+                    isMobile ? "space-y-2" : "flex items-start justify-between"
+                  )}>
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">Created At</span>
+                      <Calendar className={cn(
+                        "text-muted-foreground",
+                        isMobile ? "h-4 w-4" : "h-4 w-4"
+                      )} />
+                      <span className={cn(
+                        "font-medium text-foreground",
+                        isMobile ? "text-sm" : "text-sm"
+                      )}>Created At</span>
                     </div>
-                    <div className="text-right">
-                      <span className="text-sm text-foreground block">{formatFullTimestamp(conversation.created_at)}</span>
-                      <span className="text-xs text-muted-foreground">({formatTimestamp(conversation.created_at)})</span>
+                    <div className={cn(
+                      isMobile ? "ml-6 space-y-1" : "text-right"
+                    )}>
+                      <span className={cn(
+                        "text-foreground block",
+                        isMobile ? "text-sm" : "text-sm"
+                      )}>{formatFullTimestamp(conversation.created_at)}</span>
+                      <span className={cn(
+                        "text-muted-foreground",
+                        isMobile ? "text-xs" : "text-xs"
+                      )}>({formatTimestamp(conversation.created_at)})</span>
                     </div>
                   </div>
 
-                  <div className="flex items-start justify-between">
+                  {/* Last Updated */}
+                  <div className={cn(
+                    isMobile ? "space-y-2" : "flex items-start justify-between"
+                  )}>
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">Last Updated</span>
+                      <Clock className={cn(
+                        "text-muted-foreground",
+                        isMobile ? "h-4 w-4" : "h-4 w-4"
+                      )} />
+                      <span className={cn(
+                        "font-medium text-foreground",
+                        isMobile ? "text-sm" : "text-sm"
+                      )}>Last Updated</span>
                     </div>
-                    <div className="text-right">
-                      <span className="text-sm text-foreground block">{formatFullTimestamp(conversation.updated_at)}</span>
-                      <span className="text-xs text-muted-foreground">({formatTimestamp(conversation.updated_at)})</span>
+                    <div className={cn(
+                      isMobile ? "ml-6 space-y-1" : "text-right"
+                    )}>
+                      <span className={cn(
+                        "text-foreground block",
+                        isMobile ? "text-sm" : "text-sm"
+                      )}>{formatFullTimestamp(conversation.updated_at)}</span>
+                      <span className={cn(
+                        "text-muted-foreground",
+                        isMobile ? "text-xs" : "text-xs"
+                      )}>({formatTimestamp(conversation.updated_at)})</span>
                     </div>
                   </div>
 
+                  {/* Deleted At */}
                   {conversation.deleted_at && (
-                    <div className="flex items-start justify-between">
+                    <div className={cn(
+                      isMobile ? "space-y-2" : "flex items-start justify-between"
+                    )}>
                       <div className="flex items-center gap-2">
-                        <AlertCircle className="h-4 w-4 text-red-400" />
-                        <span className="text-sm font-medium text-red-700">Deleted At</span>
+                        <AlertCircle className={cn(
+                          "text-red-400",
+                          isMobile ? "h-4 w-4" : "h-4 w-4"
+                        )} />
+                        <span className={cn(
+                          "font-medium text-red-700",
+                          isMobile ? "text-sm" : "text-sm"
+                        )}>Deleted At</span>
                       </div>
-                      <div className="text-right">
-                        <span className="text-sm text-red-900 block">{formatFullTimestamp(conversation.deleted_at)}</span>
-                        <span className="text-xs text-red-500">({formatTimestamp(conversation.deleted_at)})</span>
+                      <div className={cn(
+                        isMobile ? "ml-6 space-y-1" : "text-right"
+                      )}>
+                        <span className={cn(
+                          "text-red-900 block",
+                          isMobile ? "text-sm" : "text-sm"
+                        )}>{formatFullTimestamp(conversation.deleted_at)}</span>
+                        <span className={cn(
+                          "text-red-500",
+                          isMobile ? "text-xs" : "text-xs"
+                        )}>({formatTimestamp(conversation.deleted_at)})</span>
                       </div>
                     </div>
                   )}
@@ -196,16 +359,33 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
               {/* User Information */}
               {conversation.created_by && (
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                  <h3 className={cn(
+                    "font-medium text-muted-foreground uppercase tracking-wider mb-4",
+                    isMobile ? "text-xs" : "text-sm"
+                  )}>
                     User Information
                   </h3>
-                  <div className="bg-accent rounded-lg p-4">
-                    <div className="flex items-start justify-between">
+                  <div className={cn(
+                    "bg-accent rounded-lg",
+                    isMobile ? "p-4" : "p-4"
+                  )}>
+                    <div className={cn(
+                      isMobile ? "space-y-2" : "flex items-start justify-between"
+                    )}>
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium text-foreground">Created By</span>
+                        <User className={cn(
+                          "text-muted-foreground",
+                          isMobile ? "h-4 w-4" : "h-4 w-4"
+                        )} />
+                        <span className={cn(
+                          "font-medium text-foreground",
+                          isMobile ? "text-sm" : "text-sm"
+                        )}>Created By</span>
                       </div>
-                      <span className="text-sm text-foreground">User ID: {conversation.created_by}</span>
+                      <span className={cn(
+                        "text-foreground",
+                        isMobile ? "text-sm ml-6 block" : "text-sm"
+                      )}>User ID: {conversation.created_by}</span>
                     </div>
                   </div>
                 </div>
@@ -213,28 +393,48 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
 
               {/* Actions */}
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                <h3 className={cn(
+                  "font-medium text-muted-foreground uppercase tracking-wider mb-4",
+                  isMobile ? "text-xs" : "text-sm"
+                )}>
                   Actions
                 </h3>
-                <div className="flex gap-3">
+                <div className={cn(
+                  "flex gap-3",
+                  isMobile ? "flex-col space-y-3" : "flex-row"
+                )}>
                   {onExport && (
                     <Button
                       variant="outline"
                       onClick={() => onExport(conversation)}
-                      className="flex items-center gap-2"
+                      className={cn(
+                        "flex items-center gap-2",
+                        isMobile ? "w-full h-11 touch-target justify-center" : ""
+                      )}
                     >
-                      <Download className="h-4 w-4" />
-                      Export Conversation
+                      <Download className={cn(
+                        isMobile ? "h-5 w-5" : "h-4 w-4"
+                      )} />
+                      <span className={cn(
+                        isMobile ? "text-sm" : ""
+                      )}>Export Conversation</span>
                     </Button>
                   )}
                   {onShare && (
                     <Button
                       variant="outline"
                       onClick={() => onShare(conversation)}
-                      className="flex items-center gap-2"
+                      className={cn(
+                        "flex items-center gap-2",
+                        isMobile ? "w-full h-11 touch-target justify-center" : ""
+                      )}
                     >
-                      <Share2 className="h-4 w-4" />
-                      Share Conversation
+                      <Share2 className={cn(
+                        isMobile ? "h-5 w-5" : "h-4 w-4"
+                      )} />
+                      <span className={cn(
+                        isMobile ? "text-sm" : ""
+                      )}>Share Conversation</span>
                     </Button>
                   )}
                 </div>
@@ -242,13 +442,15 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-border bg-accent">
-              <div className="flex justify-end">
-                <Button onClick={onClose}>
-                  Close
-                </Button>
+            {!isMobile && (
+              <div className="p-6 border-t border-border bg-accent">
+                <div className="flex justify-end">
+                  <Button onClick={onClose}>
+                    Close
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </motion.div>
         </>
       )}

@@ -161,9 +161,11 @@ const IframeApp: React.FC = () => {
       <Toaster 
         position="top-center"
         closeButton
+        gap={8}
         toastOptions={{
           style: { 
-            zIndex: 10000
+            zIndex: 10000,
+            marginTop: '8px'
           }
         }}
       />

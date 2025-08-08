@@ -33,6 +33,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn, formatTimestamp, handleApiError } from '@/lib/utils';
 import { getClient, isClientInitialized } from '@/lib/api/client';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 import type { Agent, Conversation, ConversationsResponse } from '@/types';
 import { ConversationMessages } from '@/components/projects/ConversationMessages';
 import {
@@ -47,6 +48,7 @@ interface ConversationsSettingsProps {
 }
 
 export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ project }) => {
+  const { isMobile } = useBreakpoint();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -126,32 +128,59 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
 
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className={cn(
+      "max-w-6xl mx-auto",
+      isMobile ? "p-4 mobile-px" : "p-6"
+    )}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Conversations</h2>
-          <p className="text-muted-foreground mt-1">
+      <div className={cn(
+        "mb-6",
+        isMobile ? "flex-col gap-4" : "flex items-center justify-between"
+      )}>
+        <div className={isMobile ? "w-full" : ""}>
+          <h2 className={cn(
+            "font-bold text-foreground",
+            isMobile ? "text-xl mobile-text-xl" : "text-2xl"
+          )}>Conversations</h2>
+          <p className={cn(
+            "text-muted-foreground mt-1",
+            isMobile ? "text-sm mobile-text-sm" : ""
+          )}>
             Manage chat history, sharing, and analytics for {project.project_name}
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className={cn(
+          "flex gap-3",
+          isMobile ? "w-full justify-center mt-4" : "items-center"
+        )}>
           <Button
             variant="outline"
             onClick={handleRefresh}
             disabled={loading}
             size="sm"
+            className={isMobile ? "h-9 px-3 text-sm" : ""}
           >
-            <RefreshCw className={cn('w-4 h-4 mr-2', loading && 'animate-spin')} />
+            <RefreshCw className={cn('w-4 h-4 mr-1.5', loading && 'animate-spin')} />
             Refresh
           </Button>
           
+          {!isMobile && (
+            <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+              GET /projects/{project.id}/conversations
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* API Route Info - Mobile */}
+      {isMobile && (
+        <div className="mb-4 text-center">
           <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
             GET /projects/{project.id}/conversations
           </span>
         </div>
-      </div>
+      )}
 
       {/* Error State */}
       {error && (
@@ -172,7 +201,10 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
       )}
 
       {/* Stats Card */}
-      <Card className="p-4 mb-6">
+      <Card className={cn(
+        "mb-6",
+        isMobile ? "p-4 mobile-px mobile-py" : "p-4"
+      )}>
         <div className="flex items-center">
           <MessageCircle className="w-8 h-8 text-blue-600" />
           <div className="ml-4">
@@ -188,19 +220,28 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search conversations by name or session ID..."
+            placeholder={isMobile ? "Search conversations..." : "Search conversations by name or session ID..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className={cn(
+              "w-full pl-10 pr-4 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground",
+              isMobile ? "py-3 text-base mobile-input" : "py-2"
+            )}
           />
         </div>
       </div>
 
       {/* Conversations List */}
       {loading && conversations.length === 0 ? (
-        <div className="space-y-4">
+        <div className={cn(
+          "space-y-4",
+          isMobile && "space-y-3"
+        )}>
           {[...Array(5)].map((_, i) => (
-            <Card key={i} className="p-6 animate-pulse">
+            <Card key={i} className={cn(
+              "animate-pulse",
+              isMobile ? "p-4 mobile-px mobile-py" : "p-6"
+            )}>
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-muted rounded-lg" />
                 <div className="flex-1">
@@ -213,12 +254,24 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
           ))}
         </div>
       ) : filteredConversations.length === 0 ? (
-        <Card className="p-12 text-center">
-          <MessageCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">
+        <Card className={cn(
+          "text-center",
+          isMobile ? "p-8 mobile-px mobile-py" : "p-12"
+        )}>
+          <MessageCircle className={cn(
+            "text-muted-foreground mx-auto mb-4",
+            isMobile ? "w-12 h-12" : "w-16 h-16"
+          )} />
+          <h3 className={cn(
+            "font-medium text-foreground mb-2",
+            isMobile ? "text-base mobile-text-lg" : "text-lg"
+          )}>
             {searchQuery ? 'No conversations found' : 'No conversations yet'}
           </h3>
-          <p className="text-muted-foreground mb-6">
+          <p className={cn(
+            "text-muted-foreground",
+            isMobile ? "text-sm mobile-text-sm mb-4" : "mb-6"
+          )}>
             {searchQuery 
               ? 'Try adjusting your search or filters'
               : 'Conversations will appear here once users start chatting with your agent'
@@ -226,11 +279,20 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
           </p>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className={cn(
+          "space-y-4",
+          isMobile && "space-y-3"
+        )}>
           {filteredConversations.map((conversation) => {
             return (
-              <Card key={conversation.id} className="p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-start gap-4">
+              <Card key={conversation.id} className={cn(
+                "hover:shadow-lg transition-shadow",
+                isMobile ? "p-4 mobile-px mobile-py" : "p-6"
+              )}>
+                <div className={cn(
+                  "flex items-start gap-4",
+                  isMobile && "gap-3"
+                )}>
                   {/* Icon */}
                   <div className="w-10 h-10 rounded-lg bg-brand-100 flex items-center justify-center flex-shrink-0">
                     <MessageCircle className="w-5 h-5 text-brand-600" />
@@ -238,13 +300,22 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
                   
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-2">
+                    <div className={cn(
+                      "flex items-start justify-between mb-2",
+                      isMobile && "flex-col gap-1"
+                    )}>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-foreground truncate mb-1">
+                        <h3 className={cn(
+                          "font-semibold text-foreground truncate mb-1",
+                          isMobile ? "text-base mobile-text-lg" : "text-lg"
+                        )}>
                           {conversation.name || `Conversation ${conversation.id}`}
                         </h3>
                         
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                        <div className={cn(
+                          "text-muted-foreground mb-2",
+                          isMobile ? "flex flex-col gap-1 text-xs" : "flex items-center gap-4 text-sm"
+                        )}>
                           <span>Session ID: {conversation.session_id}</span>
                           {conversation.created_by && (
                             <span>User ID: {conversation.created_by}</span>
@@ -254,7 +325,10 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
                     </div>
 
                     {/* Metadata */}
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+                    <div className={cn(
+                      "text-muted-foreground mb-3",
+                      isMobile ? "flex flex-col gap-1 text-xs" : "flex items-center gap-4 text-xs"
+                    )}>
                       <span>Created {formatTimestamp(conversation.created_at)}</span>
                       {conversation.updated_at && (
                         <span>Updated {formatTimestamp(conversation.updated_at)}</span>
@@ -262,7 +336,10 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 pt-3 border-t">
+                    <div className={cn(
+                      "pt-3 border-t",
+                      isMobile ? "grid grid-cols-2 gap-2" : "flex items-center gap-2"
+                    )}>
                       <Button 
                         size="sm" 
                         variant="ghost"
@@ -270,18 +347,22 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
                           setSelectedConversation(conversation);
                           setShowMessagesModal(true);
                         }}
+                        className={isMobile ? "h-8 px-3 text-xs" : ""}
                       >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Messages
+                        <Eye className="w-4 h-4 mr-1.5" />
+                        {isMobile ? 'View' : 'View Messages'}
                       </Button>
                       
                       <Button 
                         size="sm" 
                         variant="ghost"
                         onClick={() => handleDeleteConversation(conversation.session_id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className={cn(
+                          "text-red-600 hover:text-red-700 hover:bg-red-50",
+                          isMobile ? "h-8 px-3 text-xs" : ""
+                        )}
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
+                        <Trash2 className="w-4 h-4 mr-1.5" />
                         Delete
                       </Button>
                     </div>
@@ -293,16 +374,23 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
           
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
+            <div className={cn(
+              "flex items-center justify-center gap-2 mt-6",
+              isMobile && "gap-1 mt-4"
+            )}>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1 || loading}
+                className={isMobile ? "h-8 px-3 text-xs" : ""}
               >
-                Previous
+                {isMobile ? 'Prev' : 'Previous'}
               </Button>
-              <span className="text-sm text-muted-foreground">
+              <span className={cn(
+                "text-muted-foreground",
+                isMobile ? "text-xs mx-2" : "text-sm"
+              )}>
                 Page {currentPage} of {totalPages}
               </span>
               <Button
@@ -310,6 +398,7 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
                 size="sm"
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages || loading}
+                className={isMobile ? "h-8 px-3 text-xs" : ""}
               >
                 Next
               </Button>
@@ -328,9 +417,17 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
           }
         }}
       >
-        <DialogContent className="max-w-6xl h-[90vh] flex flex-col p-0">
-          <DialogHeader className="px-6 py-4 border-b">
-            <DialogTitle>Conversation Messages</DialogTitle>
+        <DialogContent className={cn(
+          "h-[90vh] flex flex-col p-0",
+          isMobile ? "max-w-[95vw] w-[95vw]" : "max-w-6xl"
+        )}>
+          <DialogHeader className={cn(
+            "border-b",
+            isMobile ? "px-4 py-3" : "px-6 py-4"
+          )}>
+            <DialogTitle className={isMobile ? "text-base mobile-text-lg" : ""}>
+              Conversation Messages
+            </DialogTitle>
           </DialogHeader>
           
           {selectedConversation && (

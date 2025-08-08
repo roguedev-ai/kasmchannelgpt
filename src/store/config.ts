@@ -44,8 +44,10 @@ export const useConfigStore = create<ConfigStore>()(
       }),
       onRehydrateStorage: () => (state) => {
         // Apply theme on rehydration
-        if (state?.theme && typeof window !== 'undefined') {
-          document.documentElement.className = state.theme;
+        if (typeof window !== 'undefined') {
+          // Use stored theme if available, otherwise default to 'light'
+          const theme = state?.theme || 'light';
+          document.documentElement.className = theme;
         }
       },
     }

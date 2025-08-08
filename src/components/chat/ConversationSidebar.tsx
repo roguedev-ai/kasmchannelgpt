@@ -38,7 +38,7 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -389,18 +389,23 @@ interface ConversationSidebarProps {
   className?: string;
   isCollapsed?: boolean;
   onToggle?: () => void;
+  isMobile?: boolean;
+  onConversationSelect?: () => void;
 }
 
 export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
   className,
   isCollapsed = false,
-  onToggle
+  onToggle,
+  isMobile = false,
+  onConversationSelect
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [showSortFilter, setShowSortFilter] = useState(false);
   const [searchMode, setSearchMode] = useState<'name' | 'id' | 'session'>('name');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [isSearching, setIsSearching] = useState(false);
   
   const { 
     conversations, 
@@ -445,48 +450,92 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
     }
   }, [currentAgent, fetchConversations]);
 
-  // Filter conversations based on search query and advanced filters
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    async (query: string) => {
+      if (!currentAgent) return;
+      
+      setIsSearching(true);
+      try {
+        await fetchConversations(currentAgent.id, { 
+          page: 1,
+          searchQuery: query.trim() || undefined,
+          searchMode: searchMode,
+          dateFilter: dateFilter !== 'all' ? dateFilter : undefined,
+          order: sortOrder,
+          orderBy: sortBy,
+          userFilter: userFilter !== 'all' ? userFilter : undefined
+        });
+      } catch (error) {
+        logger.error('UI', 'Failed to search conversations', error);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [currentAgent, searchMode, dateFilter, sortOrder, sortBy, userFilter, fetchConversations]
+  );
+
+  // Debounce search calls
+  useEffect(() => {
+    // Skip initial empty state to prevent unnecessary API call on mount
+    if (searchQuery === '') return;
+    
+    const timeoutId = setTimeout(() => {
+      debouncedSearch(searchQuery);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, debouncedSearch]);
+
+  // Handle search input change
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  // Handle date filter change
+  const handleDateFilterChange = async (filter: 'all' | 'today' | 'week' | 'month') => {
+    setDateFilter(filter);
+    
+    if (!currentAgent) return;
+    
+    try {
+      await fetchConversations(currentAgent.id, { 
+        page: 1,
+        searchQuery: searchQuery.trim() || undefined,
+        searchMode: searchMode,
+        dateFilter: filter !== 'all' ? filter : undefined,
+        order: sortOrder,
+        orderBy: sortBy,
+        userFilter: userFilter !== 'all' ? userFilter : undefined
+      });
+    } catch (error) {
+      logger.error('UI', 'Failed to filter conversations by date', error);
+    }
+  };
+
+  // Handle search mode change  
+  const handleSearchModeChange = async (mode: 'name' | 'id' | 'session') => {
+    setSearchMode(mode);
+    
+    if (!currentAgent || !searchQuery.trim()) return;
+    
+    try {
+      await fetchConversations(currentAgent.id, { 
+        page: 1,
+        searchQuery: searchQuery.trim(),
+        searchMode: mode,
+        dateFilter: dateFilter !== 'all' ? dateFilter : undefined,
+        order: sortOrder,
+        orderBy: sortBy,
+        userFilter: userFilter !== 'all' ? userFilter : undefined
+      });
+    } catch (error) {
+      logger.error('UI', 'Failed to change search mode', error);
+    }
+  };
   
-  const filteredConversations = Array.isArray(conversations) 
-    ? conversations.filter(conversation => {
-        // Search filter
-        if (searchQuery) {
-          const query = searchQuery.toLowerCase();
-          switch (searchMode) {
-            case 'name':
-              if (!conversation.name.toLowerCase().includes(query)) return false;
-              break;
-            case 'id':
-              if (!conversation.id.toString().includes(query)) return false;
-              break;
-            case 'session':
-              if (!conversation.session_id.toLowerCase().includes(query)) return false;
-              break;
-          }
-        }
-        
-        // Date filter
-        if (dateFilter !== 'all') {
-          const convDate = new Date(conversation.updated_at);
-          const now = new Date();
-          const diffDays = Math.floor((now.getTime() - convDate.getTime()) / (1000 * 60 * 60 * 24));
-          
-          switch (dateFilter) {
-            case 'today':
-              if (diffDays > 0) return false;
-              break;
-            case 'week':
-              if (diffDays > 7) return false;
-              break;
-            case 'month':
-              if (diffDays > 30) return false;
-              break;
-          }
-        }
-        
-        return true;
-      })
-    : [];
+  // Use conversations directly since filtering is now done server-side
+  const filteredConversations = Array.isArray(conversations) ? conversations : [];
 
   const handleNewConversation = async () => {
     if (!currentAgent || isCreating) return;
@@ -503,6 +552,11 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
       clearMessages(); // Clear current messages when starting new conversation
       logger.info('UI', 'New conversation created successfully', { name });
       toast.success('New conversation created');
+      
+      // Call the onConversationSelect callback to close the mobile drawer
+      if (onConversationSelect) {
+        onConversationSelect();
+      }
     } catch (error) {
       logger.error('UI', 'Failed to create conversation', error, {
         agentId: currentAgent.id,
@@ -540,6 +594,11 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
       logger.info('UI', 'Messages loaded successfully for conversation', {
         conversationId: conversation.id
       });
+      
+      // Call the onConversationSelect callback to close the mobile drawer
+      if (onConversationSelect) {
+        onConversationSelect();
+      }
     } catch (error) {
       logger.error('UI', 'Failed to load messages for conversation', error, {
         conversationId: conversation.id,
@@ -571,7 +630,10 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
     }
   };
 
-  if (isCollapsed) {
+  // Use prop or fallback to viewport check if needed
+  // const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  
+  if (isCollapsed && !isMobile) {
     return (
       <div className={cn('w-12 bg-muted border-r border-border flex flex-col', className)}>
         <div className="p-2">
@@ -590,20 +652,26 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
   }
 
   return (
-    <div className={cn('w-80 bg-muted border-r border-border flex flex-col', className)}>
+    <div className={cn(
+      'bg-muted flex flex-col',
+      isMobile ? 'w-full h-full' : 'w-80 border-r border-border',
+      className
+    )}>
       {/* Header */}
       <div className="p-4 border-b border-border bg-background">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold text-foreground">Conversations</h2>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={onToggle}
-            className="h-8 w-8"
-            title="Collapse sidebar"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {!isMobile && (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onToggle}
+              className="h-8 w-8"
+              title="Collapse sidebar"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         
         {/* Search */}
@@ -612,66 +680,78 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder={`Search by ${searchMode}...`}
+              placeholder={isMobile ? "Search conversations..." : `Search by ${searchMode}...`}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm border border-input bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
+              onChange={(e) => handleSearch(e.target.value)}
+              className={cn(
+                "w-full pl-9 pr-12 py-2 text-sm border border-input bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground",
+                isMobile && "py-3"
+              )}
             />
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-600"></div>
+              </div>
+            )}
           </div>
           
-          {/* Search Mode Selector */}
-          <div className="flex gap-1">
-            <button
-              onClick={() => setSearchMode('name')}
-              className={cn(
-                "flex-1 px-2 py-1 text-xs rounded transition-colors",
-                searchMode === 'name' 
-                  ? "bg-brand-500 text-white" 
-                  : "bg-muted text-muted-foreground hover:bg-accent"
-              )}
-            >
-              Name
-            </button>
-            <button
-              onClick={() => setSearchMode('id')}
-              className={cn(
-                "flex-1 px-2 py-1 text-xs rounded transition-colors",
-                searchMode === 'id' 
-                  ? "bg-brand-500 text-white" 
-                  : "bg-muted text-muted-foreground hover:bg-accent"
-              )}
-            >
-              ID
-            </button>
-            <button
-              onClick={() => setSearchMode('session')}
-              className={cn(
-                "flex-1 px-2 py-1 text-xs rounded transition-colors",
-                searchMode === 'session' 
-                  ? "bg-brand-500 text-white" 
-                  : "bg-muted text-muted-foreground hover:bg-accent"
-              )}
-            >
-              Session
-            </button>
-          </div>
+          {/* Search Mode Selector - Hidden on mobile */}
+          {!isMobile && (
+            <div className="flex gap-1">
+              <button
+                onClick={() => handleSearchModeChange('name')}
+                className={cn(
+                  "flex-1 px-2 py-1 text-xs rounded transition-colors",
+                  searchMode === 'name' 
+                    ? "bg-brand-500 text-white" 
+                    : "bg-muted text-muted-foreground hover:bg-accent"
+                )}
+              >
+                Name
+              </button>
+              <button
+                onClick={() => handleSearchModeChange('id')}
+                className={cn(
+                  "flex-1 px-2 py-1 text-xs rounded transition-colors",
+                  searchMode === 'id' 
+                    ? "bg-brand-500 text-white" 
+                    : "bg-muted text-muted-foreground hover:bg-accent"
+                )}
+              >
+                ID
+              </button>
+              <button
+                onClick={() => handleSearchModeChange('session')}
+                className={cn(
+                  "flex-1 px-2 py-1 text-xs rounded transition-colors",
+                  searchMode === 'session' 
+                    ? "bg-brand-500 text-white" 
+                    : "bg-muted text-muted-foreground hover:bg-accent"
+                )}
+              >
+                Session
+              </button>
+            </div>
+          )}
         </div>
         
-        {/* Sort and Filter Toggle */}
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setShowSortFilter(!showSortFilter)}
-          className="w-full mt-2 justify-center gap-2"
-        >
-          <Filter className="h-3 w-3" />
-          Sort & Filter
-          {showSortFilter ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-        </Button>
+        {/* Sort and Filter Toggle - Hidden on mobile */}
+        {!isMobile && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowSortFilter(!showSortFilter)}
+            className="w-full mt-2 justify-center gap-2"
+          >
+            <Filter className="h-3 w-3" />
+            Sort & Filter
+            {showSortFilter ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </Button>
+        )}
         
-        {/* Sort and Filter Options */}
-        <AnimatePresence>
-          {showSortFilter && (
+        {/* Sort and Filter Options - Hidden on mobile */}
+        {!isMobile && showSortFilter && (
+          <AnimatePresence>
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -723,7 +803,7 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
                 <label className="text-xs font-medium text-foreground mb-1 block">Filter By Date</label>
                 <select
                   value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value as 'all' | 'today' | 'week' | 'month')}
+                  onChange={(e) => handleDateFilterChange(e.target.value as 'all' | 'today' | 'week' | 'month')}
                   className="w-full px-2 py-1 text-xs border border-input bg-background text-foreground rounded focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="all">All Time</option>
@@ -753,8 +833,8 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
                 </select>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+          </AnimatePresence>
+        )}
       </div>
 
       {/* Action Buttons */}

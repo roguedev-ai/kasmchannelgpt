@@ -8,6 +8,7 @@ import { useProjectSettingsStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 import type { Agent } from '@/types';
 
 interface BehaviorSettingsProps {
@@ -23,6 +24,7 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
     updateSettings 
   } = useProjectSettingsStore();
 
+  const { isMobile } = useBreakpoint();
   const [formData, setFormData] = useState({
     persona_instructions: '',
     response_source: 'own_content' as 'default' | 'own_content' | 'openai_content',
@@ -117,24 +119,40 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
   ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className={cn(
+      "max-w-4xl mx-auto",
+      isMobile ? "p-4 mobile-px" : "p-6"
+    )}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Behavior Settings</h2>
-          <p className="text-muted-foreground mt-1">
+      <div className={cn(
+        "mb-6",
+        isMobile ? "flex-col gap-4" : "flex items-center justify-between"
+      )}>
+        <div className={isMobile ? "w-full" : ""}>
+          <h2 className={cn(
+            "font-bold text-foreground",
+            isMobile ? "text-xl mobile-text-xl" : "text-2xl"
+          )}>Behavior Settings</h2>
+          <p className={cn(
+            "text-muted-foreground mt-1",
+            isMobile ? "text-sm mobile-text-sm" : ""
+          )}>
             Configure how your AI agent behaves and responds to users
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className={cn(
+          "flex gap-3",
+          isMobile ? "w-full grid grid-cols-2 gap-2 mt-4" : "items-center"
+        )}>
           <Button
             variant="outline"
             onClick={handleRefresh}
             disabled={settingsLoading}
             size="sm"
+            className={isMobile ? "h-9 px-3 text-sm" : ""}
           >
-            <RefreshCw className={cn('w-4 h-4 mr-2', settingsLoading && 'animate-spin')} />
+            <RefreshCw className={cn('w-4 h-4 mr-1.5', settingsLoading && 'animate-spin')} />
             Refresh
           </Button>
           
@@ -142,8 +160,9 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
             onClick={handleSave}
             disabled={!isModified || settingsLoading}
             size="sm"
+            className={isMobile ? "h-9 px-3 text-sm" : ""}
           >
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-4 h-4 mr-1.5" />
             {settingsLoading ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
@@ -162,9 +181,15 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
 
       {/* Loading State */}
       {settingsLoading && !settings ? (
-        <div className="space-y-6">
+        <div className={cn(
+          "space-y-6",
+          isMobile && "space-y-4"
+        )}>
           {[...Array(3)].map((_, i) => (
-            <Card key={i} className="p-6 animate-pulse">
+            <Card key={i} className={cn(
+              "p-6 animate-pulse",
+              isMobile && "p-4 mobile-px mobile-py"
+            )}>
               <div className="h-4 bg-muted rounded w-1/4 mb-4" />
               <div className="h-32 bg-muted rounded mb-2" />
               <div className="h-3 bg-muted rounded w-3/4" />
@@ -172,22 +197,39 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
           ))}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className={cn(
+          "space-y-6",
+          isMobile && "space-y-4"
+        )}>
           {/* Persona Instructions */}
-          <Card className="p-6">
-            <div className="flex items-start justify-between mb-4">
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <div className={cn(
+              "mb-4",
+              isMobile ? "flex-col gap-3" : "flex items-start justify-between"
+            )}>
               <div className="flex items-start gap-3">
                 <Brain className="w-6 h-6 text-brand-600 mt-1" />
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">AI Persona Instructions</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <h3 className={cn(
+                    "font-semibold text-foreground",
+                    isMobile ? "text-base mobile-text-lg" : "text-lg"
+                  )}>AI Persona Instructions</h3>
+                  <p className={cn(
+                    "text-muted-foreground mt-1",
+                    isMobile ? "text-xs mobile-text-sm" : "text-sm"
+                  )}>
                     Define your AI agent's personality, role, and behavior patterns
                   </p>
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-                POST /projects/{project.id}/settings
-              </span>
+              {!isMobile && (
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                  POST /projects/{project.id}/settings
+                </span>
+              )}
             </div>
             
             <div className="space-y-4">
@@ -199,8 +241,11 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                   value={formData.persona_instructions}
                   onChange={(e) => handleInputChange('persona_instructions', e.target.value)}
                   placeholder="You are a helpful assistant that..."
-                  rows={6}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none bg-background text-foreground"
+                  rows={isMobile ? 5 : 6}
+                  className={cn(
+                    "w-full border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none bg-background text-foreground",
+                    isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                  )}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   These instructions control your AI's personality and behavior. Be specific about tone, expertise, and how it should interact with users.
@@ -208,15 +253,15 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
               </div>
 
               {/* Persona Examples */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-blue-900 mb-3 flex items-center gap-2">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-3 flex items-center gap-2">
                   <Info className="w-4 h-4" />
                   Example Personas
                 </h4>
                 
                 <div className="space-y-3">
                   {personaExamples.map((example, index) => (
-                    <div key={index} className="bg-white rounded p-3 border border-blue-100">
+                    <div key={index} className="bg-white dark:bg-gray-800 rounded p-3 border border-blue-100 dark:border-blue-900">
                       <h5 className="text-sm font-medium text-foreground mb-2">
                         {example.title}
                       </h5>
@@ -227,7 +272,10 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                         variant="outline"
                         size="sm"
                         onClick={() => handleInputChange('persona_instructions', example.content)}
-                        className="text-xs"
+                        className={cn(
+                          "text-xs",
+                          isMobile ? "w-full h-8 px-3" : ""
+                        )}
                       >
                         Use This Example
                       </Button>
@@ -239,14 +287,28 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
           </Card>
 
           {/* Response Source */}
-          <Card className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Knowledge Source</h3>
-              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-                POST /projects/{project.id}/settings
-              </span>
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <div className={cn(
+              "mb-4",
+              isMobile ? "flex-col gap-2" : "flex items-start justify-between"
+            )}>
+              <h3 className={cn(
+                "font-semibold text-foreground",
+                isMobile ? "text-base mobile-text-lg" : "text-lg"
+              )}>Knowledge Source</h3>
+              {!isMobile && (
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                  POST /projects/{project.id}/settings
+                </span>
+              )}
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className={cn(
+              "text-muted-foreground mb-4",
+              isMobile ? "text-xs mobile-text-sm" : "text-sm"
+            )}>
               Control what information your AI agent can access when generating responses
             </p>
             
@@ -257,7 +319,7 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                   className={cn(
                     "flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors",
                     formData.response_source === option.value
-                      ? "border-brand-500 bg-brand-50"
+                      ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20"
                       : "border-border hover:bg-accent"
                   )}
                 >
@@ -267,13 +329,16 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                     value={option.value}
                     checked={formData.response_source === option.value}
                     onChange={(e) => handleInputChange('response_source', e.target.value)}
-                    className="mt-1"
+                    className={cn(
+                      "mt-1",
+                      isMobile && "touch-target"
+                    )}
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-foreground">{option.label}</span>
                       {option.recommended && (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                        <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs rounded-full">
                           Recommended
                         </span>
                       )}
@@ -281,14 +346,14 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                     <p className="text-sm text-muted-foreground">{option.description}</p>
                     
                     {option.value === 'own_content' && formData.response_source === option.value && (
-                      <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded text-xs text-green-800">
+                      <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded text-xs text-green-800 dark:text-green-300">
                         <strong>Benefits:</strong> More accurate responses based on your specific content, 
                         better brand consistency, and reduced risk of hallucinated information.
                       </div>
                     )}
                     
                     {option.value === 'openai_content' && formData.response_source === option.value && (
-                      <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                      <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-xs text-yellow-800 dark:text-yellow-300">
                         <strong>Note:</strong> The AI may provide information beyond your uploaded content, 
                         which could be less accurate or relevant to your specific use case.
                       </div>
@@ -300,22 +365,36 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
           </Card>
 
           {/* Language Settings */}
-          <Card className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">Language Settings</h3>
-              <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
-                POST /projects/{project.id}/settings
-              </span>
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <div className={cn(
+              "mb-4",
+              isMobile ? "flex-col gap-2" : "flex items-start justify-between"
+            )}>
+              <h3 className={cn(
+                "font-semibold text-foreground",
+                isMobile ? "text-base mobile-text-lg" : "text-lg"
+              )}>Language Settings</h3>
+              {!isMobile && (
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                  POST /projects/{project.id}/settings
+                </span>
+              )}
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Interface Language
               </label>
               <select
                 value={formData.chatbot_msg_lang}
                 onChange={(e) => handleInputChange('chatbot_msg_lang', e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
+                className={cn(
+                  "w-full border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground",
+                  isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                )}
               >
                 {languageOptions.map((lang) => (
                   <option key={lang.value} value={lang.value}>
@@ -324,8 +403,8 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                 ))}
               </select>
               
-              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
+              <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-300">
                   <strong>Important:</strong> This setting only affects system messages like "Ask me anything" 
                   or error messages. The AI will respond in whatever language the user uses in their questions.
                 </p>
@@ -334,8 +413,14 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
           </Card>
 
           {/* Advanced Settings */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Advanced Behavior</h3>
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <h3 className={cn(
+              "font-semibold text-foreground mb-4",
+              isMobile ? "text-base mobile-text-lg" : "text-lg"
+            )}>Advanced Behavior</h3>
             
             <div className="space-y-4">
               <div className="p-4 bg-accent border border-border rounded-lg">
@@ -348,9 +433,9 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                 </ul>
               </div>
 
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="text-sm font-medium text-yellow-900 mb-2">Best Practices</h4>
-                <ul className="text-sm text-yellow-800 space-y-1">
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <h4 className="text-sm font-medium text-yellow-900 dark:text-yellow-200 mb-2">Best Practices</h4>
+                <ul className="text-sm text-yellow-800 dark:text-yellow-300 space-y-1">
                   <li>• Be specific in your persona instructions</li>
                   <li>• Test different instruction variations to find what works best</li>
                   <li>• Consider your target audience when defining personality</li>
@@ -361,13 +446,17 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
           </Card>
 
           {/* Save Button at Bottom */}
-          <div className="flex justify-end mt-6">
+          <div className={cn(
+            "flex mt-6",
+            isMobile ? "justify-center" : "justify-end"
+          )}>
             <Button
               onClick={handleSave}
               disabled={!isModified || settingsLoading}
               size="sm"
+              className={isMobile ? "h-9 px-6 text-sm" : ""}
             >
-              <Save className="w-4 h-4 mr-2" />
+              <Save className="w-4 h-4 mr-1.5" />
               {settingsLoading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>

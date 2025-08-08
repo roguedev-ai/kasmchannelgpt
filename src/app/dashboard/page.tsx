@@ -16,18 +16,29 @@ export default function DashboardPage() {
     fetchAgents();
   }, []);
 
+  const handleEditAgent = (agentId: number) => {
+    setSelectedAgentId(agentId);
+    setCurrentView('settings');
+  };
+
+  const handleBackFromSettings = () => {
+    setCurrentView('agents');
+    setSelectedAgentId(null);
+  };
+
   const renderContent = () => {
     switch (currentView) {
       case 'overview':
         return <DashboardOverview />;
       case 'agents':
-        return <AgentManagement />;
+        return <AgentManagement onEditAgent={handleEditAgent} />;
       case 'settings':
         const selectedAgent = agents.find(agent => agent.id === selectedAgentId);
         return selectedAgentId && selectedAgent ? (
           <AgentSettings 
             agentId={selectedAgentId} 
-            agentName={selectedAgent.project_name} 
+            agentName={selectedAgent.project_name}
+            onBack={handleBackFromSettings}
           />
         ) : (
           <div className="p-6">

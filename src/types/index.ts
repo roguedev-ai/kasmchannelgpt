@@ -859,6 +859,9 @@ export interface InputProps extends BaseComponentProps {
   
   /** Handler for voice mode button click */
   onVoiceClick?: () => void;
+  
+  /** Mobile optimization mode */
+  isMobile?: boolean;
 }
 
 /**
@@ -1002,6 +1005,9 @@ export interface ConversationStore {
     order?: 'asc' | 'desc';
     orderBy?: string;
     userFilter?: 'all' | string;
+    searchQuery?: string;
+    searchMode?: 'name' | 'id' | 'session';
+    dateFilter?: 'today' | 'week' | 'month';
   }) => Promise<void>;
   
   /** Create a new conversation */

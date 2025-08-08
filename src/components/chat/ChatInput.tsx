@@ -113,12 +113,6 @@ const FileChip: React.FC<FileChipProps> = ({ file, onRemove }) => {
   );
 };
 
-interface FileUploadButtonProps {
-  /** Handler called when files are selected */
-  onUpload: (files: File[]) => void;
-  /** Whether the button is disabled */
-  disabled?: boolean;
-}
 
 /**
  * FileUploadButton Component
@@ -126,7 +120,16 @@ interface FileUploadButtonProps {
  * Hidden file input with visible button trigger.
  * Accepts multiple files based on ACCEPTED_FILE_TYPES.
  */
-const FileUploadButton: React.FC<FileUploadButtonProps> = ({ onUpload, disabled }) => {
+interface FileUploadButtonProps {
+  /** Handler called when files are selected */
+  onUpload: (files: File[]) => void;
+  /** Whether the button is disabled */
+  disabled?: boolean;
+  /** Mobile optimization mode */
+  isMobile?: boolean;
+}
+
+const FileUploadButton: React.FC<FileUploadButtonProps> = ({ onUpload, disabled, isMobile = false }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleClick = () => {
@@ -157,10 +160,13 @@ const FileUploadButton: React.FC<FileUploadButtonProps> = ({ onUpload, disabled 
         variant="ghost"
         onClick={handleClick}
         disabled={disabled}
-        className="h-10 w-10 text-muted-foreground hover:text-foreground"
+        className={cn(
+          "text-muted-foreground hover:text-foreground relative z-10",
+          isMobile ? "h-10 w-10 min-w-[40px]" : "h-9 w-9"
+        )}
         title="Upload files"
       >
-        <Paperclip className="h-5 w-5" />
+        <Paperclip className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
       </Button>
     </>
   );
@@ -197,7 +203,8 @@ export const ChatInput: React.FC<InputProps> = ({
   placeholder = "Send a message...",
   maxLength = CONSTANTS.MAX_MESSAGE_LENGTH,
   className,
-  onVoiceClick
+  onVoiceClick,
+  isMobile = false
 }) => {
   const [input, setInput] = useState('');
   const [files, setFiles] = useState<FileUpload[]>([]);
@@ -367,8 +374,9 @@ export const ChatInput: React.FC<InputProps> = ({
     <div 
       {...getRootProps()}
       className={cn(
-        'border-t border-border bg-background px-4 py-3 relative',
+        'border-t border-border bg-background relative',
         isDragActive && 'bg-brand-50',
+        isMobile ? 'px-3 py-3 safe-area-pb' : 'px-4 py-3',
         className
       )}
     >
@@ -414,11 +422,15 @@ export const ChatInput: React.FC<InputProps> = ({
         )}
       </AnimatePresence>
       
-      <form onSubmit={handleSubmit} className="flex items-end gap-2">
+      <form onSubmit={handleSubmit} className={cn(
+        "flex items-center",
+        isMobile ? "gap-2" : "gap-2"
+      )}>
         {/* File Upload Button */}
         <FileUploadButton
           onUpload={handleFileUpload}
           disabled={disabled}
+          isMobile={isMobile}
         />
         
         {/* Voice Button */}
@@ -426,6 +438,7 @@ export const ChatInput: React.FC<InputProps> = ({
           <VoiceButton
             onClick={onVoiceClick}
             disabled={disabled}
+            isMobile={isMobile}
           />
         )}
         
@@ -441,11 +454,12 @@ export const ChatInput: React.FC<InputProps> = ({
             rows={1}
             className={cn(
               'w-full resize-none rounded-lg border border-input bg-background',
-              'px-3 py-2 pr-12',
               'focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
               'disabled:opacity-50 disabled:cursor-not-allowed',
-              'min-h-[44px] max-h-[200px]',
-              'placeholder:text-muted-foreground text-foreground'
+              'placeholder:text-muted-foreground text-foreground',
+              isMobile 
+                ? 'px-3 py-2.5 mobile-input text-base min-h-[44px] max-h-[120px]' 
+                : 'px-3 py-2 text-sm min-h-[40px] max-h-[200px]'
             )}
             style={{
               height: 'auto',
@@ -467,23 +481,27 @@ export const ChatInput: React.FC<InputProps> = ({
           size="icon"
           disabled={!canSend}
           className={cn(
-            'h-10 w-10 flex-shrink-0',
-            'transition-all duration-200'
+            'flex-shrink-0 transition-all duration-200 relative z-10',
+            isMobile 
+              ? 'h-10 w-10 min-w-[40px]' 
+              : 'h-9 w-9'
           )}
           title={disabled ? 'Sending message...' : 'Send message'}
         >
           {disabled ? (
             <Spinner size="sm" className="text-white" />
           ) : (
-            <Send className="h-5 w-5" />
+            <Send className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
           )}
         </Button>
       </form>
       
-      {/* Input Hints */}
-      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-        <span>Press Enter to send, Shift+Enter for new line</span>
-      </div>
+      {/* Input Hints - Hide on mobile for space */}
+      {!isMobile && (
+        <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+          <span>Press Enter to send, Shift+Enter for new line</span>
+        </div>
+      )}
     </div>
   );
 };

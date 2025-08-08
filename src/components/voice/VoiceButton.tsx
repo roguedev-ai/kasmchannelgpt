@@ -6,9 +6,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 interface VoiceButtonProps {
   onClick: () => void;
   disabled?: boolean;
+  isMobile?: boolean;
 }
 
-export function VoiceButton({ onClick, disabled }: VoiceButtonProps) {
+export function VoiceButton({ onClick, disabled, isMobile = false }: VoiceButtonProps) {
   return (
     <TooltipProvider>
       <Tooltip>
@@ -17,8 +18,9 @@ export function VoiceButton({ onClick, disabled }: VoiceButtonProps) {
             type="button"
             onClick={onClick}
             disabled={disabled}
-            className="
-              relative h-10 w-10 flex-shrink-0 rounded-full
+            className={`
+              relative flex-shrink-0 rounded-full
+              ${isMobile ? 'h-10 w-10 min-w-[40px]' : 'h-9 w-9'}
               bg-gradient-to-br from-purple-500 via-pink-500 to-red-500
               hover:from-purple-600 hover:via-pink-600 hover:to-red-600
               active:from-purple-700 active:via-pink-700 active:to-red-700
@@ -30,7 +32,7 @@ export function VoiceButton({ onClick, disabled }: VoiceButtonProps) {
               group
               flex items-center justify-center
               border-2 border-white/20 hover:border-white/30
-            "
+            `}
           >
             {/* Animated background glow */}
             <div className="
@@ -43,12 +45,13 @@ export function VoiceButton({ onClick, disabled }: VoiceButtonProps) {
             " />
             
             {/* Mic icon with enhanced styling */}
-            <Mic className="
-              h-5 w-5 text-white relative z-10
+            <Mic className={`
+              text-white relative z-10
+              ${isMobile ? 'h-5 w-5' : 'h-4 w-4'}
               drop-shadow-sm
               group-hover:drop-shadow-md
               transition-all duration-200
-            " />
+            `} />
           </button>
         </TooltipTrigger>
         <TooltipContent>

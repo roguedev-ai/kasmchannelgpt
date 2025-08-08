@@ -3,12 +3,15 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useMicVAD, utils } from '@ricky0123/vad-react';
 import RotateLoader from 'react-spinners/RotateLoader';
-import { X, StopCircle, Mic, MicOff } from 'lucide-react';
+import { X, StopCircle, Mic, MicOff, Settings } from 'lucide-react';
 import Canvas from './Canvas';
+import { VoiceSettings } from './VoiceSettings';
 import { speechManager } from '@/lib/voice/speech-manager';
 import { particleActions } from '@/lib/voice/particle-manager';
 import { useMessageStore, useConversationStore } from '@/hooks/useWidgetStore';
+import { useAgentStore } from '@/store/agents';
 import { generateId } from '@/lib/utils';
+import { useVoiceSettingsStore } from '@/store/voice-settings';
 
 interface VoiceModalProps {
   isOpen: boolean;
@@ -16,6 +19,9 @@ interface VoiceModalProps {
   projectId: string;
   projectName?: string;
 }
+
+// Voice states for UI animations
+type VoiceState = 'idle' | 'listening' | 'recording' | 'processing' | 'speaking';
 
 // Separate component that handles VAD initialization
 function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceModalProps) {
@@ -27,22 +33,28 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [apiKeyError, setApiKeyError] = useState(false);
   const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // Message store integration
   const { addMessage, messages } = useMessageStore();
   const { currentConversation, ensureConversation } = useConversationStore();
   const [currentUserMessageId, setCurrentUserMessageId] = useState<string | null>(null);
+  
+  // Voice settings integration
+  const { selectedVoice, selectedPersona, selectedColorScheme } = useVoiceSettingsStore();
 
-  // Initialize VAD
+  // Initialize VAD with error handling
   const vad = useMicVAD({
-    preSpeechPadFrames: 5,
-    positiveSpeechThreshold: 0.90,  // Back to AIUI settings
-    negativeSpeechThreshold: 0.75,   // Back to AIUI settings
-    minSpeechFrames: 4,              // Back to AIUI settings
-    startOnLoad: false,              // Start manually to handle permissions properly
+    preSpeechPadFrames: 10,
+    positiveSpeechThreshold: 0.8,   // Lower threshold for easier detection
+    negativeSpeechThreshold: 0.6,   // Lower threshold
+    minSpeechFrames: 3,              // Reduce minimum frames
+    startOnLoad: false,              // Start manually
     workletURL: '/vad.worklet.bundle.min.js',
     modelURL: '/silero_vad.onnx',
+    // VAD configuration
     onSpeechStart: () => {
       console.log('🎤 [VAD] Speech started detected');
       const debugMsg = `${new Date().toLocaleTimeString()} - VAD: Speech started`;
@@ -69,6 +81,22 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       console.log('🔧 [VOICE-MODAL] Setting up speech manager');
       speechManager.setProjectId(projectId);
       
+      // Apply voice settings to speech manager
+      speechManager.setVoiceSettings(selectedVoice, selectedPersona);
+      
+      // Apply color scheme to particle manager
+      particleActions.setColorScheme(selectedColorScheme);
+      
+      // Check if agent is active
+      const currentAgentStore = useAgentStore.getState();
+      const agent = currentAgentStore.agents.find(a => a.id === parseInt(projectId));
+      
+      if (agent && !agent.is_chat_active) {
+        console.warn('⚠️ [VOICE-MODAL] Agent is inactive - may fall back to OpenAI');
+        const warningMsg = `${new Date().toLocaleTimeString()} - WARNING: Agent is inactive. Upload documents to activate.`;
+        setDebugMessages(prev => [...prev.slice(-10), warningMsg]);
+      }
+      
       // Ensure we have a conversation before starting voice
       const setupConversation = async () => {
         try {
@@ -84,6 +112,7 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           // Load conversation history and session ID
           const conversationMessages = messages.get(conversation.id.toString()) || [];
           console.log('📝 [VOICE-MODAL] Loading conversation history:', conversationMessages.length, 'messages');
+          console.log('📝 [VOICE-MODAL] Agent status:', agent?.is_chat_active ? 'Active' : 'Inactive');
           speechManager.setConversationHistory(conversationMessages);
           speechManager.setSessionId(conversation.session_id);
         } catch (error) {
@@ -99,17 +128,21 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
         onUserSpeaking: () => {
           particleActions.onUserSpeaking();
           setTranscript('');
+          setVoiceState('recording');
         },
         onProcessing: () => {
           particleActions.onProcessing();
+          setVoiceState('processing');
         },
         onAiSpeaking: () => {
           particleActions.onAiSpeaking();
           setIsAgentSpeaking(true);
+          setVoiceState('speaking');
         },
         onReset: () => {
           particleActions.reset();
           setIsAgentSpeaking(false);
+          setVoiceState('idle');
         },
         onDebug: (message: string, data?: any) => {
           const debugMsg = `${new Date().toLocaleTimeString()} - ${message}`;
@@ -186,7 +219,29 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       setDebugMessages([]);
       setIsAgentSpeaking(false);
     }
-  }, [isOpen, projectId, currentConversation, messages]);
+  }, [isOpen, projectId, currentConversation, messages, selectedVoice, selectedPersona, selectedColorScheme]);
+  
+  // Update settings when they change
+  useEffect(() => {
+    if (isOpen && projectId) {
+      // Update speech manager with new voice settings
+      speechManager.setVoiceSettings(selectedVoice, selectedPersona);
+      
+      // Update particle manager with new color scheme
+      particleActions.setColorScheme(selectedColorScheme);
+    }
+  }, [selectedVoice, selectedPersona, selectedColorScheme, isOpen, projectId]);
+  
+  // Monitor VAD state changes
+  useEffect(() => {
+    if (vad.errored) {
+      const errorMsg = `${new Date().toLocaleTimeString()} - VAD failed to initialize. Manual recording available.`;
+      setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
+    } else if (!vad.loading && !vad.errored) {
+      const successMsg = `${new Date().toLocaleTimeString()} - VAD loaded successfully`;
+      setDebugMessages(prev => [...prev.slice(-10), successMsg]);
+    }
+  }, [vad.loading, vad.errored]);
 
   // Define handleToggleListening before useEffect that uses it
   const handleToggleListening = useCallback(async () => {
@@ -195,6 +250,10 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       vadListening: vad.listening,
       vadErrored: vad.errored
     });
+    
+    // Add immediate user feedback
+    const clickMsg = `${new Date().toLocaleTimeString()} - Button clicked, processing...`;
+    setDebugMessages(prev => [...prev.slice(-10), clickMsg]);
     
     // Enhanced error handling for VAD
     if (vad.errored) {
@@ -225,40 +284,33 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       if (vad.listening) {
         console.log('⏸️ [VOICE-MODAL] Pausing VAD');
         vad.pause();
+        setVoiceState('idle');
         const debugMsg = `${new Date().toLocaleTimeString()} - VAD paused`;
         setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
       } else {
         console.log('▶️ [VOICE-MODAL] Starting VAD');
+        setVoiceState('listening');
         
-        // Enhanced microphone permission check
+        // Simplified microphone permission check
         try {
           console.log('🎤 [VOICE-MODAL] Checking microphone permissions...');
           const stream = await navigator.mediaDevices.getUserMedia({ 
-            audio: {
-              channelCount: 1,
-              echoCancellation: true,
-              noiseSuppression: true,
-              sampleRate: 16000
-            } 
+            audio: true
           });
           
-          // Test the stream briefly
-          const audioContext = new AudioContext();
-          const source = audioContext.createMediaStreamSource(stream);
-          console.log('🎯 [VOICE-MODAL] Audio context created successfully');
-          
-          // Clean up test resources
-          source.disconnect();
-          audioContext.close();
+          // Clean up immediately - we just needed to check permission
           stream.getTracks().forEach(track => track.stop());
           
-          console.log('🎯 [VOICE-MODAL] Microphone permission granted and tested');
+          console.log('🎯 [VOICE-MODAL] Microphone permission granted');
+          const successMsg = `${new Date().toLocaleTimeString()} - Microphone permission granted`;
+          setDebugMessages(prev => [...prev.slice(-10), successMsg]);
         } catch (permissionError) {
-          console.error('❌ [VOICE-MODAL] Microphone permission or setup failed:', permissionError);
-          const errorMessage = permissionError instanceof Error ? permissionError.message : 'Check permissions.';
-          const errorMsg = `${new Date().toLocaleTimeString()} - ERROR: Microphone setup failed. ${errorMessage}`;
+          console.error('❌ [VOICE-MODAL] Microphone permission failed:', permissionError);
+          const errorMessage = permissionError instanceof Error ? permissionError.message : 'Permission denied';
+          const errorMsg = `${new Date().toLocaleTimeString()} - ERROR: Microphone permission failed. ${errorMessage}`;
           setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
-          return;
+          
+          // Still try to start VAD - it might handle permissions internally
         }
         
         // Start VAD with additional error handling
@@ -287,6 +339,7 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
     try {
       if (!isManualRecording) {
         // Start manual recording with better audio quality
+        setVoiceState('recording');
         const stream = await navigator.mediaDevices.getUserMedia({ 
           audio: {
             echoCancellation: true,
@@ -474,12 +527,30 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-50 bg-black">
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Dynamic gradient background based on voice state */}
+          <div className={`absolute inset-0 transition-all duration-1000 ${
+            voiceState === 'idle' ? 'voice-gradient-idle' :
+            voiceState === 'listening' ? 'voice-gradient-listening' :
+            voiceState === 'recording' ? 'voice-gradient-recording' :
+            voiceState === 'processing' ? 'voice-gradient-processing' :
+            'voice-gradient-speaking'
+          }`} />
+          
+          {/* Wave overlay effect for processing and speaking states */}
+          {(voiceState === 'processing' || voiceState === 'speaking') && (
+            <div className="absolute inset-0 voice-overlay-wave" />
+          )}
+          
+          {/* Pulse overlay for recording state */}
+          {voiceState === 'recording' && (
+            <div className="absolute inset-0 bg-red-500/10 voice-overlay-pulse" />
+          )}
           {loading ? (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-full relative z-10">
               <RotateLoader
                 loading={loading}
-                color="#27eab6"
+                color="#ffffff"
                 aria-label="Loading Voice"
                 data-testid="loader"
               />
@@ -489,14 +560,26 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
               {/* Canvas for particle animation */}
               <Canvas draw={particleActions.draw} />
               
-              {/* Close button */}
-              <button
-                onClick={onClose}
-                className="absolute top-8 right-8 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center transition-colors"
-                aria-label="Close voice mode"
-              >
-                <X className="w-6 h-6 text-white" />
-              </button>
+              {/* Top-right controls - responsive */}
+              <div className="absolute top-4 sm:top-6 md:top-8 right-4 sm:right-6 md:right-8 flex items-center gap-2 sm:gap-3 z-10">
+                {/* Settings button */}
+                <button
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm flex items-center justify-center transition-all transform active:scale-95 pointer-events-auto"
+                  aria-label="Voice settings"
+                >
+                  <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </button>
+                
+                {/* Close button */}
+                <button
+                  onClick={onClose}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm flex items-center justify-center transition-all transform active:scale-95 pointer-events-auto"
+                  aria-label="Close voice mode"
+                >
+                  <X className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </button>
+              </div>
               
               {/* API Key Error Message */}
               {apiKeyError && (
@@ -506,82 +589,175 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
                   </p>
                   <p className="text-white/80 text-sm text-center">
                     OpenAI API key is required for voice transcription and text-to-speech. 
-                    Please add <code className="bg-black/30 px-1 rounded">OPENAI_API_KEY</code> to your <code className="bg-black/30 px-1 rounded">.env.local</code> file.
+                    Please add <code className="bg-white/20 px-1 rounded">OPENAI_API_KEY</code> to your <code className="bg-white/20 px-1 rounded">.env.local</code> file.
                   </p>
                 </div>
               )}
               
+              {/* Agent Inactive Warning */}
+              {(() => {
+                const agent = useAgentStore.getState().agents.find(a => a.id === parseInt(projectId));
+                return agent && !agent.is_chat_active ? (
+                  <div className="absolute top-24 left-1/2 transform -translate-x-1/2 bg-yellow-500/20 backdrop-blur-md border border-yellow-500/30 rounded-lg p-4 max-w-md">
+                    <p className="text-white text-center mb-2">
+                      <strong>Agent Not Active</strong>
+                    </p>
+                    <p className="text-white/80 text-sm text-center">
+                      This agent has no knowledge base configured. Responses will use general OpenAI knowledge instead of your custom data.
+                    </p>
+                  </div>
+                ) : null;
+              })()}
+              
 
-              {/* Status display */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center">
-                <p className="text-3xl font-light mb-4">
-                  {isManualRecording 
-                    ? 'Recording...' 
-                    : vad.errored 
-                    ? 'Click button to speak' 
-                    : vad.listening 
-                    ? 'Listening...' 
-                    : vad.loading
-                    ? 'Initializing...'
-                    : 'Click to start'}
-                </p>
+              {/* Status display - responsive with animations */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center px-4 z-10">
+                <div className="relative">
+                  {/* Main status text with state-based colors - no blinking */}
+                  <p className={`text-2xl sm:text-3xl md:text-4xl font-light mb-4 leading-tight transition-all duration-300 ${
+                    voiceState === 'recording' ? 'text-red-400' :
+                    voiceState === 'processing' ? 'text-purple-400' :
+                    voiceState === 'speaking' ? 'text-green-400' :
+                    voiceState === 'listening' ? 'text-blue-400' :
+                    'text-white/90'
+                  }`}>
+                    {isManualRecording 
+                      ? '🎤 Recording...' 
+                      : vad.errored 
+                      ? '💬 Click to speak' 
+                      : voiceState === 'listening'
+                      ? '👂 Listening...'
+                      : voiceState === 'processing'
+                      ? '🧠 Thinking...'
+                      : voiceState === 'speaking'
+                      ? '🗣️ Speaking...'
+                      : vad.loading
+                      ? '⚡ Initializing...'
+                      : '✨ Ready to chat'}
+                  </p>
+                  
+                  {/* Animated dots for processing state */}
+                  {voiceState === 'processing' && (
+                    <div className="flex justify-center gap-1 mt-2">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  )}
+                </div>
                 
-                {/* Show user's transcript */}
+                {/* Show user's transcript - responsive */}
                 {transcript && (
-                  <div className="mb-6">
-                    <p className="text-sm text-white/50 mb-1">You said:</p>
-                    <p className="text-lg text-white/80 max-w-md mx-auto">"{transcript}"</p>
+                  <div className="mb-4 sm:mb-6">
+                    <p className="text-xs sm:text-sm text-white/70 mb-1">You said:</p>
+                    <p className="text-sm sm:text-lg text-white/90 max-w-xs sm:max-w-md mx-auto px-2">"{transcript}"</p>
                   </div>
                 )}
                 
-                {/* Show agent's response */}
+                {/* Show agent's response - responsive */}
                 {agentResponse && (
                   <div className="animate-fade-in">
-                    <p className="text-sm text-white/50 mb-1">Agent:</p>
-                    <p className="text-xl text-white max-w-md mx-auto">"{agentResponse}"</p>
+                    <p className="text-xs sm:text-sm text-white/70 mb-1">Agent:</p>
+                    <p className="text-base sm:text-xl text-white max-w-xs sm:max-w-md mx-auto px-2 leading-relaxed">"{agentResponse}"</p>
+                    
+                    {/* Audio wave visualization for speaking state */}
+                    {voiceState === 'speaking' && (
+                      <div className="flex justify-center items-center gap-1 mt-4">
+                        {[...Array(5)].map((_, i) => (
+                          <div
+                            key={i}
+                            className="w-1 bg-green-400 rounded-full audio-wave-bar"
+                            style={{
+                              height: '20px',
+                              animationDelay: `${i * 0.1}s`
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 
-                {/* Start listening button when not listening */}
-                {!vad.loading && !vad.listening && !isManualRecording && (
-                  <button
-                    onClick={handleToggleListening}
-                    className="mt-8 px-8 py-4 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all transform hover:scale-105 pointer-events-auto"
-                  >
-                    Start Listening
-                  </button>
-                )}
+                {/* Voice control buttons */}
+                <div className="flex flex-col items-center gap-4">
+                  {/* Show start button when not recording and not listening */}
+                  {!vad.loading && !isManualRecording && (
+                    <>
+                      {!vad.errored ? (
+                        <button
+                          onClick={handleToggleListening}
+                          className={`px-6 sm:px-8 py-3 sm:py-4 rounded-full text-white backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 pointer-events-auto text-sm sm:text-base font-medium relative z-20 ${
+                            voiceState === 'listening' ? 'bg-blue-500/20 border-2 border-blue-500/50 voice-button-glow' : 
+                            'bg-white/10 hover:bg-white/20 active:bg-white/30'
+                          }`}
+                          style={{ pointerEvents: 'auto' }}
+                        >
+                          <span className="flex items-center gap-2">
+                            <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span className="hidden sm:inline">{voiceState === 'listening' ? 'Listening...' : 'Start Listening'}</span>
+                            <span className="sm:hidden">{voiceState === 'listening' ? 'Listening' : 'Start'}</span>
+                          </span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleManualRecording}
+                          className="px-6 sm:px-8 py-3 sm:py-4 rounded-full bg-orange-600/80 hover:bg-orange-600 active:bg-orange-700 text-white backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 pointer-events-auto text-sm sm:text-base font-medium relative z-20"
+                          style={{ pointerEvents: 'auto' }}
+                        >
+                          <span className="flex items-center gap-2">
+                            <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span className="hidden sm:inline">Start Recording</span>
+                            <span className="sm:hidden">Record</span>
+                          </span>
+                        </button>
+                      )}
+                      
+                      {vad.errored && (
+                        <p className="text-xs text-orange-400 dark:text-orange-300 text-center max-w-xs">
+                          Voice detection failed. Use the button above to record manually.
+                        </p>
+                      )}
+                    </>
+                  )}
+                  
+                  {/* Show stop button when manually recording */}
+                  {isManualRecording && (
+                    <button
+                      onClick={handleManualRecording}
+                      className="px-6 sm:px-8 py-3 sm:py-4 rounded-full voice-button-recording shadow-lg shadow-red-500/50 text-white backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 pointer-events-auto text-sm sm:text-base font-medium relative z-20"
+                      style={{ pointerEvents: 'auto' }}
+                    >
+                      <span className="relative flex items-center gap-2">
+                        {/* Ripple effect */}
+                        <span className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75"></span>
+                        <MicOff className="w-4 h-4 sm:w-5 sm:h-5 relative z-10" />
+                        <span className="hidden sm:inline relative z-10">Stop Recording</span>
+                        <span className="sm:hidden relative z-10">Stop</span>
+                      </span>
+                    </button>
+                  )}
+                </div>
+                
+                {/* Debug info - show current VAD state */}
+                <div className="mt-4 text-xs text-white/50 text-center">
+                  <div>VAD State: {vad.loading ? 'Loading' : vad.listening ? 'Listening' : vad.errored ? 'Error' : 'Ready'}</div>
+                  <div>Manual Recording: {isManualRecording ? 'Active' : 'Inactive'}</div>
+                </div>
               </div>
 
-              {/* Bottom control buttons */}
-              <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 flex items-center gap-4">
-                {/* Manual recording button only shown if VAD fails */}
-                {vad.errored && (
-                  <button
-                    onClick={handleManualRecording}
-                    className={`group flex items-center gap-2 px-4 sm:px-6 py-3 rounded-full font-medium transition-all transform hover:scale-105 ${
-                      isManualRecording
-                        ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/50'
-                        : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm'
-                    }`}
-                    aria-label={isManualRecording ? 'Stop recording' : 'Start recording'}
-                  >
-                    {isManualRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                    <span className="font-medium hidden sm:inline">
-                      {isManualRecording ? 'Stop Recording' : 'Hold to Speak'}
-                    </span>
-                  </button>
-                )}
+              {/* Bottom control buttons - responsive */}
+              <div className="absolute bottom-6 sm:bottom-8 md:bottom-12 left-1/2 transform -translate-x-1/2 flex items-center gap-3 sm:gap-4 px-4 z-10">
 
                 {/* Stop button when agent is speaking */}
                 {isAgentSpeaking && (
                   <button
                     onClick={handleStopSpeech}
-                    className="group flex items-center gap-2 px-4 sm:px-6 py-3 rounded-full bg-red-500/20 hover:bg-red-500/30 text-white backdrop-blur-sm transition-all transform hover:scale-105"
+                    className="group flex items-center gap-2 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-full bg-red-500/20 hover:bg-red-500/30 active:bg-red-500/40 text-white backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 text-sm sm:text-base font-medium"
                     aria-label="Stop speaking"
                   >
-                    <StopCircle className="w-5 h-5" />
+                    <StopCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span className="font-medium hidden sm:inline">Stop Response</span>
+                    <span className="font-medium sm:hidden">Stop</span>
                   </button>
                 )}
               </div>
@@ -590,6 +766,12 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           )}
         </div>
       )}
+      
+      {/* Voice Settings Modal */}
+      <VoiceSettings 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+      />
     </>
   );
 }

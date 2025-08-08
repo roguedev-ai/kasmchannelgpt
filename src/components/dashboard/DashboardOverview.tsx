@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 import { useLimits } from '@/hooks/useLimits';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 
 interface MetricCardProps {
   title: string;
@@ -41,6 +42,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
   icon: Icon, 
   color = 'blue' 
 }) => {
+  const { isMobile } = useBreakpoint();
   const colorClasses = {
     blue: 'bg-blue-50 text-blue-600 border-blue-200',
     green: 'bg-green-50 text-green-600 border-green-200',
@@ -53,23 +55,42 @@ const MetricCard: React.FC<MetricCardProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-lg border border-border p-6 hover:shadow-md transition-shadow"
+      className={cn(
+        "bg-card rounded-lg border border-border hover:shadow-md transition-shadow",
+        isMobile ? "p-4" : "p-6"
+      )}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
-          <p className="text-3xl font-bold text-foreground mb-2">{value}</p>
+          <p className={cn(
+            "font-medium text-muted-foreground mb-1",
+            isMobile ? "text-xs" : "text-sm"
+          )}>{title}</p>
+          <p className={cn(
+            "font-bold text-foreground mb-2",
+            isMobile ? "text-2xl" : "text-3xl"
+          )}>{value}</p>
           {change && (
             <div className="flex items-center gap-1">
               {change.trend === 'up' ? (
-                <TrendingUp className="h-4 w-4 text-green-500" />
+                <TrendingUp className={cn(
+                  "text-green-500",
+                  isMobile ? "h-3 w-3" : "h-4 w-4"
+                )} />
               ) : change.trend === 'down' ? (
-                <TrendingDown className="h-4 w-4 text-red-500" />
+                <TrendingDown className={cn(
+                  "text-red-500",
+                  isMobile ? "h-3 w-3" : "h-4 w-4"
+                )} />
               ) : (
-                <Activity className="h-4 w-4 text-muted-foreground" />
+                <Activity className={cn(
+                  "text-muted-foreground",
+                  isMobile ? "h-3 w-3" : "h-4 w-4"
+                )} />
               )}
               <span className={cn(
-                'text-sm font-medium',
+                'font-medium',
+                isMobile ? 'text-xs' : 'text-sm',
                 change.trend === 'up' && 'text-green-600',
                 change.trend === 'down' && 'text-red-600',
                 change.trend === 'neutral' && 'text-muted-foreground'
@@ -80,10 +101,13 @@ const MetricCard: React.FC<MetricCardProps> = ({
           )}
         </div>
         <div className={cn(
-          'w-12 h-12 rounded-lg border flex items-center justify-center',
+          'rounded-lg border flex items-center justify-center',
+          isMobile ? 'w-10 h-10' : 'w-12 h-12',
           colorClasses[color]
         )}>
-          <Icon className="h-6 w-6" />
+          <Icon className={cn(
+            isMobile ? "h-5 w-5" : "h-6 w-6"
+          )} />
         </div>
       </div>
     </motion.div>
@@ -105,22 +129,43 @@ const QuickAction: React.FC<QuickActionProps> = ({
   onClick,
   color = 'bg-brand-600'
 }) => {
+  const { isMobile } = useBreakpoint();
+  
   return (
     <motion.button
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: isMobile ? 1 : 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="bg-card rounded-lg border border-border p-6 text-left hover:shadow-md transition-all"
+      className={cn(
+        "bg-card rounded-lg border border-border text-left hover:shadow-md transition-all w-full",
+        isMobile ? "p-4 touch-target" : "p-6"
+      )}
     >
-      <div className="flex items-start gap-4">
-        <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center', color)}>
-          <Icon className="h-5 w-5 text-white" />
+      <div className={cn(
+        "flex items-start gap-3",
+        isMobile && "gap-3"
+      )}>
+        <div className={cn(
+          'rounded-lg flex items-center justify-center flex-shrink-0',
+          isMobile ? 'w-9 h-9' : 'w-10 h-10',
+          color
+        )}>
+          <Icon className={cn(
+            "text-white",
+            isMobile ? "h-4 w-4" : "h-5 w-5"
+          )} />
         </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-foreground mb-1">{title}</h3>
-          <p className="text-sm text-muted-foreground">{description}</p>
+        <div className="flex-1 min-w-0">
+          <h3 className={cn(
+            "font-semibold text-foreground mb-1",
+            isMobile ? "text-sm" : "text-base"
+          )}>{title}</h3>
+          <p className={cn(
+            "text-muted-foreground",
+            isMobile ? "text-xs" : "text-sm"
+          )}>{description}</p>
         </div>
       </div>
     </motion.button>
@@ -137,34 +182,55 @@ interface RecentActivityItem {
 }
 
 const ActivityItem: React.FC<{ item: RecentActivityItem }> = ({ item }) => {
+  const { isMobile } = useBreakpoint();
+  
   const getIcon = () => {
+    const iconClass = isMobile ? "h-3 w-3" : "h-4 w-4";
     switch (item.type) {
       case 'conversation':
-        return <MessageSquare className="h-4 w-4 text-blue-600" />;
+        return <MessageSquare className={cn(iconClass, "text-blue-600")} />;
       case 'agent_created':
-        return <Bot className="h-4 w-4 text-green-600" />;
+        return <Bot className={cn(iconClass, "text-green-600")} />;
       case 'page_indexed':
-        return <FileText className="h-4 w-4 text-purple-600" />;
+        return <FileText className={cn(iconClass, "text-purple-600")} />;
       case 'settings_updated':
-        return <Activity className="h-4 w-4 text-orange-600" />;
+        return <Activity className={cn(iconClass, "text-orange-600")} />;
       default:
-        return <Activity className="h-4 w-4 text-muted-foreground" />;
+        return <Activity className={cn(iconClass, "text-muted-foreground")} />;
     }
   };
 
   return (
-    <div className="flex items-start gap-3 p-3 hover:bg-accent rounded-lg">
-      <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 mt-0.5">
+    <div className={cn(
+      "flex items-start gap-3 hover:bg-accent rounded-lg",
+      isMobile ? "p-3" : "p-3"
+    )}>
+      <div className={cn(
+        "rounded-full bg-accent flex items-center justify-center flex-shrink-0 mt-0.5",
+        isMobile ? "w-7 h-7" : "w-8 h-8"
+      )}>
         {getIcon()}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground">{item.title}</p>
-        <p className="text-sm text-muted-foreground mt-0.5">{item.description}</p>
+        <p className={cn(
+          "font-medium text-foreground",
+          isMobile ? "text-sm" : "text-sm"
+        )}>{item.title}</p>
+        <p className={cn(
+          "text-muted-foreground mt-0.5",
+          isMobile ? "text-xs" : "text-sm"
+        )}>{item.description}</p>
         {item.agent && (
-          <p className="text-xs text-muted-foreground mt-1">Agent: {item.agent}</p>
+          <p className={cn(
+            "text-muted-foreground mt-1",
+            isMobile ? "text-xs" : "text-xs"
+          )}>Agent: {item.agent}</p>
         )}
       </div>
-      <div className="text-xs text-muted-foreground flex-shrink-0">
+      <div className={cn(
+        "text-muted-foreground flex-shrink-0",
+        isMobile ? "text-xs" : "text-xs"
+      )}>
         {item.timestamp}
       </div>
     </div>
@@ -174,6 +240,7 @@ const ActivityItem: React.FC<{ item: RecentActivityItem }> = ({ item }) => {
 export const DashboardOverview: React.FC = () => {
   const { limits, isLoading, error } = useLimits();
   const router = useRouter();
+  const { isMobile } = useBreakpoint();
 
   // Calculate percentages for display
   const projectsUsagePercentage = limits 
@@ -293,37 +360,76 @@ export const DashboardOverview: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 space-y-8">
+    <div className={cn(
+      "space-y-6",
+      isMobile ? "p-4" : "p-6 space-y-8"
+    )}>
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Dashboard Overview</h1>
-        <p className="text-muted-foreground">Welcome back! Here's what's happening with your agents.</p>
+        <h1 className={cn(
+          "font-bold text-foreground mb-2",
+          isMobile ? "text-xl" : "text-2xl"
+        )}>Dashboard Overview</h1>
+        <p className={cn(
+          "text-muted-foreground",
+          isMobile ? "text-sm" : "text-base"
+        )}>Welcome back! Here's what's happening with your agents.</p>
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className={cn(
+        "grid gap-4",
+        isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+      )}>
         {isLoading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="bg-card rounded-lg border border-border p-6 animate-pulse">
+            <div key={index} className={cn(
+              "bg-card rounded-lg border border-border animate-pulse",
+              isMobile ? "p-4" : "p-6"
+            )}>
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <div className="h-4 bg-muted rounded w-20 mb-2"></div>
-                  <div className="h-8 bg-muted rounded w-32 mb-2"></div>
-                  <div className="h-4 bg-muted rounded w-24"></div>
+                  <div className={cn(
+                    "h-3 bg-muted rounded mb-2",
+                    isMobile ? "w-16" : "w-20"
+                  )}></div>
+                  <div className={cn(
+                    "bg-muted rounded mb-2",
+                    isMobile ? "h-7 w-24" : "h-8 w-32"
+                  )}></div>
+                  <div className={cn(
+                    "h-3 bg-muted rounded",
+                    isMobile ? "w-20" : "w-24"
+                  )}></div>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-muted"></div>
+                <div className={cn(
+                  "rounded-lg bg-muted",
+                  isMobile ? "w-10 h-10" : "w-12 h-12"
+                )}></div>
               </div>
             </div>
           ))
         ) : error ? (
           // Error state
-          <div className="col-span-full bg-red-50 rounded-lg border border-red-200 p-6">
+          <div className={cn(
+            "col-span-full bg-red-50 rounded-lg border border-red-200",
+            isMobile ? "p-4" : "p-6"
+          )}>
             <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600" />
+              <AlertCircle className={cn(
+                "text-red-600 flex-shrink-0",
+                isMobile ? "h-4 w-4" : "h-5 w-5"
+              )} />
               <div>
-                <p className="font-medium text-red-900">Failed to load usage limits</p>
-                <p className="text-sm text-red-700 mt-1">Please check your connection and try again.</p>
+                <p className={cn(
+                  "font-medium text-red-900",
+                  isMobile ? "text-sm" : "text-base"
+                )}>Failed to load usage limits</p>
+                <p className={cn(
+                  "text-red-700 mt-1",
+                  isMobile ? "text-xs" : "text-sm"
+                )}>Please check your connection and try again.</p>
               </div>
             </div>
           </div>
@@ -335,11 +441,20 @@ export const DashboardOverview: React.FC = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className={cn(
+        "grid gap-6",
+        isMobile ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2 gap-8"
+      )}>
         {/* Quick Actions */}
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <h2 className={cn(
+            "font-semibold text-foreground mb-4",
+            isMobile ? "text-base" : "text-lg"
+          )}>Quick Actions</h2>
+          <div className={cn(
+            "grid gap-4",
+            isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"
+          )}>
             {quickActions.map((action, index) => (
               <QuickAction key={index} {...action} />
             ))}
@@ -348,15 +463,24 @@ export const DashboardOverview: React.FC = () => {
 
         {/* Recent Activity */}
         <div>
-          <h2 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h2>
+          <h2 className={cn(
+            "font-semibold text-foreground mb-4",
+            isMobile ? "text-base" : "text-lg"
+          )}>Recent Activity</h2>
           <div className="bg-card rounded-lg border border-border">
             <div className="divide-y divide-gray-200">
               {recentActivity.map((item) => (
                 <ActivityItem key={item.id} item={item} />
               ))}
             </div>
-            <div className="p-4 text-center border-t border-border">
-              <button className="text-sm text-brand-600 hover:text-brand-700 font-medium">
+            <div className={cn(
+              "text-center border-t border-border",
+              isMobile ? "p-3" : "p-4"
+            )}>
+              <button className={cn(
+                "text-brand-600 hover:text-brand-700 font-medium",
+                isMobile ? "text-sm" : "text-sm"
+              )}>
                 View all activity
               </button>
             </div>
@@ -365,34 +489,88 @@ export const DashboardOverview: React.FC = () => {
       </div>
 
       {/* Usage Overview */}
-      <div className="bg-card rounded-lg border border-border p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Usage Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className={cn(
+        "bg-card rounded-lg border border-border",
+        isMobile ? "p-4" : "p-6"
+      )}>
+        <h2 className={cn(
+          "font-semibold text-foreground mb-4",
+          isMobile ? "text-base" : "text-lg"
+        )}>Usage Overview</h2>
+        <div className={cn(
+          "grid gap-6",
+          isMobile ? "grid-cols-1 gap-4" : "grid-cols-1 md:grid-cols-3"
+        )}>
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-3 bg-blue-100 rounded-full flex items-center justify-center">
-              <Clock className="h-8 w-8 text-blue-600" />
+            <div className={cn(
+              "mx-auto mb-3 bg-blue-100 rounded-full flex items-center justify-center",
+              isMobile ? "w-14 h-14" : "w-16 h-16"
+            )}>
+              <Clock className={cn(
+                "text-blue-600",
+                isMobile ? "h-7 w-7" : "h-8 w-8"
+              )} />
             </div>
-            <h3 className="font-semibold text-foreground">Response Time</h3>
-            <p className="text-2xl font-bold text-blue-600 mt-1">1.2s</p>
-            <p className="text-sm text-muted-foreground">Average response time</p>
+            <h3 className={cn(
+              "font-semibold text-foreground",
+              isMobile ? "text-sm" : "text-base"
+            )}>Response Time</h3>
+            <p className={cn(
+              "font-bold text-blue-600 mt-1",
+              isMobile ? "text-xl" : "text-2xl"
+            )}>1.2s</p>
+            <p className={cn(
+              "text-muted-foreground",
+              isMobile ? "text-xs" : "text-sm"
+            )}>Average response time</p>
           </div>
           
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-3 bg-green-100 rounded-full flex items-center justify-center">
-              <Globe className="h-8 w-8 text-green-600" />
+            <div className={cn(
+              "mx-auto mb-3 bg-green-100 rounded-full flex items-center justify-center",
+              isMobile ? "w-14 h-14" : "w-16 h-16"
+            )}>
+              <Globe className={cn(
+                "text-green-600",
+                isMobile ? "h-7 w-7" : "h-8 w-8"
+              )} />
             </div>
-            <h3 className="font-semibold text-foreground">Global Reach</h3>
-            <p className="text-2xl font-bold text-green-600 mt-1">23</p>
-            <p className="text-sm text-muted-foreground">Countries served</p>
+            <h3 className={cn(
+              "font-semibold text-foreground",
+              isMobile ? "text-sm" : "text-base"
+            )}>Global Reach</h3>
+            <p className={cn(
+              "font-bold text-green-600 mt-1",
+              isMobile ? "text-xl" : "text-2xl"
+            )}>23</p>
+            <p className={cn(
+              "text-muted-foreground",
+              isMobile ? "text-xs" : "text-sm"
+            )}>Countries served</p>
           </div>
           
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-3 bg-purple-100 rounded-full flex items-center justify-center">
-              <Zap className="h-8 w-8 text-purple-600" />
+            <div className={cn(
+              "mx-auto mb-3 bg-purple-100 rounded-full flex items-center justify-center",
+              isMobile ? "w-14 h-14" : "w-16 h-16"
+            )}>
+              <Zap className={cn(
+                "text-purple-600",
+                isMobile ? "h-7 w-7" : "h-8 w-8"
+              )} />
             </div>
-            <h3 className="font-semibold text-foreground">Uptime</h3>
-            <p className="text-2xl font-bold text-purple-600 mt-1">99.9%</p>
-            <p className="text-sm text-muted-foreground">Service availability</p>
+            <h3 className={cn(
+              "font-semibold text-foreground",
+              isMobile ? "text-sm" : "text-base"
+            )}>Uptime</h3>
+            <p className={cn(
+              "font-bold text-purple-600 mt-1",
+              isMobile ? "text-xl" : "text-2xl"
+            )}>99.9%</p>
+            <p className={cn(
+              "text-muted-foreground",
+              isMobile ? "text-xs" : "text-sm"
+            )}>Service availability</p>
           </div>
         </div>
       </div>

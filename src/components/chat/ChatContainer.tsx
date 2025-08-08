@@ -44,6 +44,7 @@ import { useMessageStore, useConversationStore, useAgentStore } from '@/hooks/us
 import { MessageSkeleton, LoadingOverlay } from '@/components/ui/loading';
 import { getClient } from '@/lib/api/client';
 import { VoiceModal } from '@/components/voice/VoiceModal';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 
 /**
  * Default example prompts shown to users when starting a new conversation
@@ -73,7 +74,14 @@ const ExamplePromptCard: React.FC<ExamplePromptCardProps> = ({ prompt, onClick }
   return (
     <button
       onClick={() => onClick(prompt)}
-      className="p-3 text-left bg-card border border-border rounded-lg hover:border-accent hover:shadow-sm transition-all text-sm text-card-foreground"
+      className={cn(
+        "text-left bg-card border border-border rounded-lg",
+        "hover:border-accent hover:shadow-sm transition-all",
+        "text-card-foreground",
+        "p-2.5",
+        "text-xs",
+        "min-h-[50px] flex items-center"
+      )}
     >
       {prompt}
     </button>
@@ -147,32 +155,52 @@ const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ onPromptClick }) => {
   }, [currentAgent]);
   
   return (
-    <div className="flex flex-col items-center justify-center h-full px-4 py-8">
+    <div className={cn(
+      "flex flex-col items-center justify-center h-full py-8",
+      "px-4 md:px-8"
+    )}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="text-center max-w-md"
+        className={cn(
+          "text-center w-full",
+          "max-w-sm sm:max-w-md md:max-w-lg"
+        )}
       >
-        {/* Logo */}
-        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 mx-auto">
-          <img 
-            src="/logo.png" 
-            alt="CustomGPT.ai Logo" 
-            className="w-16 h-16 rounded-full"
-          />
+        {/* Agent Avatar */}
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 mx-auto overflow-hidden bg-accent">
+          {currentAgent?.settings?.chatbot_avatar ? (
+            <img 
+              src={currentAgent.settings.chatbot_avatar} 
+              alt={`${currentAgent.project_name} avatar`} 
+              className="w-16 h-16 rounded-full object-cover"
+            />
+          ) : (
+            <Bot className="w-8 h-8 text-muted-foreground" />
+          )}
         </div>
         
         {/* Welcome Text */}
-        <h3 className="text-xl font-semibold text-foreground mb-2">
+        <h3 className={cn(
+          "font-semibold text-foreground mb-2",
+          "text-lg sm:text-xl md:text-2xl"
+        )}>
           Welcome to {currentAgent?.project_name || 'CustomGPT'}!
         </h3>
-        <p className="text-muted-foreground mb-8">
+        <p className={cn(
+          "text-muted-foreground mb-6 sm:mb-8",
+          "text-sm sm:text-base"
+        )}>
           I'm here to help answer your questions and assist with your tasks. How can I help you today?
         </p>
         
         {/* Example Prompts */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+        <div className={cn(
+          "grid gap-2 sm:gap-3 w-full",
+          "grid-cols-2",
+          "max-w-full sm:max-w-md md:max-w-lg"
+        )}>
           {exampleQuestions.map((prompt, idx) => (
             <motion.div
               key={`${currentAgent?.id}-${idx}`} // Include agent ID to force re-render on agent change
@@ -497,6 +525,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   conversationRefreshKey
 }) => {
   const { currentAgent } = useAgentStore();
+  const { isMobile } = useBreakpoint();
   
   if (mode === 'widget' || mode === 'floating') {
     return (
@@ -550,8 +579,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
     );
   }
   
-  // For standalone mode, show agent selector header
-  if (mode === 'standalone') {
+  // For standalone mode, show agent selector header (but not on mobile)
+  if (mode === 'standalone' && !isMobile) {
     return (
       <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
         <div className="flex items-center gap-3">
@@ -599,6 +628,8 @@ interface ChatContainerProps {
   onMessage?: (message: any) => void;
   /** Key to trigger ConversationManager refresh */
   conversationRefreshKey?: number;
+  /** Mobile optimization mode */
+  isMobile?: boolean;
 }
 
 /**
@@ -640,7 +671,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   threadId,
   onConversationChange,
   onMessage,
-  conversationRefreshKey
+  conversationRefreshKey,
+  isMobile = false
 }) => {
   const { sendMessage, isStreaming, cancelStreaming } = useMessageStore();
   const { fetchAgents, agents, currentAgent } = useAgentStore();
@@ -750,8 +782,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       className={cn(
         'flex flex-col bg-background',
         mode === 'standalone' && 'h-full',
-        mode === 'widget' && 'h-[600px] w-[400px] rounded-lg shadow-xl border border-border',
-        mode === 'floating' && 'h-[600px] w-[400px] rounded-lg shadow-2xl border border-border',
+        mode === 'widget' && !isMobile && 'h-[600px] w-[400px] rounded-lg shadow-xl border border-border',
+        mode === 'floating' && !isMobile && 'h-[600px] w-[400px] rounded-lg shadow-2xl border border-border',
+        isMobile && 'h-full w-full',
         className
       )}
     >
@@ -767,13 +800,19 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         onCreateConversation={handleCreateConversation}
         conversationRefreshKey={conversationRefreshKey}
       />
-      <MessageArea className="flex-1" />
-      <ChatInput
-        onSend={handleSendMessage}
-        disabled={isStreaming}
-        placeholder={isStreaming ? "AI is thinking..." : "Send a message..."}
-        onVoiceClick={() => setIsVoiceModalOpen(true)}
-      />
+      <MessageArea className="flex-1 overflow-y-auto" />
+      <div className={cn(
+        "mt-auto",
+        isMobile && mode === 'standalone' ? "pb-16" : ""
+      )}>
+        <ChatInput
+          onSend={handleSendMessage}
+          disabled={isStreaming}
+          placeholder={isStreaming ? "AI is thinking..." : "Send a message..."}
+          onVoiceClick={() => setIsVoiceModalOpen(true)}
+          isMobile={isMobile}
+        />
+      </div>
       
       {/* Branding Footer */}
       {(mode === 'widget' || mode === 'floating') && (

@@ -89,42 +89,112 @@ function loadMessagesFromStorage(conversationId: string): ChatMessage[] | null {
  * @param projectId - The project/agent ID
  * @returns Array of citation objects with details
  */
+/**
+ * Validate and filter citation IDs
+ * 
+ * @param citationIds - Raw citation IDs from API
+ * @returns Filtered array of valid citation IDs
+ */
+function validateCitationIds(citationIds: any[]): number[] {
+  if (!Array.isArray(citationIds)) {
+    logger.warn('MESSAGES', 'Citation IDs is not an array', { citationIds });
+    return [];
+  }
+  
+  const validIds = citationIds
+    .filter(id => typeof id === 'number' && !isNaN(id) && id > 0)
+    .filter((id, index, arr) => arr.indexOf(id) === index); // Remove duplicates
+  
+  if (validIds.length !== citationIds.length) {
+    logger.warn('MESSAGES', 'Filtered out invalid citation IDs', {
+      original: citationIds,
+      valid: validIds,
+      filtered: citationIds.length - validIds.length
+    });
+  }
+  
+  return validIds;
+}
+
 async function fetchCitationDetails(citationIds: number[], projectId: number): Promise<Citation[]> {
+  // Validate input citation IDs
+  const validCitationIds = validateCitationIds(citationIds);
+  
+  if (validCitationIds.length === 0) {
+    logger.warn('MESSAGES', 'No valid citation IDs to fetch', { citationIds });
+    return [];
+  }
+  
+  logger.info('MESSAGES', 'Fetching citation details', {
+    projectId,
+    citationIds: validCitationIds,
+    count: validCitationIds.length
+  });
+  
   const client = getClient();
   const citations: Citation[] = [];
   
-  for (let i = 0; i < citationIds.length; i++) {
-    const citationId = citationIds[i];
+  for (let i = 0; i < validCitationIds.length; i++) {
+    const citationId = validCitationIds[i];
     
     try {
       const response = await client.getCitation(projectId, citationId);
       
       if (response.data) {
-        citations.push({
+        const citation = {
           id: citationId.toString(), // Convert to string as per Citation interface
           index: i + 1, // 1-based index for display
           title: response.data.title || `Citation ${i + 1}`,
           source: response.data.url,
           url: response.data.url,
           content: response.data.description || '',
+        };
+        citations.push(citation);
+        
+        logger.info('MESSAGES', 'Citation fetched successfully', {
+          citationId,
+          title: citation.title,
+          hasContent: !!citation.content,
+          hasUrl: !!citation.url
+        });
+      } else {
+        logger.warn('MESSAGES', 'Citation API returned empty data', {
+          citationId,
+          response
         });
       }
     } catch (error) {
       logger.warn('MESSAGES', 'Failed to fetch citation details', {
         citationId,
-        error: error instanceof Error ? error.message : String(error)
+        projectId,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : typeof error
       });
-      // Fallback citation object if fetch fails
-      citations.push({
-        id: citationId.toString(), // Convert to string
-        index: i + 1,
-        title: `Citation ${i + 1}`,
-        source: '',
-        url: '',
-        content: 'Citation details unavailable',
-      });
+      // Only create fallback citations for actual errors, not empty responses
+      // This reduces wrong citations from appearing
+      if (error instanceof Error && error.message.includes('404')) {
+        logger.info('MESSAGES', 'Citation not found, skipping fallback', { citationId });
+        // Skip creating fallback for 404 errors - citation simply doesn't exist
+        continue;
+      } else {
+        // Create fallback only for network/server errors
+        citations.push({
+          id: citationId.toString(), // Convert to string
+          index: i + 1,
+          title: `Citation ${i + 1}`,
+          source: '',
+          url: '',
+          content: 'Citation details unavailable',
+        });
+      }
     }
   }
+  
+  logger.info('MESSAGES', 'Citation fetching completed', {
+    requested: validCitationIds.length,
+    fetched: citations.length,
+    success: citations.filter(c => c.content !== 'Citation details unavailable').length
+  });
   
   return citations;
 }

@@ -42,6 +42,7 @@ import type { Agent } from '@/types';
 import { ChatContainer } from './ChatContainer';
 import { ConversationSidebar } from './ConversationSidebar';
 import { useConversationStore, useMessageStore } from '@/hooks/useWidgetStore';
+import { useBreakpoint } from '@/hooks/useMediaQuery';
 
 /**
  * Props for ChatLayout component
@@ -101,6 +102,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
   conversationRefreshKey
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { currentConversation: storeCurrentConversation } = useConversationStore();
   const { loadMessages } = useMessageStore();
 
@@ -149,16 +151,43 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
         onConversationChange={onConversationChange}
         onMessage={onMessage}
         conversationRefreshKey={conversationRefreshKey}
+        isMobile={false} // widgets are typically not mobile-optimized by default
       />
     );
   }
 
+  const { isMobile } = useBreakpoint();
+
+  // On mobile, hide the sidebar and use drawer navigation instead
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-full bg-background">
+        <ChatContainer
+          mode={mode}
+          className="flex-1"
+          onClose={onClose}
+          onAgentSettings={onAgentSettings}
+          enableConversationManagement={enableConversationManagement}
+          maxConversations={maxConversations}
+          sessionId={sessionId}
+          threadId={threadId}
+          onConversationChange={onConversationChange}
+          onMessage={onMessage}
+          conversationRefreshKey={conversationRefreshKey}
+          isMobile={true}
+        />
+      </div>
+    );
+  }
+
+  // Desktop layout with sidebar
   return (
-    <div className="flex h-full bg-white">
+    <div className="flex h-full bg-background">
       {/* Sidebar */}
       <ConversationSidebar
         isCollapsed={sidebarCollapsed}
         onToggle={handleToggleSidebar}
+        isMobile={false}
       />
       
       {/* Main Chat Area */}
@@ -175,6 +204,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
           onConversationChange={onConversationChange}
           onMessage={onMessage}
           conversationRefreshKey={conversationRefreshKey}
+          isMobile={false}
         />
       </div>
     </div>

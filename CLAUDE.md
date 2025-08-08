@@ -123,6 +123,13 @@ ALLOWED_ORIGINS=https://yourdomain.com
 
 ## Important Implementation Notes
 
+### Feature Parity Rule
+**IMPORTANT**: Only implement features that exist in the desktop version or are supported by the CustomGPT API:
+- Do NOT add features like billing, logout, or settings that don't exist in desktop
+- Do NOT create functionality that isn't backed by an API endpoint
+- Always check desktop version for feature availability before implementing
+- Mobile UI should be a responsive version of desktop, not have additional features
+
 ### API Terminology Mismatch
 The codebase has a terminology mismatch:
 - **UI/Store**: Uses "agents" terminology
