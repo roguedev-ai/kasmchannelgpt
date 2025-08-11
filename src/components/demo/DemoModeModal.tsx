@@ -49,6 +49,7 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
   const [showOpenAIKey, setShowOpenAIKey] = useState(false);
   const [enableVoice, setEnableVoice] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'try' | 'deploy'>('try');
   const { isMobile } = useBreakpoint();
@@ -107,7 +108,7 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
   };
   
   return (
-    <>
+    <div>
       {/* Background Overlay - prevents clicks on background UI */}
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
       
@@ -170,10 +171,11 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
           {/* Modal Content */}
           <div className="p-6">
             {activeTab === 'try' ? (
-              <div className={cn(
-                "grid gap-6",
-                isMobile ? "grid-cols-1" : "grid-cols-2"
-              )}>
+              <>
+                <div className={cn(
+                  "grid gap-6",
+                  isMobile ? "grid-cols-1" : "grid-cols-2"
+                )}>
                 {/* Free Trial Option */}
                 <Card className="p-6 border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20">
                   <div className="space-y-4">
@@ -360,24 +362,25 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                     </p>
                   </form>
                 </Card>
-              </div>
-              
-              {/* Bottom CTA to Deploy Section */}
-              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    Want to deploy your own CustomGPT UI with full features?
-                  </p>
-                  <Button
-                    variant="outline"
-                    onClick={() => setActiveTab('deploy')}
-                    className="inline-flex items-center gap-2"
-                  >
-                    <Github className="h-4 w-4" />
-                    View Deployment Options
-                  </Button>
                 </div>
-              </div>
+                
+                {/* Bottom CTA to Deploy Section */}
+                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      Want to deploy your own CustomGPT UI with full features?
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => setActiveTab('deploy')}
+                      className="inline-flex items-center gap-2"
+                    >
+                      <Github className="h-4 w-4" />
+                      View Deployment Options
+                    </Button>
+                  </div>
+                </div>
+              </>
             ) : (
               <div className="space-y-6">
                 {/* Deployment Options Header */}
@@ -645,6 +648,6 @@ services:
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
