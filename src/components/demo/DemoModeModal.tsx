@@ -25,7 +25,9 @@ import {
   Zap,
   Clock,
   MessageSquare,
-  FolderOpen
+  FolderOpen,
+  Container,
+  Rocket
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -181,10 +183,10 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                          Free Trial
+                          Instant Playground
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          No API key required
+                          Try now - no signup needed
                         </p>
                       </div>
                     </div>
@@ -215,11 +217,11 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                       size="lg"
                     >
                       <Zap className="h-4 w-4 mr-2" />
-                      Start Free Trial
+                      Try CustomGPT Now
                     </Button>
                     
                     <p className="text-xs text-center text-gray-500 dark:text-gray-500">
-                      No registration • Auto-cleanup
+                      Instant access • No login required
                     </p>
                   </div>
                 </Card>
@@ -236,7 +238,7 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                           Use Your API Key
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          Full features for 2 hours
+                          Load your projects & data
                         </p>
                       </div>
                     </div>
@@ -359,9 +361,36 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                   </form>
                 </Card>
               </div>
+              
+              {/* Bottom CTA to Deploy Section */}
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                    Want to deploy your own CustomGPT UI with full features?
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => setActiveTab('deploy')}
+                    className="inline-flex items-center gap-2"
+                  >
+                    <Github className="h-4 w-4" />
+                    View Deployment Options
+                  </Button>
+                </div>
+              </div>
             ) : (
               <div className="space-y-6">
-                {/* Deploy Your Own */}
+                {/* Deployment Options Header */}
+                <div className="text-center">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    Choose Your Deployment Method
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Deploy CustomGPT UI using your preferred method
+                  </p>
+                </div>
+                
+                {/* Option 1: GitHub Clone */}
                 <Card className="p-6">
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
@@ -370,10 +399,10 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                          Deploy Your Own CustomGPT UI
+                          Method 1: Clone from GitHub
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          Get started with our open-source starter kit
+                          Traditional deployment with full customization
                         </p>
                       </div>
                     </div>
@@ -381,7 +410,7 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                     {/* Clone Command */}
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        1. Clone the repository
+                        Step 1: Clone the repository
                       </label>
                       <div className="flex gap-2">
                         <div className="flex-1 bg-gray-900 dark:bg-gray-950 rounded-lg px-4 py-3 font-mono text-sm text-gray-100">
@@ -405,57 +434,176 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                     {/* Setup Steps */}
                     <div className="space-y-3">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        2. Configure your environment
+                        Step 2: Configure environment
                       </label>
                       <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 font-mono text-xs text-gray-100 overflow-x-auto">
                         <pre className="whitespace-pre">
-{`# Copy the environment template
+{`cd customgpt-starter-kit
 cp .env.example .env.local
 
-# Add your API keys
+# Edit .env.local and add your keys:
 CUSTOMGPT_API_KEY=your_api_key_here
-OPENAI_API_KEY=your_openai_key_here  # Optional for voice`}
+OPENAI_API_KEY=your_openai_key_here  # Optional`}
                         </pre>
                       </div>
                     </div>
                     
                     <div className="space-y-3">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        3. Start the application
+                        Step 3: Install and run
                       </label>
                       <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 font-mono text-xs text-gray-100 overflow-x-auto">
                         <pre className="whitespace-pre">
 {`# Install dependencies
 npm install
 
-# Start development server
+# Development mode
 npm run dev
 
-# Or build for production
+# Production build
 npm run build && npm start`}
                         </pre>
                       </div>
                     </div>
                     
-                    {/* CTA Buttons */}
-                    <div className="flex gap-3 pt-4">
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => window.open('https://github.com/Poll-The-People/customgpt-starter-kit', '_blank')}
-                      >
-                        <Github className="h-4 w-4 mr-2" />
-                        View on GitHub
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => window.open('https://app.customgpt.ai/', '_blank')}
-                      >
-                        <Key className="h-4 w-4 mr-2" />
-                        Get API Key
-                      </Button>
+                    {/* GitHub CTA */}
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => window.open('https://github.com/Poll-The-People/customgpt-starter-kit', '_blank')}
+                    >
+                      <Github className="h-4 w-4 mr-2" />
+                      View on GitHub
+                    </Button>
+                  </div>
+                </Card>
+                
+                {/* Option 2: Docker */}
+                <Card className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                        <Container className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                          Method 2: Docker Deployment
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          One-command deployment with Docker
+                        </p>
+                      </div>
                     </div>
+                    
+                    {/* Docker Pull Command */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Option A: Using Docker Compose (Recommended)
+                      </label>
+                      <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 font-mono text-xs text-gray-100 overflow-x-auto">
+                        <pre className="whitespace-pre">
+{`# Create docker-compose.yml
+cat > docker-compose.yml << EOF
+version: '3.8'
+services:
+  customgpt-ui:
+    image: ghcr.io/poll-the-people/customgpt-ui:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - CUSTOMGPT_API_KEY=your_api_key_here
+      - OPENAI_API_KEY=your_openai_key_here
+      - NODE_ENV=production
+    restart: unless-stopped
+EOF
+
+# Start the container
+docker-compose up -d`}
+                        </pre>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Option B: Using Docker Run
+                      </label>
+                      <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 font-mono text-xs text-gray-100 overflow-x-auto">
+                        <pre className="whitespace-pre">
+{`# Pull and run the Docker image
+docker run -d \\
+  --name customgpt-ui \\
+  -p 3000:3000 \\
+  -e CUSTOMGPT_API_KEY=your_api_key_here \\
+  -e OPENAI_API_KEY=your_openai_key_here \\
+  -e NODE_ENV=production \\
+  --restart unless-stopped \\
+  ghcr.io/poll-the-people/customgpt-ui:latest`}
+                        </pre>
+                      </div>
+                    </div>
+                    
+                    {/* Docker Features */}
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+                        Docker Deployment Benefits:
+                      </h4>
+                      <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                        <li className="flex items-start gap-2">
+                          <Rocket className="h-4 w-4 mt-0.5 text-gray-500" />
+                          <span>Pre-configured production environment</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <Container className="h-4 w-4 mt-0.5 text-gray-500" />
+                          <span>Isolated container with all dependencies</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <Zap className="h-4 w-4 mt-0.5 text-gray-500" />
+                          <span>Automatic health checks and restarts</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <Key className="h-4 w-4 mt-0.5 text-gray-500" />
+                          <span>Environment variables for secure API key management</span>
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    {/* Advanced Docker Config */}
+                    <details className="group">
+                      <summary className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                        Advanced Docker Configuration ▼
+                      </summary>
+                      <div className="mt-3 space-y-3">
+                        <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 font-mono text-xs text-gray-100 overflow-x-auto">
+                          <pre className="whitespace-pre">
+{`# Custom docker-compose.yml with all options
+version: '3.8'
+services:
+  customgpt-ui:
+    image: ghcr.io/poll-the-people/customgpt-ui:latest
+    ports:
+      - "3000:3000"
+    environment:
+      # Required
+      - CUSTOMGPT_API_KEY=your_api_key_here
+      # Optional
+      - OPENAI_API_KEY=your_openai_key_here
+      - CUSTOMGPT_API_BASE_URL=https://app.customgpt.ai/api/v1
+      - ALLOWED_ORIGINS=https://yourdomain.com
+      - RATE_LIMIT_PER_MINUTE=60
+      - NODE_ENV=production
+    volumes:
+      # Persist widget builds (optional)
+      - ./widget-dist:/app/dist/widget
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3`}
+                          </pre>
+                        </div>
+                      </div>
+                    </details>
                   </div>
                 </Card>
                 
@@ -470,6 +618,28 @@ npm run build && npm start`}
                     <li>Widget mode for embedding in other sites</li>
                   </ul>
                 </div>
+                
+                {/* Get API Key CTA */}
+                <Card className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200 dark:border-blue-800">
+                  <div className="text-center space-y-3">
+                    <Key className="h-8 w-8 text-blue-600 dark:text-blue-400 mx-auto" />
+                    <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                        Need an API Key?
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Get your CustomGPT.ai API key to start deploying
+                      </p>
+                    </div>
+                    <Button
+                      className="w-full sm:w-auto"
+                      onClick={() => window.open('https://app.customgpt.ai/', '_blank')}
+                    >
+                      <Key className="h-4 w-4 mr-2" />
+                      Get Your API Key
+                    </Button>
+                  </div>
+                </Card>
               </div>
             )}
           </div>
