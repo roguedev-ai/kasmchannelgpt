@@ -36,6 +36,7 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { useDemoStore } from '@/store/demo';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
+import { FREE_TRIAL_LIMITS, DEMO_STORAGE_KEYS } from '@/lib/constants/demo-limits';
 
 interface DemoModeModalProps {
   onClose?: () => void;
@@ -65,7 +66,7 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
         button.textContent = 'Starting Demo...';
       }
       
-      localStorage.setItem('customgpt.deploymentMode', 'demo');
+      localStorage.setItem(DEMO_STORAGE_KEYS.DEPLOYMENT_MODE, 'demo');
       setApiKey(apiKeyInput);
       if (enableVoice && openAIKeyInput.trim()) {
         setOpenAIApiKey(openAIKeyInput);
@@ -81,8 +82,8 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
     console.log('[DemoModeModal] Starting free trial');
     
     // Set special marker for free trial mode
-    localStorage.setItem('customgpt.deploymentMode', 'demo');
-    localStorage.setItem('customgpt.freeTrialMode', 'true');
+    localStorage.setItem(DEMO_STORAGE_KEYS.DEPLOYMENT_MODE, 'demo');
+    localStorage.setItem(DEMO_STORAGE_KEYS.FREE_TRIAL_MODE, 'true');
     
     // Start free trial session
     const sessionData = {
@@ -93,11 +94,16 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
       sessionId: `trial_${Date.now()}_${Math.random().toString(36).substring(7)}`
     };
     
-    sessionStorage.setItem('customgpt.freeTrialSession', JSON.stringify(sessionData));
+    sessionStorage.setItem(DEMO_STORAGE_KEYS.FREE_TRIAL_SESSION, JSON.stringify(sessionData));
     
     setTimeout(() => {
       window.location.href = window.location.href;
     }, 100);
+  };
+  
+  const handleModalClose = () => {
+    console.log('[DemoModeModal] Closing modal - starting free trial by default');
+    handleFreeTrial();
   };
   
   const handleCopyCommand = () => {
@@ -129,16 +135,15 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                   Experience the power of custom AI chatbots
                 </p>
               </div>
-              {onClose && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onClose}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleModalClose}
+                className="text-gray-400 hover:text-gray-600"
+                title="Start free trial"
+              >
+                <X className="h-5 w-5" />
+              </Button>
             </div>
             
             {/* Tab Navigation */}
@@ -197,19 +202,19 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                         <FolderOpen className="h-4 w-4" />
-                        <span>1 Project</span>
+                        <span>{FREE_TRIAL_LIMITS.MAX_PROJECTS} Project</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                         <MessageSquare className="h-4 w-4" />
-                        <span>2 Conversations</span>
+                        <span>{FREE_TRIAL_LIMITS.MAX_CONVERSATIONS} Conversations</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                         <AlertTriangle className="h-4 w-4" />
-                        <span>2 messages per chat</span>
+                        <span>{FREE_TRIAL_LIMITS.MAX_MESSAGES_PER_CONVERSATION} messages per chat</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                         <Clock className="h-4 w-4" />
-                        <span>30 minute session</span>
+                        <span>{FREE_TRIAL_LIMITS.SESSION_DURATION / 60000} minute session</span>
                       </div>
                     </div>
                     

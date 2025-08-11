@@ -23,16 +23,29 @@ export async function proxyRequest(
     
     // Check deployment mode from header
     const deploymentMode = request.headers.get('X-Deployment-Mode') || 'production';
+    const isFreeTrialMode = request.headers.get('X-Free-Trial-Mode') === 'true';
     let apiKey: string | undefined;
     
     if (deploymentMode === 'demo') {
-      // In demo mode, get API key from request header
-      apiKey = request.headers.get('X-CustomGPT-API-Key') || undefined;
-      if (!apiKey) {
-        return NextResponse.json(
-          { error: 'API key required in demo mode' },
-          { status: 401 }
-        );
+      if (isFreeTrialMode) {
+        // In free trial mode, use the server-side demo API key
+        apiKey = process.env.CUSTOMGPT_API_KEY_DEMO_USE_ONLY;
+        if (!apiKey) {
+          console.error('[Proxy] Free trial mode but no CUSTOMGPT_API_KEY_DEMO_USE_ONLY configured');
+          return NextResponse.json(
+            { error: 'Free trial is not available. Please use your own API key.' },
+            { status: 503 }
+          );
+        }
+      } else {
+        // In regular demo mode, get API key from request header
+        apiKey = request.headers.get('X-CustomGPT-API-Key') || undefined;
+        if (!apiKey) {
+          return NextResponse.json(
+            { error: 'API key required in demo mode' },
+            { status: 401 }
+          );
+        }
       }
     }
     

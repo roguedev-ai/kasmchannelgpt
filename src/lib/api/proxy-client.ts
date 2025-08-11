@@ -119,8 +119,16 @@ export class ProxyCustomGPTClient {
         : 'production';
       baseHeaders['X-Deployment-Mode'] = deploymentMode;
       
-      // Add demo mode API key if available
-      if (deploymentMode === 'demo' && this.demoApiKey) {
+      // Check if free trial mode
+      const isFreeTrialMode = typeof window !== 'undefined' 
+        ? localStorage.getItem('customgpt.freeTrialMode') === 'true'
+        : false;
+      
+      if (isFreeTrialMode) {
+        baseHeaders['X-Free-Trial-Mode'] = 'true';
+        console.log('[ProxyClient] Free trial mode - using server-side demo key');
+      } else if (deploymentMode === 'demo' && this.demoApiKey) {
+        // Add demo mode API key if available
         baseHeaders['X-CustomGPT-API-Key'] = this.demoApiKey;
         console.log('[ProxyClient] Added demo API key to request headers');
       } else if (deploymentMode === 'demo' && !this.demoApiKey) {
@@ -192,8 +200,16 @@ export class ProxyCustomGPTClient {
       : 'production';
     baseHeaders['X-Deployment-Mode'] = deploymentMode;
     
-    // Add demo mode API key if available
-    if (deploymentMode === 'demo' && this.demoApiKey) {
+    // Check if free trial mode
+    const isFreeTrialMode = typeof window !== 'undefined' 
+      ? localStorage.getItem('customgpt.freeTrialMode') === 'true'
+      : false;
+    
+    if (isFreeTrialMode) {
+      baseHeaders['X-Free-Trial-Mode'] = 'true';
+      console.log('[ProxyClient] Free trial mode - using server-side demo key for streaming');
+    } else if (deploymentMode === 'demo' && this.demoApiKey) {
+      // Add demo mode API key if available
       baseHeaders['X-CustomGPT-API-Key'] = this.demoApiKey;
       console.log('[ProxyClient] Added demo API key to streaming request headers');
     } else if (deploymentMode === 'demo' && !this.demoApiKey) {

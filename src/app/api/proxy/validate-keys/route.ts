@@ -11,12 +11,17 @@ export async function GET(request: NextRequest) {
   try {
     console.log('[VALIDATE-KEYS] Checking environment variables...');
     
-    // Check if CustomGPT API key is present
+    // Check if CustomGPT API key is present (production key)
     const customGptKey = process.env.CUSTOMGPT_API_KEY;
     const hasCustomGptKey = !!(customGptKey && customGptKey.trim().length > 0);
     
+    // Check if demo API key is present (for free trial)
+    const demoKey = process.env.CUSTOMGPT_API_KEY_DEMO_USE_ONLY;
+    const hasDemoKey = !!(demoKey && demoKey.trim().length > 0);
+    
     console.log('[VALIDATE-KEYS] CustomGPT API key present:', hasCustomGptKey);
     console.log('[VALIDATE-KEYS] CustomGPT API key length:', customGptKey?.length || 0);
+    console.log('[VALIDATE-KEYS] Demo API key present:', hasDemoKey);
     
     // OpenAI key is optional
     const openaiKey = process.env.OPENAI_API_KEY;
@@ -25,8 +30,9 @@ export async function GET(request: NextRequest) {
     console.log('[VALIDATE-KEYS] OpenAI API key present:', hasOpenaiKey);
     
     const result = {
-      valid: hasCustomGptKey,
+      valid: hasCustomGptKey || hasDemoKey,
       customgpt_key_present: hasCustomGptKey,
+      demo_key_present: hasDemoKey,
       openai_key_present: hasOpenaiKey,
       timestamp: new Date().toISOString()
     };
