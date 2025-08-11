@@ -37,6 +37,7 @@ import { cn } from '@/lib/utils';
 import { useDemoStore } from '@/store/demo';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
 import { FREE_TRIAL_LIMITS, DEMO_STORAGE_KEYS } from '@/lib/constants/demo-limits';
+import { SimpleCaptcha, isCaptchaVerified } from './SimpleCaptcha';
 
 interface DemoModeModalProps {
   onClose?: () => void;
@@ -53,6 +54,7 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'try' | 'deploy'>('try');
+  const [showCaptcha, setShowCaptcha] = useState(false);
   const { isMobile } = useBreakpoint();
   
   const handleDemoSubmit = (e: React.FormEvent) => {
@@ -79,6 +81,16 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
   };
 
   const handleFreeTrial = () => {
+    // Check if already verified
+    if (!isCaptchaVerified()) {
+      setShowCaptcha(true);
+      return;
+    }
+    
+    startFreeTrial();
+  };
+  
+  const startFreeTrial = () => {
     console.log('[DemoModeModal] Starting free trial');
     
     // Set special marker for free trial mode
@@ -218,18 +230,29 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                       </div>
                     </div>
                     
-                    <Button 
-                      onClick={handleFreeTrial}
-                      className="w-full"
-                      size="lg"
-                    >
-                      <Zap className="h-4 w-4 mr-2" />
-                      Try CustomGPT Now
-                    </Button>
-                    
-                    <p className="text-xs text-center text-gray-500 dark:text-gray-500">
-                      Instant access • No login required
-                    </p>
+                    {showCaptcha ? (
+                      <SimpleCaptcha 
+                        onVerified={() => {
+                          setShowCaptcha(false);
+                          startFreeTrial();
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <Button 
+                          onClick={handleFreeTrial}
+                          className="w-full"
+                          size="lg"
+                        >
+                          <Zap className="h-4 w-4 mr-2" />
+                          Try CustomGPT Now
+                        </Button>
+                        
+                        <p className="text-xs text-center text-gray-500 dark:text-gray-500">
+                          Instant access • No login required
+                        </p>
+                      </>
+                    )}
                   </div>
                 </Card>
                 
