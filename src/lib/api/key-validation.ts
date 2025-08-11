@@ -14,9 +14,18 @@ interface KeyValidationResult {
  * Check if CustomGPT API key is configured on the server
  */
 export async function validateCustomGPTKey(): Promise<KeyValidationResult> {
+  // Check if we're in demo mode - if so, skip server validation
+  if (typeof window !== 'undefined') {
+    const deploymentMode = localStorage.getItem('customgpt.deploymentMode');
+    if (deploymentMode === 'demo') {
+      // In demo mode, keys are handled client-side
+      return { isValid: true, keyType: 'customgpt' };
+    }
+  }
+  
   try {
-    // Try to fetch user limits to verify API key works
-    const response = await fetch('/api/proxy/user/limits');
+    // Try to fetch projects list to verify API key works
+    const response = await fetch('/api/proxy/projects?limit=1');
     
     if (response.ok) {
       return { isValid: true, keyType: 'customgpt' };
@@ -59,31 +68,9 @@ export async function validateCustomGPTKey(): Promise<KeyValidationResult> {
  * Check if OpenAI API key is configured (only needed for voice features)
  */
 export async function validateOpenAIKey(): Promise<KeyValidationResult> {
-  try {
-    // Check if OPENAI_API_KEY is configured by trying a voice endpoint
-    const response = await fetch('/api/proxy/voice/inference', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ test: true })
-    });
-    
-    if (response.status === 401 || response.status === 500) {
-      const data = await response.json().catch(() => null);
-      if (data?.error?.includes('OPENAI_API_KEY')) {
-        return { 
-          isValid: false, 
-          keyType: 'openai',
-          error: 'OpenAI API key is not configured. Voice features require OPENAI_API_KEY in your .env.local file.' 
-        };
-      }
-    }
-    
-    // If we get here, assume it's configured (actual test would happen when using voice)
-    return { isValid: true, keyType: 'openai' };
-  } catch (error) {
-    // OpenAI key validation failure is not critical
-    return { isValid: true, keyType: 'openai' };
-  }
+  // OpenAI key is optional - skip validation on startup
+  // The actual validation will happen when user tries to use voice features
+  return { isValid: true, keyType: 'openai' };
 }
 
 /**

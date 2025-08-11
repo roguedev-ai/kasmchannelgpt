@@ -37,6 +37,7 @@ import { useConfigStore } from '@/store';
 import { ApiKeySetupModal } from '@/components/setup/ApiKeySetupModal';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { DemoModeProvider } from '@/components/demo/DemoModeProvider';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 import type { Agent } from '@/types';
 
 /**
@@ -73,7 +74,10 @@ const ChatLayout = dynamic(
  * The component re-renders when apiKey changes,
  * automatically transitioning from setup to chat.
  */
-export default function Home() {
+/**
+ * Inner component that has access to demo mode context
+ */
+function HomeContent() {
   // Track setup completion state
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,19 +85,68 @@ export default function Home() {
   // Next.js router for navigation
   const router = useRouter();
   
-  // Check if demo mode is enabled
-  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+  // Get runtime demo mode status from context
+  const { isRuntimeDemoMode, deploymentMode, isInitialized } = useDemoModeContext();
 
   useEffect(() => {
+    // Wait for context to initialize
+    if (!isInitialized) return;
+    
+    // If no deployment mode selected, let DemoModeProvider handle it
+    if (!deploymentMode) {
+      setIsLoading(false);
+      return;
+    }
+    
+    console.log('[HomeContent] Deployment mode:', deploymentMode, 'isRuntimeDemoMode:', isRuntimeDemoMode);
+    
     // In demo mode, skip API key validation
-    if (isDemoMode) {
+    if (isRuntimeDemoMode) {
       setIsSetupComplete(true);
       setIsLoading(false);
     } else {
-      // For non-demo mode, the ApiKeySetupModal will handle validation
-      setIsLoading(false);
+      // For production mode, check if server has valid API keys
+      console.log('[HomeContent] Checking server-side API keys...');
+      
+      // Use a simple validation endpoint first
+      fetch('/api/proxy/validate-keys')
+        .then(response => response.json())
+        .then(data => {
+          console.log('[HomeContent] API validation result:', data);
+          if (data.valid) {
+            // Server has valid API keys - skip setup
+            console.log('[HomeContent] Valid API keys detected, skipping setup');
+            setIsSetupComplete(true);
+          } else {
+            // Server needs API keys - show setup modal
+            console.log('[HomeContent] No valid API keys, showing setup modal');
+            setIsSetupComplete(false);
+          }
+          setIsLoading(false);
+        })
+        .catch(error => {
+          console.log('[HomeContent] API validation error, trying projects endpoint:', error);
+          // Fallback to projects endpoint
+          fetch('/api/proxy/projects?limit=1')
+            .then(response => {
+              console.log('[HomeContent] Projects endpoint response:', response.status, response.ok);
+              if (response.ok) {
+                console.log('[HomeContent] Projects endpoint success, keys are valid');
+                setIsSetupComplete(true);
+              } else {
+                console.log('[HomeContent] Projects endpoint failed, showing setup');
+                setIsSetupComplete(false);
+              }
+              setIsLoading(false);
+            })
+            .catch(projectError => {
+              console.log('[HomeContent] Both validations failed:', projectError);
+              setIsSetupComplete(false);
+              setIsLoading(false);
+            });
+        });
     }
-  }, [isDemoMode]);
+  }, [isRuntimeDemoMode, deploymentMode, isInitialized]);
 
   // Handler for agent settings navigation
   const handleAgentSettings = (agent: Agent) => {
@@ -106,33 +159,66 @@ export default function Home() {
   };
 
   // Don't render anything while checking initial state
-  if (isLoading) {
+  if (isLoading || !isInitialized) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  // If no deployment mode selected, DemoModeProvider will show selection screen
+  if (!deploymentMode) {
     return null;
   }
 
-  // Show main chat interface (wrapped in demo provider if needed)
+  // If in production mode and setup is not complete, show only the setup modal
+  if (deploymentMode === 'production' && !isSetupComplete) {
+    console.log('[HomeContent] Showing setup modal because isSetupComplete =', isSetupComplete);
+    return (
+      <ApiKeySetupModal 
+        onComplete={handleSetupComplete}
+        isDemoMode={false}
+      />
+    );
+  }
+
+  // Otherwise, show the main app layout
+  console.log('[HomeContent] Rendering main app with:', { 
+    deploymentMode, 
+    isRuntimeDemoMode, 
+    isSetupComplete 
+  });
+  
+  return (
+    <PageLayout showBackButton={false}>
+      {/* Container with calculated height to account for navbar */}
+      <div className="h-[calc(100vh-4rem)] bg-gray-50">
+        {/* Main chat interface in standalone mode */}
+        {(isRuntimeDemoMode || isSetupComplete) && (
+          <ChatLayout 
+            mode="standalone" 
+            onAgentSettings={handleAgentSettings}
+          />
+        )}
+        {/* Debug info */}
+        {!(isRuntimeDemoMode || isSetupComplete) && (
+          <div className="p-4 text-red-600">
+            DEBUG: Main app not showing because isRuntimeDemoMode={String(isRuntimeDemoMode)} and isSetupComplete={String(isSetupComplete)}
+          </div>
+        )}
+      </div>
+    </PageLayout>
+  );
+}
+
+/**
+ * Main Home component wrapped with DemoModeProvider
+ */
+export default function Home() {
   return (
     <DemoModeProvider>
-      {/* API Key Setup Modal - only shown in non-demo mode when keys are missing */}
-      {!isDemoMode && !isSetupComplete && (
-        <ApiKeySetupModal 
-          onComplete={handleSetupComplete}
-          isDemoMode={isDemoMode}
-        />
-      )}
-      
-      <PageLayout showBackButton={false}>
-        {/* Container with calculated height to account for navbar */}
-        <div className="h-[calc(100vh-4rem)] bg-gray-50">
-          {/* Main chat interface in standalone mode */}
-          {isSetupComplete && (
-            <ChatLayout 
-              mode="standalone" 
-              onAgentSettings={handleAgentSettings}
-            />
-          )}
-        </div>
-      </PageLayout>
+      <HomeContent />
     </DemoModeProvider>
   );
 }

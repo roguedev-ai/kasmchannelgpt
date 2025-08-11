@@ -2,16 +2,29 @@
 
 ## Overview
 
-Demo Mode allows users to quickly try out CustomGPT UI by entering their API key directly in the browser, without needing server configuration. This is perfect for:
+CustomGPT UI now supports runtime deployment mode selection. When you first visit the app, you can choose between:
 
-- Quick testing and evaluation
-- Development and debugging
-- Playground/sandbox environments
-- Shared demo deployments
+- **Demo Mode**: Enter API keys directly in the browser for quick testing
+- **Production Mode**: Use server-side API keys for secure production deployments
+
+This flexible approach allows:
+- Quick testing and evaluation without server setup
+- Secure production deployments with server-side keys
+- Easy switching between modes
+- No build-time configuration required
 
 ## How It Works
 
-### Storage Method: Encrypted SessionStorage
+### Runtime Mode Selection
+
+When you first visit the app:
+
+1. You'll see a deployment mode selection screen
+2. Choose either "Demo Mode" or "Production Mode"
+3. Your choice is saved in localStorage
+4. The app configures itself accordingly
+
+### Demo Mode
 
 Demo mode uses **encrypted sessionStorage** for API key storage:
 
@@ -21,7 +34,18 @@ Demo mode uses **encrypted sessionStorage** for API key storage:
 - ✅ **Basic encryption** to prevent casual observation
 - ✅ **2-hour session timeout** for additional security
 
-### Security Considerations
+### Production Mode
+
+Production mode uses server-side API keys:
+
+- ✅ **Secure**: API keys never sent to browser
+- ✅ **Persistent**: Works across all sessions
+- ✅ **Shared**: All users share the same server configuration
+- ✅ **Professional**: Suitable for production deployments
+
+## Security Considerations
+
+### Demo Mode Security
 
 | Aspect | Details |
 |--------|---------|
@@ -31,155 +55,161 @@ Demo mode uses **encrypted sessionStorage** for API key storage:
 | **Sharing** | Cannot be shared via URL |
 | **Timeout** | Auto-expires after 2 hours |
 
-⚠️ **Important**: Demo mode is less secure than server-side configuration. Use it only for:
+⚠️ **Important**: Demo mode is less secure than production mode. Use it only for:
 - Development environments
 - Temporary testing
-- Non-production deployments
+- Personal use
+- Proof of concepts
+
+### Production Mode Security
+
+| Aspect | Details |
+|--------|---------|
+| **Visibility** | API key never exposed to browser |
+| **Storage** | Secure server environment variables |
+| **Persistence** | Permanent server configuration |
+| **Sharing** | All users share server's API access |
+| **Best Practice** | Recommended for production use |
 
 ## Configuration
 
-### Enable Demo Mode (Default)
+### For Production Deployments
+
+Add your API keys to the server environment:
 
 ```bash
 # In .env.local
-NEXT_PUBLIC_DEMO_MODE=true
-```
-
-### Disable Demo Mode (Production)
-
-```bash
-# In .env.local
-NEXT_PUBLIC_DEMO_MODE=false
 CUSTOMGPT_API_KEY=your_server_side_api_key
+OPENAI_API_KEY=your_openai_key  # Optional, for voice features
 ```
-
-## User Experience
-
-### When Demo Mode is Enabled
-
-1. User visits the app
-2. Sees demo mode setup screen with:
-   - CustomGPT API key input field (required)
-   - Voice capability toggle (optional)
-   - OpenAI API key input field (shown when voice is enabled)
-   - Security warnings
-   - Instructions for secure setup
-3. Enters API key(s)
-4. Keys are encrypted and stored in sessionStorage
-5. App shows with demo mode banner
-6. Session expires after 2 hours
-
-### Demo Mode Banner
-
-While in demo mode, users see a persistent banner showing:
-- Demo mode active indicator
-- Time remaining in session
-- Option to end session
-- Can be minimized to corner icon
-
-## Technical Implementation
-
-### Components
-
-- `DemoModeProvider` - Wraps app and handles authentication flow
-- `DemoModeScreen` - Initial API key entry screen
-- `DemoModeBanner` - Persistent session indicator
-- `useDemoStore` - Zustand store for demo state management
-
-### API Integration
-
-The proxy client automatically includes the demo API key in requests:
-
-```typescript
-// Automatic in demo mode
-headers['X-CustomGPT-API-Key'] = demoApiKey
-```
-
-Server-side proxy checks for demo mode and uses appropriate key:
-
-```typescript
-if (isDemoMode) {
-  apiKey = request.headers.get('X-CustomGPT-API-Key')
-} else {
-  apiKey = process.env.CUSTOMGPT_API_KEY
-}
-```
-
-### Security Features
-
-1. **Encryption**: Simple XOR encryption (obfuscation)
-2. **Session Timeout**: 2-hour automatic expiration
-3. **Validation**: API key format validation
-4. **Clear Warnings**: Security notices throughout
-5. **No URL Sharing**: Keys never appear in URL
-
-### Voice Capability (Optional)
-
-When voice capability is enabled:
-- Users can provide their OpenAI API key for voice features
-- Enables voice-to-text (Whisper) and text-to-speech (TTS)
-- OpenAI key is stored with same security measures as CustomGPT key
-- Both keys are cleared together on session end
-- Voice features are only available when OpenAI key is provided
-
-## URL Sharing Behavior
-
-When a user shares a URL from a demo mode deployment:
-
-1. **Recipient sees**: Fresh demo mode setup screen
-2. **No key shared**: Each user must enter their own key
-3. **Safe sharing**: No risk of accidental API key exposure
-4. **Independent sessions**: Each browser tab is isolated
-
-## Best Practices
 
 ### For Development
 
-```bash
-# .env.local
-NEXT_PUBLIC_DEMO_MODE=true
-# Use your development API key
+No configuration needed! Just run the app and select your preferred mode.
+
+## User Experience
+
+### First Visit
+
+1. User visits the app
+2. Sees deployment mode selection screen
+3. Chooses between Demo Mode or Production Mode
+4. Proceeds based on selection
+
+### Demo Mode Flow
+
+1. User selects "Demo Mode"
+2. Enters their CustomGPT API key
+3. Optionally enters OpenAI API key for voice features
+4. Starts using the app immediately
+
+### Production Mode Flow
+
+1. User selects "Production Mode"
+2. If server keys are configured:
+   - User proceeds directly to the app
+3. If server keys are missing:
+   - User sees setup instructions
+   - Admin must configure server environment
+
+## Switching Modes
+
+To switch between modes:
+
+1. Clear your browser's localStorage
+2. Refresh the page
+3. Select the new mode
+
+Or programmatically:
+```javascript
+localStorage.removeItem('customgpt.deploymentMode');
+location.reload();
 ```
+
+## Voice Features
+
+Voice features require an OpenAI API key:
+
+- **Demo Mode**: Enter OpenAI key in the demo settings
+- **Production Mode**: Add `OPENAI_API_KEY` to server environment
+
+## Common Use Cases
+
+### For Developers
+
+1. Run the app locally
+2. Select "Demo Mode"
+3. Use your development API keys
+4. Test features quickly
 
 ### For Production
 
-```bash
-# .env.local
-NEXT_PUBLIC_DEMO_MODE=false
-CUSTOMGPT_API_KEY=your_production_key
-# Never expose production keys to browser
-```
+1. Deploy with server-side API keys
+2. Users automatically use "Production Mode"
+3. No API key management for end users
 
 ### For Shared Demos
 
-1. Deploy with `NEXT_PUBLIC_DEMO_MODE=true`
-2. Share the URL freely
-3. Each user provides their own API key
-4. Monitor usage via CustomGPT dashboard
+1. Deploy without server keys
+2. Share the URL
+3. Each user selects "Demo Mode"
+4. Each user provides their own API key
 
-## Migration Path
+## Migration Guide
 
-To migrate from demo mode to production:
+### From Old Demo Mode to New System
 
-1. Set `NEXT_PUBLIC_DEMO_MODE=false`
-2. Add `CUSTOMGPT_API_KEY` to server environment
-3. Remove any stored demo keys from browsers
-4. Deploy the updated configuration
+The old `NEXT_PUBLIC_DEMO_MODE` environment variable is no longer needed. The app now:
+
+1. Automatically detects runtime mode from localStorage
+2. Shows mode selection on first visit
+3. Respects user's choice across sessions
+
+### To Force Production Mode
+
+If you want to prevent demo mode entirely:
+
+1. Configure server-side API keys
+2. Modify the deployment mode selection logic
+3. Or set a server-side flag to skip selection
 
 ## Troubleshooting
 
-### Session Expired
-- **Issue**: "Session expired" message
-- **Solution**: Re-enter API key (automatic after 2 hours)
+### "API Configuration Required" in Demo Mode
 
-### Invalid API Key
-- **Issue**: "Invalid API key format" error
-- **Solution**: Check key format (alphanumeric, 20+ characters)
+- Ensure you've entered your API key in demo settings
+- Check that the key is valid
+- Try refreshing the page
 
-### API Errors
-- **Issue**: 401 Unauthorized errors
-- **Solution**: Verify API key is correct and active
+### Can't Switch Modes
 
-### Page Refresh Required
-- **Issue**: After closing/reopening tab
-- **Solution**: Re-enter API key (by design for security)
+- Clear browser localStorage
+- Use incognito/private browsing
+- Check browser console for errors
+
+### Voice Features Not Working
+
+- Ensure OpenAI API key is provided
+- Check browser microphone permissions
+- Verify both CustomGPT and OpenAI keys are valid
+
+## Technical Details
+
+### Storage Locations
+
+- **Deployment Mode**: `localStorage.getItem('customgpt.deploymentMode')`
+- **Demo Keys**: Encrypted in sessionStorage
+- **User Preferences**: localStorage with `customgpt.` prefix
+
+### API Request Headers
+
+Demo mode automatically adds:
+- `X-Deployment-Mode: demo`
+- `X-CustomGPT-API-Key: [user's key]`
+- `X-OpenAI-API-Key: [user's key]` (if provided)
+
+### Session Management
+
+- Session validated every 60 seconds
+- Expires after 2 hours of inactivity
+- Cleared on browser tab close

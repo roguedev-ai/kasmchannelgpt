@@ -224,7 +224,8 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           if (error.includes('OpenAI API key') || error.includes('API key')) {
             setApiKeyError(true);
             // Also show a toast error
-            const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+            const deploymentMode = typeof window !== 'undefined' ? localStorage.getItem('customgpt.deploymentMode') : null;
+            const isDemoMode = deploymentMode === 'demo';
             const errorMsg = isDemoMode 
               ? 'Voice feature requires an OpenAI API key. Please enable voice capability in demo settings and provide your OpenAI API key.'
               : 'Voice feature requires OpenAI API key configuration. Please add OPENAI_API_KEY to your .env.local file.';

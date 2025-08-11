@@ -67,8 +67,11 @@ export class ProxyCustomGPTClient {
   private demoApiKey: string | null = null;
 
   constructor() {
-    // Check if demo mode is enabled
-    this.isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+    // Demo mode is determined at runtime from localStorage
+    if (typeof window !== 'undefined') {
+      const deploymentMode = localStorage.getItem('customgpt.deploymentMode');
+      this.isDemoMode = deploymentMode === 'demo';
+    }
     
     logger.info('PROXY_CLIENT', 'Proxy API Client initialized', {
       baseURL: this.baseURL,

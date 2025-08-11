@@ -40,7 +40,8 @@ export const useProfileStore = create<UserProfileStore>()(
           let errorMessage = 'Failed to fetch profile';
           
           if (error.status === 401) {
-            const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+            const deploymentMode = typeof window !== 'undefined' ? localStorage.getItem('customgpt.deploymentMode') : null;
+            const isDemoMode = deploymentMode === 'demo';
             if (isDemoMode) {
               errorMessage = 'API key authentication failed. Please check your API key.';
               toast.error('Authentication failed. Please check your API key in demo settings.');
@@ -94,7 +95,8 @@ export const useProfileStore = create<UserProfileStore>()(
           let errorMessage = 'Failed to update profile';
           
           if (error.status === 401) {
-            const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+            const deploymentMode = typeof window !== 'undefined' ? localStorage.getItem('customgpt.deploymentMode') : null;
+            const isDemoMode = deploymentMode === 'demo';
             if (isDemoMode) {
               errorMessage = 'API key authentication failed. Please check your API key.';
               toast.error('Authentication failed. Please check your API key in demo settings.');

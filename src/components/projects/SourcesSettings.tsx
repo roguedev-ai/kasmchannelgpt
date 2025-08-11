@@ -554,7 +554,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
             <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
               <p className="text-yellow-800">
                 <strong>Authentication Error:</strong> API key authentication failed. 
-                {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' 
+                {typeof window !== 'undefined' && localStorage.getItem('customgpt.deploymentMode') === 'demo'
                   ? 'Please check your API key in demo settings.'
                   : 'Please check your API key configuration.'}
               </p>

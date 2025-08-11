@@ -48,20 +48,49 @@ export function DemoModeScreen() {
   const handleDemoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (apiKeyInput.trim()) {
+      console.log('[DemoModeScreen] Starting demo session');
+      
+      // Show immediate feedback
+      const button = e.currentTarget.querySelector('button[type="submit"]') as HTMLButtonElement;
+      if (button) {
+        button.disabled = true;
+        button.textContent = 'Starting Demo...';
+      }
+      
       // Set deployment mode to demo
       localStorage.setItem('customgpt.deploymentMode', 'demo');
       setApiKey(apiKeyInput);
       if (enableVoice && openAIKeyInput.trim()) {
         setOpenAIApiKey(openAIKeyInput);
       }
+      
+      console.log('[DemoModeScreen] Demo session configured, reloading in 100ms');
+      
+      // Force reload to ensure clean state
+      setTimeout(() => {
+        window.location.href = window.location.href;
+      }, 100);
     }
   };
   
   const handleProductionMode = () => {
+    console.log('[DemoModeScreen] Switching to production mode');
+    
+    // Show immediate feedback - disable button
+    const button = document.querySelector('[data-production-button]') as HTMLButtonElement;
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Switching...';
+    }
+    
     // Set deployment mode to production
     localStorage.setItem('customgpt.deploymentMode', 'production');
-    // Force reload to apply production mode
-    window.location.reload();
+    console.log('[DemoModeScreen] localStorage set, forcing reload in 100ms');
+    
+    // Force reliable reload
+    setTimeout(() => {
+      window.location.href = window.location.href;
+    }, 100);
   };
   
   const handleCopyInstructions = () => {
@@ -383,6 +412,7 @@ npm run build && npm start`}
                     onClick={handleProductionMode} 
                     className="w-full"
                     variant="default"
+                    data-production-button
                   >
                     <Server className="h-4 w-4 mr-2" />
                     Use Production Mode

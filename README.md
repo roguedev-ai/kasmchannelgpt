@@ -87,13 +87,13 @@ Demo mode allows you to try CustomGPT UI without setting up a server or adding A
 
 ### How to Use Demo Mode
 
-1. **Build and run the app in demo mode**:
+1. **Build and run the app**:
 ```bash
-# Set demo mode environment variable
-NEXT_PUBLIC_DEMO_MODE=true npm run dev
+# Start development server
+npm run dev
 
-# Or build for production demo
-NEXT_PUBLIC_DEMO_MODE=true npm run build
+# Or build for production
+npm run build
 npm start
 ```
 
@@ -179,9 +179,6 @@ OPENAI_API_KEY=your-openai-api-key-here
 
 # Optional - Custom API base URL
 CUSTOMGPT_API_BASE_URL=https://app.customgpt.ai/api/v1
-
-# Optional - Enable demo mode
-NEXT_PUBLIC_DEMO_MODE=true
 ```
 
 5. Start development server:
@@ -378,8 +375,7 @@ docker-compose --profile dev up dev
 2. Add your API keys:
    - `CUSTOMGPT_API_KEY=your-api-key-here`
    - `OPENAI_API_KEY=your-openai-key-here` (optional, for voice features)
-3. For demo mode, add: `NEXT_PUBLIC_DEMO_MODE=true`
-4. Run desired service: `docker-compose up app`
+3. Run desired service: `docker-compose up app`
 
 **Available Services**:
 - **`app`** (port 3000): Full Next.js application with dashboard
@@ -451,9 +447,6 @@ CUSTOMGPT_API_BASE_URL=https://app.customgpt.ai/api/v1
 
 # Optional - Allowed origins for CORS
 ALLOWED_ORIGINS=https://yourdomain.com,https://anotherdomain.com
-
-# Optional - Enable demo mode
-NEXT_PUBLIC_DEMO_MODE=true
 ```
 
 ## Development
