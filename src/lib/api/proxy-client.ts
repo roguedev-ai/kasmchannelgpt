@@ -126,6 +126,20 @@ export class ProxyCustomGPTClient {
       
       if (isFreeTrialMode) {
         baseHeaders['X-Free-Trial-Mode'] = 'true';
+        
+        // Add session ID from session storage
+        const sessionData = sessionStorage.getItem('customgpt.freeTrialSession');
+        if (sessionData) {
+          try {
+            const session = JSON.parse(sessionData);
+            if (session.sessionId) {
+              baseHeaders['X-Demo-Session-ID'] = session.sessionId;
+            }
+          } catch (e) {
+            console.error('[ProxyClient] Failed to parse session data:', e);
+          }
+        }
+        
         console.log('[ProxyClient] Free trial mode - using server-side demo key');
       } else if (deploymentMode === 'demo' && this.demoApiKey) {
         // Add demo mode API key if available
@@ -207,6 +221,20 @@ export class ProxyCustomGPTClient {
     
     if (isFreeTrialMode) {
       baseHeaders['X-Free-Trial-Mode'] = 'true';
+      
+      // Add session ID from session storage
+      const sessionData = sessionStorage.getItem('customgpt.freeTrialSession');
+      if (sessionData) {
+        try {
+          const session = JSON.parse(sessionData);
+          if (session.sessionId) {
+            baseHeaders['X-Demo-Session-ID'] = session.sessionId;
+          }
+        } catch (e) {
+          console.error('[ProxyClient] Failed to parse session data:', e);
+        }
+      }
+      
       console.log('[ProxyClient] Free trial mode - using server-side demo key for streaming');
     } else if (deploymentMode === 'demo' && this.demoApiKey) {
       // Add demo mode API key if available
@@ -725,6 +753,43 @@ export class ProxyCustomGPTClient {
       method: 'POST',
       body: formData,
       headers: {}, // Let browser set content-type with boundary
+    });
+  }
+
+  // Demo Mode
+  async getDemoUsageStats(): Promise<{
+    status: string;
+    data: {
+      usage: {
+        projects: { used: number; limit: number; remaining: number };
+        conversations: { used: number; limit: number; remaining: number };
+        messages: { total: number; limitPerConversation: number; byConversation: Record<string, number> };
+      };
+      session: {
+        sessionId: string;
+        startTime: number;
+        expiresAt: number;
+        remainingTime: number;
+      };
+    };
+  }> {
+    // Add session start time header
+    const sessionData = sessionStorage.getItem('customgpt.freeTrialSession');
+    let startTime = Date.now();
+    
+    if (sessionData) {
+      try {
+        const session = JSON.parse(sessionData);
+        startTime = session.startTime || Date.now();
+      } catch (e) {
+        console.error('[ProxyClient] Failed to parse session data:', e);
+      }
+    }
+    
+    return this.request('/demo/usage', {
+      headers: {
+        'X-Session-Start-Time': startTime.toString()
+      }
     });
   }
 }

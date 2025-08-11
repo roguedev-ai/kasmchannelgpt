@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiHeaders } from '@/lib/api/headers';
+import { 
+  enforceDemoLimits, 
+  trackResourceCreation, 
+  isFreeTrialRequest 
+} from '@/lib/api/demo-limits-middleware';
+import { DEMO_API_HEADERS } from '@/lib/constants/demo-limits';
 
 interface ProxyOptions {
   method?: string;
@@ -25,6 +31,14 @@ export async function proxyRequest(
     const deploymentMode = request.headers.get('X-Deployment-Mode') || 'production';
     const isFreeTrialMode = request.headers.get('X-Free-Trial-Mode') === 'true';
     let apiKey: string | undefined;
+    
+    // Enforce demo limits for free trial mode
+    if (isFreeTrialMode) {
+      const limitResponse = await enforceDemoLimits(request, apiPath);
+      if (limitResponse) {
+        return limitResponse; // Return error if limits exceeded
+      }
+    }
     
     if (deploymentMode === 'demo') {
       if (isFreeTrialMode) {
@@ -122,6 +136,31 @@ export async function proxyRequest(
     
     if (contentType?.includes('application/json')) {
       const data = await response.json();
+      
+      // Track resource creation for free trial mode
+      if (isFreeTrialMode && method === 'POST' && response.ok) {
+        const sessionId = request.headers.get(DEMO_API_HEADERS.SESSION_ID) || 
+          request.cookies.get('demo_session_id')?.value;
+        
+        if (sessionId && data.data) {
+          // Track project creation
+          if (apiPath === '/projects' || apiPath === '/projects/') {
+            trackResourceCreation(sessionId, 'project', data.data.id);
+          }
+          // Track conversation creation
+          else if (apiPath === '/conversations' || apiPath === '/conversations/') {
+            trackResourceCreation(sessionId, 'conversation', data.data.id);
+          }
+          // Track message creation
+          else if (apiPath.match(/^\/conversations\/([^\/]+)\/message\/?$/)) {
+            const conversationId = apiPath.match(/^\/conversations\/([^\/]+)\/message\/?$/)?.[1];
+            if (conversationId && data.data.id) {
+              trackResourceCreation(sessionId, 'message', data.data.id, conversationId);
+            }
+          }
+        }
+      }
+      
       return NextResponse.json(data);
     } else {
       // For non-JSON responses (e.g., file downloads)
