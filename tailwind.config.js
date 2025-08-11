@@ -24,6 +24,9 @@ module.exports = {
         ring: 'var(--ring)',
         primary: 'var(--primary)',
         'primary-foreground': 'var(--primary-foreground)',
+        'primary-hover': 'var(--primary-hover)',
+        'primary-active': 'var(--primary-active)',
+        'primary-light': 'var(--primary-light)',
         secondary: 'var(--secondary)',
         'secondary-foreground': 'var(--secondary-foreground)',
         accent: 'var(--accent)',
@@ -72,6 +75,10 @@ module.exports = {
         'slide-up': 'slideUp 0.3s ease-out',
         'blink': 'blink 1s infinite',
         'bounce-subtle': 'bounceSubtle 1.4s infinite',
+        'voice-pulse': 'voicePulse 0.8s ease-in-out infinite',
+      },
+      transitionTimingFunction: {
+        'spring': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
       },
       keyframes: {
         fadeIn: {
@@ -89,6 +96,10 @@ module.exports = {
         bounceSubtle: {
           '0%, 80%, 100%': { transform: 'translateY(0)' },
           '40%': { transform: 'translateY(-6px)' },
+        },
+        voicePulse: {
+          '0%, 100%': { transform: 'scaleY(0.5)' },
+          '50%': { transform: 'scaleY(1)' },
         },
       },
     },

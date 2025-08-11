@@ -215,7 +215,7 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
   };
 
   return (
-    <div className="p-4 h-full overflow-y-auto">
+    <div className="p-4" style={{ touchAction: 'pan-y' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>

@@ -111,8 +111,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   
   // Determine background color based on state
   const backgroundClass = isSelected 
-    ? 'bg-brand-600' 
-    : 'bg-gray-200 hover:bg-gray-300 transition-colors';
+    ? 'bg-primary shadow-md' 
+    : 'bg-muted hover:bg-accent transition-all duration-200';
   
   // Handle image load error
   const handleImageError = () => {
@@ -130,7 +130,7 @@ export const Avatar: React.FC<AvatarProps> = ({
     
     const iconClass = cn(
       sizeClasses.icon,
-      isSelected ? 'text-white' : 'text-gray-600'
+      isSelected ? 'text-primary-foreground' : 'text-muted-foreground'
     );
     
     switch (fallback) {
@@ -144,7 +144,11 @@ export const Avatar: React.FC<AvatarProps> = ({
   
   return (
     <div className={cn(
-      'flex items-center justify-center flex-shrink-0 overflow-hidden',
+      'relative flex items-center justify-center flex-shrink-0 overflow-hidden',
+      'ring-2 ring-transparent',
+      'hover:ring-primary/20 hover:scale-105',
+      'transition-all duration-200',
+      isSelected && 'ring-primary ring-offset-2 ring-offset-background',
       sizeClasses.container,
       shapeClass,
       backgroundClass,
@@ -160,6 +164,10 @@ export const Avatar: React.FC<AvatarProps> = ({
         />
       ) : (
         renderFallbackIcon()
+      )}
+      {/* Online indicator (optional) */}
+      {isSelected && (
+        <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-success border-2 border-background" />
       )}
     </div>
   );

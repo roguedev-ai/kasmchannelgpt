@@ -133,16 +133,40 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              // Prevent flash of incorrect theme on page load
+              // Prevent flash of incorrect theme on page load using cookies
               (function() {
                 try {
-                  const stored = localStorage.getItem('customgpt-config');
-                  const config = stored ? JSON.parse(stored) : null;
-                  const theme = config?.theme || 'light';
-                  document.documentElement.className = theme;
+                  // Get theme from cookie
+                  const cookies = document.cookie.split(';');
+                  const themeCookie = cookies.find(cookie => 
+                    cookie.trim().startsWith('customgpt-theme=')
+                  );
+                  
+                  let theme = 'light';
+                  
+                  if (themeCookie) {
+                    theme = themeCookie.split('=')[1].trim();
+                  } else {
+                    // Fallback to localStorage for backward compatibility
+                    const stored = localStorage.getItem('customgpt-config');
+                    if (stored) {
+                      const parsed = JSON.parse(stored);
+                      theme = parsed?.state?.theme || 'light';
+                      
+                      // Migrate to cookie
+                      document.cookie = 'customgpt-theme=' + theme + '; max-age=' + (365 * 24 * 60 * 60) + '; path=/; SameSite=Lax';
+                    }
+                  }
+                  
+                  // Apply theme
+                  if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
                 } catch (e) {
                   // Default to light theme if there's an error
-                  document.documentElement.className = 'light';
+                  document.documentElement.classList.remove('dark');
                 }
               })();
             `,
@@ -159,7 +183,6 @@ export default function RootLayout({
           position="top-center" 
           closeButton
           richColors
-          theme="light"
           gap={8}
           toastOptions={{
             style: {

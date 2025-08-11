@@ -119,10 +119,13 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
   ];
 
   return (
-    <div className={cn(
-      "max-w-4xl mx-auto",
-      isMobile ? "p-4 mobile-px" : "p-6"
-    )}>
+    <div 
+      className={cn(
+        "max-w-4xl mx-auto",
+        isMobile ? "p-4 mobile-px" : "p-6"
+      )}
+      style={isMobile ? { touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' } : {}}
+    >
       {/* Header */}
       <div className={cn(
         "mb-6",

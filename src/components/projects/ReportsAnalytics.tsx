@@ -80,12 +80,36 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
         client.getAnalysisReport(project.id, interval)
       ]);
 
-      setData({
-        traffic: trafficResponse.data.sources,
-        queries: queriesResponse.data,
-        conversations: conversationsResponse.data,
-        analysis: analysisResponse.data
+      console.log('Analytics API responses:', {
+        traffic: trafficResponse,
+        queries: queriesResponse,
+        conversations: conversationsResponse,
+        analysis: analysisResponse
       });
+
+      // Handle different API response formats - some endpoints return arrays instead of numbers
+      const processedData = {
+        traffic: Array.isArray(trafficResponse.data.sources) ? trafficResponse.data.sources : [],
+        queries: {
+          total: Array.isArray(queriesResponse.data.total) ? 0 : (queriesResponse.data.total || 0),
+          query_status: Array.isArray(queriesResponse.data.query_status) ? queriesResponse.data.query_status : []
+        },
+        conversations: {
+          total: Array.isArray(conversationsResponse.data.total) ? 0 : (conversationsResponse.data.total || 0),
+          average_queries_per_conversation: Array.isArray(conversationsResponse.data.average_queries_per_conversation) 
+            ? 0 
+            : (conversationsResponse.data.average_queries_per_conversation || 0)
+        },
+        analysis: {
+          queries: Array.isArray(analysisResponse.data.queries) ? analysisResponse.data.queries : [],
+          conversations: Array.isArray(analysisResponse.data.conversations) ? analysisResponse.data.conversations : [],
+          queries_per_conversation: Array.isArray(analysisResponse.data.queries_per_conversation) 
+            ? analysisResponse.data.queries_per_conversation 
+            : []
+        }
+      };
+
+      setData(processedData);
     } catch (err: any) {
       console.error('Failed to load reports:', err);
       
@@ -198,6 +222,27 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
           ))}
         </div>
       ) : data ? (
+        // Check if we have any data at all
+        data.queries.total === 0 && data.conversations.total === 0 && data.traffic.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="max-w-md mx-auto">
+              <PieChart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No Analytics Data Yet</h3>
+              <p className="text-muted-foreground">
+                Analytics data will appear here once your agent starts receiving traffic and conversations.
+              </p>
+              <Button
+                variant="outline"
+                onClick={handleRefresh}
+                className="mt-4"
+                size="sm"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Check Again
+              </Button>
+            </div>
+          </div>
+        ) : (
         <>
           {/* Overview Tab */}
           {activeTab === 'overview' && (
@@ -450,6 +495,7 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
             </div>
           )}
         </>
+        )
       ) : null}
     </div>
   );

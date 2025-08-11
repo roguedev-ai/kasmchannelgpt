@@ -40,8 +40,14 @@ export const useProfileStore = create<UserProfileStore>()(
           let errorMessage = 'Failed to fetch profile';
           
           if (error.status === 401) {
-            errorMessage = 'Authentication required. Please log in again.';
-            toast.error('Your session has expired. Please log in again.');
+            const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+            if (isDemoMode) {
+              errorMessage = 'API key authentication failed. Please check your API key.';
+              toast.error('Authentication failed. Please check your API key in demo settings.');
+            } else {
+              errorMessage = 'Authentication required. Please check your API key configuration.';
+              toast.error('Authentication failed. Please check your API key configuration.');
+            }
           } else if (error.status === 500) {
             errorMessage = 'Server error occurred. Please try again later.';
             toast.error('Server error. Please try again later.');
@@ -88,8 +94,14 @@ export const useProfileStore = create<UserProfileStore>()(
           let errorMessage = 'Failed to update profile';
           
           if (error.status === 401) {
-            errorMessage = 'Authentication required. Please log in again.';
-            toast.error('Your session has expired. Please log in again.');
+            const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+            if (isDemoMode) {
+              errorMessage = 'API key authentication failed. Please check your API key.';
+              toast.error('Authentication failed. Please check your API key in demo settings.');
+            } else {
+              errorMessage = 'Authentication required. Please check your API key configuration.';
+              toast.error('Authentication failed. Please check your API key configuration.');
+            }
           } else if (error.status === 500) {
             errorMessage = 'Server error occurred. Please try again later.';
             toast.error('Server error. Please try again later.');

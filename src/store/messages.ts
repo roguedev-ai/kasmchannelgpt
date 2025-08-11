@@ -34,6 +34,7 @@ import type { MessageStore, ChatMessage, Citation, FeedbackType, MessageDetails,
 import { getClient } from '@/lib/api/client';
 import { useAgentStore } from './agents';
 import { useConversationStore } from './conversations';
+import { useChatSettingsStore } from './chat-settings';
 import { generateId } from '@/lib/utils';
 import { globalStreamManager } from '@/lib/streaming/handler';
 import { logger } from '@/lib/logger';
@@ -243,7 +244,14 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
     const { currentAgent } = agentStore;
     if (!currentAgent) {
       logger.error('MESSAGES', 'No agent selected when trying to send message');
-      throw new Error('No agent selected');
+      
+      // Check if this is due to missing API keys
+      const response = await fetch('/api/proxy/user/limits').catch(() => null);
+      if (!response || response.status === 401 || response.status === 500) {
+        throw new Error('API key not configured. Please add CUSTOMGPT_API_KEY to your .env.local file and restart the server.');
+      }
+      
+      throw new Error('No agent selected. Please select or create an agent first.');
     }
 
     logger.info('MESSAGES', 'Sending message', {
@@ -336,9 +344,17 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
       });
       
       try {
-        // Prepare the request data
-        const requestData: { prompt: string; source_ids?: string[] } = { 
-          prompt: content || '' // Ensure we always have a prompt, even if empty
+        // Get chat settings for current agent
+        const chatSettings = useChatSettingsStore.getState().getSettings(currentAgent.id);
+        
+        // Prepare the request data - only send fields that the API accepts
+        const requestData: { 
+          prompt: string; 
+          source_ids?: string[];
+          response_source?: string;
+        } = { 
+          prompt: content || '', // Ensure we always have a prompt, even if empty
+          response_source: chatSettings.response_source || 'default',
         };
         
         // Add source_ids if we have uploaded files
@@ -1172,5 +1188,24 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
         });
       }
     }
+  },
+  
+  /**
+   * Clear the error state
+   */
+  clearError: () => {
+    set({ error: null });
+  },
+  
+  /**
+   * Set messages for a specific conversation
+   * Used for updating conversation messages directly
+   */
+  setMessagesForConversation: (conversationId: string, messages: ChatMessage[]) => {
+    set(state => {
+      const newMessages = new Map(state.messages);
+      newMessages.set(conversationId, messages);
+      return { messages: newMessages };
+    });
   },
 }));

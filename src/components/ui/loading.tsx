@@ -36,14 +36,21 @@ export const Spinner: React.FC<SpinnerProps> = ({
   };
 
   return (
-    <Loader2 
-      className={cn(
-        'animate-spin text-primary',
-        sizeClasses[size],
-        className
-      )}
-      aria-label={label}
-    />
+    <div className="relative inline-flex">
+      <Loader2 
+        className={cn(
+          'animate-spin text-primary transition-all duration-200',
+          sizeClasses[size],
+          className
+        )}
+        aria-label={label}
+      />
+      {/* Subtle glow effect */}
+      <div className={cn(
+        'absolute inset-0 animate-pulse rounded-full bg-primary/20 blur-xl',
+        sizeClasses[size]
+      )} />
+    </div>
   );
 };
 
@@ -66,11 +73,15 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   return (
     <div
       className={cn(
-        'bg-muted rounded',
-        animate && 'animate-pulse',
+        'relative overflow-hidden rounded-lg bg-muted',
+        animate && 'shimmer',
         className
       )}
-    />
+    >
+      {animate && (
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      )}
+    </div>
   );
 };
 
@@ -91,27 +102,27 @@ export const LoadingDots: React.FC<LoadingDotsProps> = ({
   className 
 }) => {
   const sizeClasses = {
-    sm: 'h-1 w-1',
-    md: 'h-1.5 w-1.5',
-    lg: 'h-2 w-2'
+    sm: 'h-1.5 w-1.5',
+    md: 'h-2 w-2',
+    lg: 'h-2.5 w-2.5'
   };
 
   return (
-    <div className={cn('flex space-x-1', className)}>
-      <div className={cn(
-        'bg-muted-foreground rounded-full animate-bounce',
-        sizeClasses[size],
-        '[animation-delay:-0.3s]'
-      )} />
-      <div className={cn(
-        'bg-muted-foreground rounded-full animate-bounce',
-        sizeClasses[size],
-        '[animation-delay:-0.15s]'
-      )} />
-      <div className={cn(
-        'bg-muted-foreground rounded-full animate-bounce',
-        sizeClasses[size]
-      )} />
+    <div className={cn('flex items-center space-x-1.5', className)}>
+      {[0, 1, 2].map((index) => (
+        <div
+          key={index}
+          className={cn(
+            'rounded-full bg-primary/60',
+            'animate-[pulse_1.4s_ease-in-out_infinite]',
+            sizeClasses[size]
+          )}
+          style={{
+            animationDelay: `${index * 0.15}s`,
+            animationFillMode: 'both',
+          }}
+        />
+      ))}
     </div>
   );
 };
@@ -143,14 +154,21 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   return (
     <div className={cn(
       'absolute inset-0 z-50 flex items-center justify-center',
-      'bg-background/80 transition-opacity duration-200',
-      blur && 'backdrop-blur-sm',
+      'bg-background/60 transition-all duration-300',
+      blur && 'backdrop-blur-md',
+      'animate-in fade-in-0 duration-200',
       className
     )}>
-      <div className="flex flex-col items-center space-y-3">
+      <div className={cn(
+        'flex flex-col items-center space-y-4 p-6',
+        'bg-background/90 backdrop-blur-sm',
+        'rounded-xl border border-border/50',
+        'shadow-xl',
+        'animate-in zoom-in-95 duration-300'
+      )}>
         <Spinner size="lg" />
         {message && (
-          <p className="text-sm text-muted-foreground">{message}</p>
+          <p className="text-sm text-muted-foreground font-medium">{message}</p>
         )}
       </div>
     </div>
@@ -301,14 +319,23 @@ export const ScreenLoading: React.FC<ScreenLoadingProps> = ({
   return (
     <div className={cn(
       'fixed inset-0 z-[100] flex items-center justify-center',
-      'transition-all duration-300',
+      'bg-background/90 backdrop-blur-lg',
+      'transition-all duration-500',
+      'animate-in fade-in-0',
       className
-    )}
-    style={{ backgroundColor: `rgba(255, 255, 255, ${opacity / 100})` }}>
-      <div className="flex flex-col items-center space-y-4 p-8">
+    )}>
+      <div className={cn(
+        'flex flex-col items-center space-y-6 p-10',
+        'animate-in zoom-in-95 slide-in-from-bottom-4 duration-500'
+      )}>
         <div className="relative">
           {icon ? (
-            <div className="flex items-center justify-center w-16 h-16 bg-brand-50 rounded-full mb-2">
+            <div className={cn(
+              'flex items-center justify-center w-20 h-20',
+              'bg-primary/10 rounded-2xl',
+              'shadow-lg shadow-primary/20',
+              'animate-pulse'
+            )}>
               {icon}
             </div>
           ) : (
@@ -316,11 +343,9 @@ export const ScreenLoading: React.FC<ScreenLoadingProps> = ({
           )}
         </div>
         {message && (
-          <div className="text-center">
-            <p className="text-lg font-medium text-gray-900 mb-1">{message}</p>
-            <div className="flex items-center justify-center space-x-1">
-              <LoadingDots size="md" />
-            </div>
+          <div className="text-center space-y-2">
+            <p className="text-lg font-semibold text-foreground">{message}</p>
+            <LoadingDots size="md" />
           </div>
         )}
       </div>

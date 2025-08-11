@@ -39,15 +39,15 @@ import { usePathname } from 'next/navigation';
 import { 
   Bot, 
   MessageSquare, 
-  FileText, 
-  Database, 
-  BarChart3, 
   User, 
   ArrowLeft,
   Home,
   Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useDemoStore } from '@/store/demo';
+import { DemoModeButton } from '@/components/demo/DemoModeButton';
 
 /**
  * Props for Navbar component
@@ -66,6 +66,13 @@ interface NavbarProps {
  */
 export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
   const pathname = usePathname();
+  const { isDemoMode, isAuthenticated } = useDemoStore();
+  
+  // Check deployment mode
+  const [deploymentMode, setDeploymentMode] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    setDeploymentMode(localStorage.getItem('customgpt.deploymentMode'));
+  }, []);
 
   /**
    * Navigation items configuration
@@ -101,12 +108,16 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
           {/* Left side - Logo and Back Button */}
           <div className="flex items-center gap-4">
             {showBackButton && pathname !== '/' && (
-              <Link href="/">
-                <button className="p-2 rounded-lg hover:bg-accent transition-colors flex items-center gap-2 text-muted-foreground hover:text-foreground">
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+              >
+                <Link href="/" className="flex items-center gap-2">
                   <ArrowLeft className="w-4 h-4" />
                   <span className="hidden sm:inline">Back to Chat</span>
-                </button>
-              </Link>
+                </Link>
+              </Button>
             )}
             
             <Link href="/" className="flex items-center gap-3">
@@ -149,9 +160,14 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
 
           {/* Right side - Mobile menu or additional actions */}
           <div className="flex items-center gap-2">
+            {/* Demo Mode Button - Show when in demo deployment mode and authenticated */}
+            {deploymentMode === 'demo' && isDemoMode && isAuthenticated && (
+              <DemoModeButton />
+            )}
+            
             {/* Mobile Navigation */}
             <div className="md:hidden flex items-center gap-1">
-              {navigationItems.slice(1).map((item) => {
+              {navigationItems.filter(item => item.href !== '/').map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
                 

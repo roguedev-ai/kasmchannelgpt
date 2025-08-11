@@ -41,6 +41,9 @@ import { toast } from 'sonner';
 import { useConfigStore, useAgentStore } from '@/store';
 import { isValidApiKey } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 /**
  * Props for ApiKeySetup component
@@ -126,16 +129,16 @@ export const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onComplete }) => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <Card className="p-8 shadow-xl">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Key className="w-8 h-8 text-brand-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-foreground mb-2">
               Welcome to CustomGPT UI
             </h1>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Enter your CustomGPT.ai API key to get started
             </p>
           </div>
@@ -143,17 +146,17 @@ export const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onComplete }) => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 mb-2">
+              <Label htmlFor="apiKey" className="block text-sm font-medium mb-2">
                 API Key
-              </label>
-              <input
+              </Label>
+              <Input
                 id="apiKey"
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="1234|abcd... (CustomGPT API Key)"
                 disabled={isLoading}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3"
                 required
               />
             </div>
@@ -175,11 +178,11 @@ export const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onComplete }) => {
           </form>
 
           {/* Help */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">
+          <div className="mt-8 pt-6 border-t border-border">
+            <h3 className="text-sm font-medium text-foreground mb-3">
               How to get your API key:
             </h3>
-            <ol className="text-sm text-gray-600 space-y-2">
+            <ol className="text-sm text-muted-foreground space-y-2">
               <li className="flex items-start gap-2">
                 <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                 Sign up or log in to CustomGPT.ai
@@ -204,11 +207,11 @@ export const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onComplete }) => {
               <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </a>
             
-            <p className="text-xs text-gray-500 mt-4">
+            <p className="text-xs text-muted-foreground mt-4">
               You can change your API key anytime from the Settings page after setup.
             </p>
           </div>
-        </div>
+        </Card>
       </motion.div>
     </div>
   );

@@ -31,6 +31,8 @@ export interface MessageStore {
   cancelStreaming: () => void;
   getMessagesForConversation: (conversationId: string) => ChatMessage[];
   reset: () => void;
+  clearError: () => void;
+  setMessagesForConversation: (conversationId: string, messages: ChatMessage[]) => void;
 }
 
 /**
@@ -443,6 +445,18 @@ export function createMessageStore(
         isStreaming: false,
         loading: false,
         error: null,
+      });
+    },
+    
+    clearError: () => {
+      set({ error: null });
+    },
+    
+    setMessagesForConversation: (conversationId: string, messages: ChatMessage[]) => {
+      set(state => {
+        const newMessages = new Map(state.messages);
+        newMessages.set(conversationId, messages);
+        return { messages: newMessages };
       });
     },
   }));

@@ -35,6 +35,7 @@ import {
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 interface DataSource {
   id: number;
@@ -107,13 +108,13 @@ const DataSourceCard: React.FC<DataSourceCardProps> = ({
       case 'active':
         return { color: 'bg-green-100 text-green-800', icon: CheckCircle };
       case 'inactive':
-        return { color: 'bg-gray-100 text-gray-800', icon: XCircle };
+        return { color: 'bg-secondary text-secondary-foreground', icon: XCircle };
       case 'error':
         return { color: 'bg-red-100 text-red-800', icon: AlertTriangle };
       case 'syncing':
         return { color: 'bg-blue-100 text-blue-800', icon: Loader };
       default:
-        return { color: 'bg-gray-100 text-gray-800', icon: XCircle };
+        return { color: 'bg-secondary text-secondary-foreground', icon: XCircle };
     }
   };
 
@@ -147,17 +148,18 @@ const DataSourceCard: React.FC<DataSourceCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+      className="hover:shadow-md transition-shadow"
     >
-      <div className="flex items-start justify-between mb-4">
+      <Card className="p-6">
+        <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0', getTypeColor())}>
             {getTypeIcon()}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-gray-900 truncate">{source.name}</h3>
+            <h3 className="font-semibold text-foreground truncate">{source.name}</h3>
             {source.url && (
-              <p className="text-sm text-gray-500 truncate mt-1">{source.url}</p>
+              <p className="text-sm text-muted-foreground truncate mt-1">{source.url}</p>
             )}
             <div className="flex items-center gap-2 mt-2">
               <span className={cn(
@@ -167,10 +169,10 @@ const DataSourceCard: React.FC<DataSourceCardProps> = ({
                 <StatusIcon className={cn('h-3 w-3', source.status === 'syncing' && 'animate-spin')} />
                 {source.status.charAt(0).toUpperCase() + source.status.slice(1)}
               </span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
                 {source.type.replace('_', ' ').toUpperCase()}
               </span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600">
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                 {source.sync_frequency}
               </span>
             </div>
@@ -193,26 +195,26 @@ const DataSourceCard: React.FC<DataSourceCardProps> = ({
                 initial={{ opacity: 0, scale: 0.95, y: -5 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                className="absolute right-0 top-8 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+                className="absolute right-0 top-8 mt-1 w-48 bg-popover border border-border rounded-lg shadow-lg z-50"
               >
                 <div className="py-1">
                   <button
                     onClick={() => { onView(source); setShowMenu(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent"
                   >
                     <Eye className="h-4 w-4" />
                     View Details
                   </button>
                   <button
                     onClick={() => { onEdit(source); setShowMenu(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent"
                   >
                     <Edit3 className="h-4 w-4" />
                     Edit Source
                   </button>
                   <button
                     onClick={() => { onSync(source); setShowMenu(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent"
                     disabled={source.status === 'syncing'}
                   >
                     <RefreshCw className={cn('h-4 w-4', source.status === 'syncing' && 'animate-spin')} />
@@ -220,7 +222,7 @@ const DataSourceCard: React.FC<DataSourceCardProps> = ({
                   </button>
                   <button
                     onClick={() => { onToggleStatus(source); setShowMenu(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent"
                   >
                     {source.status === 'active' ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
                     {source.status === 'active' ? 'Deactivate' : 'Activate'}
@@ -228,7 +230,7 @@ const DataSourceCard: React.FC<DataSourceCardProps> = ({
                   {source.url && (
                     <button
                       onClick={() => { window.open(source.url, '_blank'); setShowMenu(false); }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent"
                     >
                       <ArrowUpRight className="h-4 w-4" />
                       Open Source
@@ -237,7 +239,7 @@ const DataSourceCard: React.FC<DataSourceCardProps> = ({
                   <hr className="my-1" />
                   <button
                     onClick={() => { onDelete(source); setShowMenu(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="h-4 w-4" />
                     Delete
@@ -251,42 +253,43 @@ const DataSourceCard: React.FC<DataSourceCardProps> = ({
 
       {/* Metrics */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <div className="text-lg font-semibold text-gray-900">{source.documents_count}</div>
-          <div className="text-xs text-gray-600">Documents</div>
+        <div className="text-center p-3 bg-muted rounded-lg">
+          <div className="text-lg font-semibold text-foreground">{source.documents_count}</div>
+          <div className="text-xs text-muted-foreground">Documents</div>
         </div>
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <div className="text-lg font-semibold text-gray-900">{source.metrics.success_rate}%</div>
-          <div className="text-xs text-gray-600">Success Rate</div>
+        <div className="text-center p-3 bg-muted rounded-lg">
+          <div className="text-lg font-semibold text-foreground">{source.metrics.success_rate}%</div>
+          <div className="text-xs text-muted-foreground">Success Rate</div>
         </div>
       </div>
 
       {/* Performance Metrics */}
       <div className="space-y-2 mb-4">
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Total Pages</span>
-          <span className="text-sm font-medium text-gray-900">{source.metrics.total_pages.toLocaleString()}</span>
+          <span className="text-sm text-muted-foreground">Total Pages</span>
+          <span className="text-sm font-medium text-foreground">{source.metrics.total_pages.toLocaleString()}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Failed Pages</span>
-          <span className="text-sm font-medium text-gray-900">{source.metrics.failed_pages}</span>
+          <span className="text-sm text-muted-foreground">Failed Pages</span>
+          <span className="text-sm font-medium text-foreground">{source.metrics.failed_pages}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600">Avg Sync Time</span>
-          <span className="text-sm font-medium text-gray-900">{source.metrics.avg_sync_time}</span>
+          <span className="text-sm text-muted-foreground">Avg Sync Time</span>
+          <span className="text-sm font-medium text-foreground">{source.metrics.avg_sync_time}</span>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-        <div className="flex items-center gap-1 text-xs text-gray-500">
+      <div className="flex items-center justify-between pt-4 border-t border-border">
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
           Last sync {source.last_sync}
         </div>
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-muted-foreground">
           {source.agent_ids.length} agent{source.agent_ids.length !== 1 ? 's' : ''}
         </div>
       </div>
+      </Card>
     </motion.div>
   );
 };
@@ -467,8 +470,8 @@ export const DataSourceManagement: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Data Sources</h1>
-          <p className="text-gray-600 mt-1">Manage your content sources and synchronization</p>
+          <h1 className="text-2xl font-bold text-foreground">Data Sources</h1>
+          <p className="text-muted-foreground mt-1">Manage your content sources and synchronization</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -489,61 +492,61 @@ export const DataSourceManagement: React.FC = () => {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Database className="h-5 w-5 text-blue-600" />
+            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+              <Database className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              <p className="text-sm text-gray-600">Total Sources</p>
+              <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+              <p className="text-sm text-muted-foreground">Total Sources</p>
             </div>
           </div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        </Card>
+        <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
               <CheckCircle className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
-              <p className="text-sm text-gray-600">Active</p>
+              <p className="text-2xl font-bold text-foreground">{stats.active}</p>
+              <p className="text-sm text-muted-foreground">Active</p>
             </div>
           </div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        </Card>
+        <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Loader className="h-5 w-5 text-blue-600" />
+            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+              <Loader className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.syncing}</p>
-              <p className="text-sm text-gray-600">Syncing</p>
+              <p className="text-2xl font-bold text-foreground">{stats.syncing}</p>
+              <p className="text-sm text-muted-foreground">Syncing</p>
             </div>
           </div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        </Card>
+        <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+            <div className="w-10 h-10 bg-destructive/10 rounded-lg flex items-center justify-center">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.errors}</p>
-              <p className="text-sm text-gray-600">Errors</p>
+              <p className="text-2xl font-bold text-foreground">{stats.errors}</p>
+              <p className="text-sm text-muted-foreground">Errors</p>
             </div>
           </div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        </Card>
+        <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center">
               <FileText className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalDocuments.toLocaleString()}</p>
-              <p className="text-sm text-gray-600">Documents</p>
+              <p className="text-2xl font-bold text-foreground">{stats.totalDocuments.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground">Documents</p>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Filters and Search */}
@@ -551,13 +554,13 @@ export const DataSourceManagement: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search sources..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-80"
+              className="pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-80"
             />
           </div>
 
@@ -565,7 +568,7 @@ export const DataSourceManagement: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -578,7 +581,7 @@ export const DataSourceManagement: React.FC = () => {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as any)}
-            className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           >
             <option value="all">All Types</option>
             <option value="website">Website</option>
@@ -594,7 +597,7 @@ export const DataSourceManagement: React.FC = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           >
             <option value="updated">Last Updated</option>
             <option value="name">Name</option>
@@ -625,9 +628,9 @@ export const DataSourceManagement: React.FC = () => {
       {/* Data Sources Grid/List */}
       {filteredSources.length === 0 ? (
         <div className="text-center py-12">
-          <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No data sources found</h3>
-          <p className="text-gray-600 mb-6">
+          <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">No data sources found</h3>
+          <p className="text-muted-foreground mb-6">
             {searchQuery || statusFilter !== 'all' || typeFilter !== 'all'
               ? 'Try adjusting your search or filters'
               : 'Create your first data source to get started'

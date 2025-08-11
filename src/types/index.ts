@@ -166,6 +166,12 @@ export interface AgentSettings {
   /** AI model used for generating responses (e.g., 'gpt-3.5-turbo', 'gpt-4') */
   chatbot_model?: string;
   
+  /** Custom persona for the chatbot */
+  custom_persona?: string;
+  
+  /** Agent capability level (enterprise features) */
+  agent_capability?: 'fastest-responses' | 'optimal-choice' | 'advanced-reasoning' | 'complex-tasks';
+  
   /** Language code for chatbot responses (e.g., 'en', 'es', 'fr') */
   chatbot_msg_lang?: string;
   
@@ -1069,6 +1075,12 @@ export interface MessageStore {
   
   /** Load message history for a conversation from the API */
   loadMessages: (conversationId: string) => Promise<void>;
+  
+  /** Clear error state */
+  clearError: () => void;
+  
+  /** Set messages for a specific conversation */
+  setMessagesForConversation: (conversationId: string, messages: ChatMessage[]) => void;
 }
 
 /**

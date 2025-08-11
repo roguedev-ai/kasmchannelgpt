@@ -7,11 +7,13 @@ import { X, StopCircle, Mic, MicOff, Settings } from 'lucide-react';
 import Canvas from './Canvas';
 import { VoiceSettings } from './VoiceSettings';
 import { speechManager } from '@/lib/voice/speech-manager';
-import { particleActions } from '@/lib/voice/particle-manager';
 import { useMessageStore, useConversationStore } from '@/hooks/useWidgetStore';
 import { useAgentStore } from '@/store/agents';
-import { generateId } from '@/lib/utils';
+import { generateId, generateConversationName } from '@/lib/utils';
 import { useVoiceSettingsStore } from '@/store/voice-settings';
+import { parseMarkdownForVoice } from '@/lib/voice/utils';
+import { useDemoStore } from '@/store/demo';
+import { AlertTriangle } from 'lucide-react';
 
 interface VoiceModalProps {
   isOpen: boolean;
@@ -28,7 +30,6 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
   const [loading, setLoading] = useState(true);
   const [transcript, setTranscript] = useState('');
   const [agentResponse, setAgentResponse] = useState('');
-  const [debugMessages, setDebugMessages] = useState<string[]>([]);
   const [isManualRecording, setIsManualRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [apiKeyError, setApiKeyError] = useState(false);
@@ -37,14 +38,32 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
+  // Streaming state
+  const [isStreamingText, setIsStreamingText] = useState(false);
+  const [streamingResponse, setStreamingResponse] = useState('');
+  
   // Message store integration
-  const { addMessage, messages } = useMessageStore();
-  const { currentConversation, ensureConversation } = useConversationStore();
+  const { addMessage, messages, loadMessages } = useMessageStore();
+  const { currentConversation, ensureConversation, updateConversation } = useConversationStore();
   const [currentUserMessageId, setCurrentUserMessageId] = useState<string | null>(null);
   const [voiceConversation, setVoiceConversation] = useState<any>(null);
   
   // Voice settings integration
-  const { selectedVoice, selectedPersona, selectedColorScheme, setVoiceModalOpen } = useVoiceSettingsStore();
+  const { selectedVoice, selectedPersona, setVoiceModalOpen } = useVoiceSettingsStore();
+  
+  // Demo mode check
+  const { isDemoMode, openAIApiKey } = useDemoStore();
+  
+  // Check if OpenAI API key is available
+  const checkOpenAIKeyAvailability = useCallback(() => {
+    const deploymentMode = localStorage.getItem('customgpt.deploymentMode') || 'production';
+    if (deploymentMode === 'demo' && !openAIApiKey) {
+      return false;
+    }
+    // In production mode, we can't check server-side env from client
+    // We'll let the API handle validation
+    return true;
+  }, [openAIApiKey]);
 
   // Initialize VAD with error handling
   const vad = useMicVAD({
@@ -58,20 +77,14 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
     // VAD configuration
     onSpeechStart: () => {
       console.log('🎤 [VAD] Speech started detected');
-      const debugMsg = `${new Date().toLocaleTimeString()} - VAD: Speech started`;
-      setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
       speechManager.onSpeechStart();
     },
     onSpeechEnd: (audio) => {
       console.log('🎤 [VAD] Speech ended, audio length:', audio.length);
-      const debugMsg = `${new Date().toLocaleTimeString()} - VAD: Speech ended, audio length: ${audio.length}`;
-      setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
       speechManager.onSpeechEnd(audio);
     },
     onVADMisfire: () => {
       console.log('🎤 [VAD] Misfire detected');
-      const debugMsg = `${new Date().toLocaleTimeString()} - VAD: Misfire (noise detected)`;
-      setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
       speechManager.onMisfire();
     }
   });
@@ -98,8 +111,19 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       // Apply voice settings to speech manager
       speechManager.setVoiceSettings(selectedVoice, selectedPersona);
       
-      // Apply color scheme to particle manager
-      particleActions.setColorScheme(selectedColorScheme);
+      // Pass demo keys to window object for speech manager (only in demo mode)
+      if (isDemoMode) {
+        if (openAIApiKey) {
+          (window as any).__demoOpenAIKey = openAIApiKey;
+        }
+        // Also pass CustomGPT API key from demo store
+        const demoApiKey = useDemoStore.getState().apiKey;
+        if (demoApiKey) {
+          (window as any).__demoCustomGPTKey = demoApiKey;
+        }
+      }
+      
+      // Theme is now handled directly by Canvas component through themeId prop
       
       // Check if agent is active
       const currentAgentStore = useAgentStore.getState();
@@ -107,8 +131,6 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       
       if (agent && !agent.is_chat_active) {
         console.warn('⚠️ [VOICE-MODAL] Agent is inactive - may fall back to OpenAI');
-        const warningMsg = `${new Date().toLocaleTimeString()} - WARNING: Agent is inactive. Upload documents to activate.`;
-        setDebugMessages(prev => [...prev.slice(-10), warningMsg]);
       }
       
       // Ensure we have a conversation before starting voice
@@ -119,20 +141,34 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           // If no current conversation, create one for voice
           if (!conversation) {
             console.log('🔄 [VOICE-MODAL] No current conversation, creating one for voice');
-            conversation = await ensureConversation(parseInt(projectId), 'Voice conversation');
+            // Create conversation with temporary title - will be updated when we get the transcript
+            conversation = await ensureConversation(parseInt(projectId), 'New voice conversation');
             console.log('✅ [VOICE-MODAL] Created conversation:', conversation.id, 'session:', conversation.session_id);
+            // Store the conversation reference for reuse
+            setVoiceConversation(conversation);
+          } else {
+            // Store existing conversation reference
+            setVoiceConversation(conversation);
           }
           
           // Load conversation history and session ID
           const conversationMessages = messages.get(conversation.id.toString()) || [];
           console.log('📝 [VOICE-MODAL] Loading conversation history:', conversationMessages.length, 'messages');
           console.log('📝 [VOICE-MODAL] Agent status:', agent?.is_chat_active ? 'Active' : 'Inactive');
-          speechManager.setConversationHistory(conversationMessages);
+          
+          // Filter out any duplicate messages and ensure proper ordering
+          const cleanedMessages = conversationMessages.filter((msg, index, self) => 
+            // Keep only the first occurrence of each message ID
+            index === self.findIndex(m => m.id === msg.id)
+          ).sort((a, b) => 
+            // Sort by timestamp to ensure proper ordering
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          );
+          
+          speechManager.setConversationHistory(cleanedMessages);
           speechManager.setSessionId(conversation.session_id);
         } catch (error) {
           console.error('❌ [VOICE-MODAL] Failed to setup conversation:', error);
-          const errorMsg = `${new Date().toLocaleTimeString()} - ERROR: Failed to setup conversation`;
-          setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
         }
       };
       
@@ -140,73 +176,131 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       
       speechManager.setCallbacks({
         onUserSpeaking: () => {
-          particleActions.onUserSpeaking();
+          (Canvas as any).onUserSpeaking?.();
           setTranscript('');
+          setStreamingResponse(''); // Clear streaming response
+          setIsStreamingText(false);
           setVoiceState('recording');
         },
-        onProcessing: () => {
-          particleActions.onProcessing();
+        onProcessing: async () => {
+          (Canvas as any).onProcessing?.();
           setVoiceState('processing');
+          
+          // Use existing conversation - don't create a new one
+          // The conversation should already be set up in setupConversation()
+          
+          const placeholderUserMessage = {
+            id: generateId(),
+            role: 'user' as const,
+            content: '🎤 Processing voice input...',
+            timestamp: new Date().toISOString(),
+            status: 'sending' as const,
+          };
+          
+          setCurrentUserMessageId(placeholderUserMessage.id);
+          const targetConversation = voiceConversation || currentConversation;
+          if (targetConversation) {
+            addMessage(targetConversation.id.toString(), placeholderUserMessage);
+            console.log('🎤 [VOICE-MODAL] Added placeholder user message');
+          }
         },
         onAiSpeaking: () => {
-          particleActions.onAiSpeaking();
+          (Canvas as any).onAiSpeaking?.();
           setIsAgentSpeaking(true);
           setVoiceState('speaking');
         },
         onReset: () => {
-          particleActions.reset();
+          (Canvas as any).reset?.();
           setIsAgentSpeaking(false);
+          setIsStreamingText(false);
           setVoiceState('idle');
         },
         onDebug: (message: string, data?: any) => {
-          const debugMsg = `${new Date().toLocaleTimeString()} - ${message}`;
-          setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
+          // Debug logging removed for production
         },
         onError: (error: string) => {
-          const errorMsg = `${new Date().toLocaleTimeString()} - ERROR: ${error}`;
-          setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
-          
+          console.error('❌ [VOICE-MODAL] Error from speech manager:', error);
           // Check if it's an API key error
-          if (error.includes('OpenAI API key')) {
+          if (error.includes('OpenAI API key') || error.includes('API key')) {
             setApiKeyError(true);
+            // Also show a toast error
+            const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+            const errorMsg = isDemoMode 
+              ? 'Voice feature requires an OpenAI API key. Please enable voice capability in demo settings and provide your OpenAI API key.'
+              : 'Voice feature requires OpenAI API key configuration. Please add OPENAI_API_KEY to your .env.local file.';
+            
+            // Import toast at the top of the file
+            import('sonner').then(({ toast }) => {
+              toast.error(errorMsg);
+            });
           }
+          setIsStreamingText(false);
+          setVoiceState('idle');
         },
         onTranscriptReceived: async (transcript: string) => {
           console.log('🎯 [VOICE-MODAL] Transcript received:', transcript);
           setTranscript(transcript);
           
-          // Ensure we have a conversation
-          const conversation = await ensureConversation(parseInt(projectId), transcript);
-          
-          // Store conversation reference for voice messages to prevent race condition
-          setVoiceConversation(conversation);
-          
-          // Update sessionId if we got a new conversation
-          if (conversation.session_id && conversation.session_id !== speechManager.getSessionId()) {
-            console.log('🔄 [VOICE-MODAL] Updating session ID:', conversation.session_id);
-            speechManager.setSessionId(conversation.session_id);
+          // Update conversation title if this is the first message
+          const targetConversation = voiceConversation || currentConversation;
+          if (targetConversation) {
+            const conversationMessages = messages.get(targetConversation.id.toString()) || [];
+            // If this is the first or second message (after initial placeholder), update the title
+            if (conversationMessages.length <= 1 && targetConversation.name && 
+                (targetConversation.name === 'New voice conversation' || 
+                 targetConversation.name === 'Voice conversation' ||
+                 targetConversation.name === 'Processing...')) {
+              const newTitle = generateConversationName(transcript);
+              console.log('📝 [VOICE-MODAL] Updating conversation title to:', newTitle);
+              try {
+                await updateConversation(targetConversation.id, targetConversation.session_id, { name: newTitle });
+              } catch (error) {
+                console.error('❌ [VOICE-MODAL] Failed to update conversation title:', error);
+              }
+            }
           }
           
-          // Create and add user message to chat
-          const userMessage = {
-            id: generateId(),
-            role: 'user' as const,
-            content: transcript,
-            timestamp: new Date().toISOString(),
-            status: 'sent' as const,
-          };
+          // Update the placeholder message with actual transcript
           
-          setCurrentUserMessageId(userMessage.id);
-          addMessage(conversation.id.toString(), userMessage);
-          
-          const debugMsg = `${new Date().toLocaleTimeString()} - Added user message to chat: "${transcript}"`;
-          setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
+          if (targetConversation && currentUserMessageId) {
+            // Update the existing placeholder message
+            const updatedUserMessage = {
+              id: currentUserMessageId,
+              role: 'user' as const,
+              content: transcript,
+              timestamp: new Date().toISOString(),
+              status: 'sent' as const,
+            };
+            
+            addMessage(targetConversation.id.toString(), updatedUserMessage);
+            console.log('✅ [VOICE-MODAL] Updated user message with transcript');
+          } else {
+            // Fallback: create new message if no placeholder exists
+            // Use the existing conversation from voiceConversation or currentConversation
+            const conversation = voiceConversation || currentConversation;
+            if (!conversation) {
+              console.error('❌ [VOICE-MODAL] No conversation available for user message');
+              return;
+            }
+            
+            const userMessage = {
+              id: generateId(),
+              role: 'user' as const,
+              content: transcript,
+              timestamp: new Date().toISOString(),
+              status: 'sent' as const,
+            };
+            
+            setCurrentUserMessageId(userMessage.id);
+            addMessage(conversation.id.toString(), userMessage);
+          }
         },
         onResponseReceived: async (response: string) => {
           console.log('🎯 [VOICE-MODAL] Response received:', response);
           
-          // Display the agent's response in the voice window
-          setAgentResponse(response);
+          // Display the agent's response in the voice window, parsing markdown
+          const cleanResponse = parseMarkdownForVoice(response);
+          setAgentResponse(cleanResponse);
           
           // Use voiceConversation to ensure we're adding to the same conversation as the user message
           // This prevents race condition where messages could be added out of order
@@ -225,11 +319,46 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
             
             addMessage(targetConversation.id.toString(), assistantMessage);
             
-            const debugMsg = `${new Date().toLocaleTimeString()} - Added AI response to chat: "${response.substring(0, 50)}..."`;
-            setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
+            // Force refresh conversation to ensure proper syncing
+            const currentMessages = messages.get(targetConversation.id.toString()) || [];
+            console.log('🔄 [VOICE-MODAL] Current conversation messages:', currentMessages.length, 'messages');
+            
           } else {
             console.warn('⚠️ [VOICE-MODAL] No conversation available for adding assistant message');
           }
+        },
+        // New streaming callbacks
+        onStreamingTextChunk: (textChunk: string) => {
+          console.log('📝 [VOICE-MODAL] Streaming text chunk:', textChunk);
+          setIsStreamingText(true);
+          setStreamingResponse(prev => {
+            const newText = prev + textChunk;
+            // Update the displayed response immediately for streaming
+            const cleanResponse = parseMarkdownForVoice(newText);
+            setAgentResponse(cleanResponse);
+            return newText;
+          });
+        },
+        onStreamingAudioReady: (audioUrl: string, chunkId: string) => {
+          console.log('🎵 [VOICE-MODAL] Audio chunk ready:', chunkId, 'URL length:', audioUrl.length);
+          
+          // Ensure we're in speaking state when audio arrives
+          if (voiceState !== 'speaking') {
+            setVoiceState('speaking');
+            setIsAgentSpeaking(true);
+          }
+        },
+        onStreamingComplete: (fullResponse: string, transcript: string) => {
+          console.log('✅ [VOICE-MODAL] Streaming complete:', { fullResponse: fullResponse.length, transcript });
+          
+          // Final cleanup - ensure we have the complete response
+          const cleanResponse = parseMarkdownForVoice(fullResponse);
+          setAgentResponse(cleanResponse);
+          setStreamingResponse(fullResponse);
+          setIsStreamingText(false);
+          
+          // Don't add messages here - they've already been added via onTranscriptReceived and onResponseReceived
+          // This prevents duplicate messages in the conversation
         }
       });
     }
@@ -239,20 +368,39 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       // Don't clear conversation history to maintain context
       setTranscript('');
       setAgentResponse('');
-      setDebugMessages([]);
+      setStreamingResponse('');
+      setIsStreamingText(false);
       setIsAgentSpeaking(false);
       setVoiceConversation(null); // Clear voice conversation reference
       setVoiceState('idle'); // Reset voice state to idle
+      setCurrentUserMessageId(null); // Clear current user message ID
+      
+      // Clean up demo keys from window object (only in demo mode)
+      if ((window as any).__demoOpenAIKey) {
+        delete (window as any).__demoOpenAIKey;
+      }
+      if ((window as any).__demoCustomGPTKey) {
+        delete (window as any).__demoCustomGPTKey;
+      }
       
       // Ensure VAD is stopped if it was running
       if (vad.listening) {
         vad.pause();
       }
       
+      // Clean up speech manager streaming resources
+      speechManager.destroy();
+      
       // Ensure global state is properly reset
       setVoiceModalOpen(false);
+      
+      // Reload messages to ensure sync with API format
+      if (currentConversation) {
+        // Use the loadMessages function directly from the hook
+        loadMessages(currentConversation.id.toString());
+      }
     }
-  }, [isOpen, projectId, currentConversation, messages, selectedVoice, selectedPersona, selectedColorScheme]);
+  }, [isOpen, projectId, currentConversation, messages, selectedVoice, selectedPersona, isDemoMode, openAIApiKey, loadMessages]);
   
   // Update settings when they change
   useEffect(() => {
@@ -260,19 +408,15 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       // Update speech manager with new voice settings
       speechManager.setVoiceSettings(selectedVoice, selectedPersona);
       
-      // Update particle manager with new color scheme
-      particleActions.setColorScheme(selectedColorScheme);
+      // Theme is now handled directly by Canvas component through themeId prop
+      // The Canvas component automatically switches themes when themeId changes
     }
-  }, [selectedVoice, selectedPersona, selectedColorScheme, isOpen, projectId]);
+  }, [selectedVoice, selectedPersona, isOpen, projectId]);
   
   // Monitor VAD state changes
   useEffect(() => {
     if (vad.errored) {
-      const errorMsg = `${new Date().toLocaleTimeString()} - VAD failed to initialize. Manual recording available.`;
-      setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
     } else if (!vad.loading && !vad.errored) {
-      const successMsg = `${new Date().toLocaleTimeString()} - VAD loaded successfully`;
-      setDebugMessages(prev => [...prev.slice(-10), successMsg]);
     }
   }, [vad.loading, vad.errored]);
 
@@ -284,15 +428,24 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       vadErrored: vad.errored
     });
     
-    // Add immediate user feedback
-    const clickMsg = `${new Date().toLocaleTimeString()} - Button clicked, processing...`;
-    setDebugMessages(prev => [...prev.slice(-10), clickMsg]);
+    // Check OpenAI key availability first
+    if (!checkOpenAIKeyAvailability()) {
+      console.error('❌ [VOICE-MODAL] OpenAI API key not available');
+      setApiKeyError(true);
+      const deploymentMode = localStorage.getItem('customgpt.deploymentMode') || 'production';
+      const errorMsg = deploymentMode === 'demo' 
+        ? 'Voice feature requires an OpenAI API key. Please enable voice capability in demo settings and provide your OpenAI API key.'
+        : 'Voice feature requires OpenAI API key. Please add OPENAI_API_KEY to your .env.local file.';
+      
+      import('sonner').then(({ toast }) => {
+        toast.error(errorMsg);
+      });
+      return;
+    }
     
     // Enhanced error handling for VAD
     if (vad.errored) {
       console.error('❌ [VOICE-MODAL] VAD is in error state, attempting recovery...');
-      const errorMsg = `${new Date().toLocaleTimeString()} - VAD ERROR: Attempting to recover. Check browser console.`;
-      setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
       
       // Try to restart VAD after error
       try {
@@ -307,8 +460,6 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
         return;
       } catch (recoveryError) {
         console.error('❌ [VOICE-MODAL] VAD recovery failed:', recoveryError);
-        const errorMsg = `${new Date().toLocaleTimeString()} - ERROR: VAD recovery failed. Try refreshing the page.`;
-        setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
         return;
       }
     }
@@ -318,8 +469,6 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
         console.log('⏸️ [VOICE-MODAL] Pausing VAD');
         vad.pause();
         setVoiceState('idle');
-        const debugMsg = `${new Date().toLocaleTimeString()} - VAD paused`;
-        setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
       } else {
         console.log('▶️ [VOICE-MODAL] Starting VAD');
         setVoiceState('listening');
@@ -335,13 +484,9 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           stream.getTracks().forEach(track => track.stop());
           
           console.log('🎯 [VOICE-MODAL] Microphone permission granted');
-          const successMsg = `${new Date().toLocaleTimeString()} - Microphone permission granted`;
-          setDebugMessages(prev => [...prev.slice(-10), successMsg]);
         } catch (permissionError) {
           console.error('❌ [VOICE-MODAL] Microphone permission failed:', permissionError);
           const errorMessage = permissionError instanceof Error ? permissionError.message : 'Permission denied';
-          const errorMsg = `${new Date().toLocaleTimeString()} - ERROR: Microphone permission failed. ${errorMessage}`;
-          setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
           
           // Still try to start VAD - it might handle permissions internally
         }
@@ -349,25 +494,34 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
         // Start VAD with additional error handling
         try {
           vad.start();
-          const debugMsg = `${new Date().toLocaleTimeString()} - VAD started successfully`;
-          setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
         } catch (vadError) {
           console.error('❌ [VOICE-MODAL] VAD start failed:', vadError);
           const errorMessage = vadError instanceof Error ? vadError.message : 'Unknown error';
-          const errorMsg = `${new Date().toLocaleTimeString()} - ERROR: VAD failed to start. ${errorMessage}`;
-          setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
         }
       }
     } catch (error) {
       console.error('❌ [VOICE-MODAL] Error in toggle listening:', error);
-      const errorMsg = `${new Date().toLocaleTimeString()} - ERROR: ${error instanceof Error ? error.message : 'Failed to toggle VAD'}`;
-      setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
     }
-  }, [vad]);
+  }, [vad, checkOpenAIKeyAvailability]);
 
   // Manual recording fallback when VAD fails
   const handleManualRecording = useCallback(async () => {
     console.log('🎤 [MANUAL] Starting manual recording fallback');
+    
+    // Check OpenAI key availability first
+    if (!checkOpenAIKeyAvailability()) {
+      console.error('❌ [MANUAL] OpenAI API key not available');
+      setApiKeyError(true);
+      const deploymentMode = localStorage.getItem('customgpt.deploymentMode') || 'production';
+      const errorMsg = deploymentMode === 'demo' 
+        ? 'Voice feature requires an OpenAI API key. Please enable voice capability in demo settings and provide your OpenAI API key.'
+        : 'Voice feature requires OpenAI API key. Please add OPENAI_API_KEY to your .env.local file.';
+      
+      import('sonner').then(({ toast }) => {
+        toast.error(errorMsg);
+      });
+      return;
+    }
     
     try {
       if (!isManualRecording) {
@@ -453,8 +607,6 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
             
           } catch (error) {
             console.error('❌ [MANUAL] Audio decoding failed:', error);
-            const errorMsg = `${new Date().toLocaleTimeString()} - Manual recording audio decode failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
-            setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
           }
           
           // Clean up recording resources
@@ -467,8 +619,6 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
         setIsManualRecording(true);
         recorder.start();
         
-        const debugMsg = `${new Date().toLocaleTimeString()} - Manual recording started (VAD fallback)`;
-        setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
         
       } else {
         // Stop manual recording
@@ -478,10 +628,8 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       }
     } catch (error) {
       console.error('❌ [MANUAL] Manual recording failed:', error);
-      const errorMsg = `${new Date().toLocaleTimeString()} - Manual recording failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
     }
-  }, [isManualRecording, mediaRecorder]);
+  }, [isManualRecording, mediaRecorder, checkOpenAIKeyAvailability]);
 
   // Track if we've already auto-started to prevent loops
   const [hasAutoStarted, setHasAutoStarted] = useState(false);
@@ -507,8 +655,6 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
     // Check for VAD errors
     if (vad.errored) {
       console.error('❌ [VOICE-MODAL] VAD encountered an error');
-      const errorMsg = `${new Date().toLocaleTimeString()} - VAD ERROR: Check console and microphone permissions`;
-      setDebugMessages(prev => [...prev.slice(-10), errorMsg]);
       return;
     }
     
@@ -516,15 +662,11 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
     // This prevents microphone permission request on modal open
     if (isOpen && !vad.loading && !vad.listening && !vad.errored) {
       console.log('🎯 [VOICE-MODAL] VAD loaded successfully, ready for manual start');
-      const debugMsg = `${new Date().toLocaleTimeString()} - Click to start listening`;
-      setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
     }
     
     // If VAD is in error state but we haven't tried recovery, attempt recovery
     if (isOpen && !vad.loading && vad.errored && hasAutoStarted) {
       console.log('🔄 [VOICE-MODAL] VAD in error state, scheduling recovery attempt...');
-      const debugMsg = `${new Date().toLocaleTimeString()} - VAD error detected, will attempt recovery`;
-      setDebugMessages(prev => [...prev.slice(-10), debugMsg]);
       
       // Don't continuously retry, just once more after a delay
       setTimeout(() => {
@@ -549,6 +691,8 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       setApiKeyError(false);
       setTranscript('');
       setAgentResponse('');
+      setStreamingResponse('');
+      setIsStreamingText(false);
       setIsAgentSpeaking(false);
       setVoiceConversation(null); // Reset voice conversation for new session
     }
@@ -562,6 +706,38 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
     <>
       {isOpen && (
         <>
+          <style jsx global>{`
+            /* Custom scrollbar styles for voice modal */
+            .voice-response-scroll::-webkit-scrollbar {
+              width: 6px;
+            }
+            
+            .voice-response-scroll::-webkit-scrollbar-track {
+              background: rgba(255, 255, 255, 0.1);
+              border-radius: 3px;
+            }
+            
+            .voice-response-scroll::-webkit-scrollbar-thumb {
+              background: rgba(255, 255, 255, 0.3);
+              border-radius: 3px;
+            }
+            
+            .voice-response-scroll::-webkit-scrollbar-thumb:hover {
+              background: rgba(255, 255, 255, 0.5);
+            }
+            
+            /* Firefox scrollbar */
+            .voice-response-scroll {
+              scrollbar-width: thin;
+              scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+            }
+            
+            /* Mobile touch scrolling optimization */
+            .voice-response-scroll {
+              -webkit-overflow-scrolling: touch;
+              scroll-behavior: smooth;
+            }
+          `}</style>
           {/* Settings and Close buttons - moved outside main container to avoid click issues */}
           <div 
             className="fixed top-4 sm:top-6 md:top-8 right-4 sm:right-6 md:right-8 flex items-center gap-2 sm:gap-3 z-[10000]"
@@ -599,7 +775,6 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           
           <div 
             className="fixed inset-0 z-[9999] overflow-hidden"
-            style={{ pointerEvents: 'none' }}
           >
           {/* Dynamic gradient background based on voice state */}
           <div className={`absolute inset-0 transition-all duration-1000 pointer-events-none ${
@@ -632,23 +807,31 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
             <>
               {/* Canvas for particle animation */}
               <div className="absolute inset-0 pointer-events-none z-0">
-                <Canvas draw={particleActions.draw} />
+                <Canvas />
               </div>
               
               {/* Top-left settings display */}
-              <div className="absolute top-4 sm:top-6 md:top-8 left-4 sm:left-6 md:left-8 z-20">
+              <div className="absolute top-4 sm:top-6 md:top-8 left-4 sm:left-6 md:left-8 z-20 space-y-2">
+                {/* Demo mode indicator */}
+                {isDemoMode && (
+                  <div className="bg-amber-500/20 backdrop-blur-sm rounded-lg px-3 py-2 text-amber-300 text-xs flex items-center gap-2 border border-amber-500/30">
+                    <AlertTriangle className="w-3 h-3" />
+                    <span className="font-medium">Demo Mode</span>
+                  </div>
+                )}
+                
+                {/* Voice settings */}
                 <div className="bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 text-white/70 text-xs space-y-1">
                   <div>Voice: {selectedVoice}</div>
                   <div>Persona: {selectedPersona}</div>
-                  <div>Theme: {selectedColorScheme}</div>
                 </div>
               </div>
 
               
               
 
-              {/* Status display - responsive with animations */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center px-4 z-10 pointer-events-none">
+              {/* Status display - mobile optimized with better text handling */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-center px-4 z-10 pointer-events-auto max-w-full" style={{ maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
                 <div className="relative">
                   {/* Main status text with state-based colors - no blinking */}
                   <p className={`text-2xl sm:text-3xl md:text-4xl font-light mb-4 leading-tight transition-all duration-300 ${
@@ -689,11 +872,26 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
                   </div>
                 )}
                 
-                {/* Show agent's response - responsive */}
+                {/* Show agent's response - mobile optimized with scrollable area */}
                 {agentResponse && (
-                  <div className="animate-fade-in">
-                    <p className="text-xs sm:text-sm text-white/70 mb-1">Agent:</p>
-                    <p className="text-base sm:text-xl text-white max-w-xs sm:max-w-md mx-auto px-2 leading-relaxed">"{agentResponse}"</p>
+                  <div className="animate-fade-in pointer-events-auto">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-xs text-white/70">Agent:</p>
+                      {isStreamingText && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
+                          <span className="text-xs text-blue-400/70">streaming...</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="voice-response-scroll max-h-[40vh] sm:max-h-[50vh] overflow-y-auto overflow-x-hidden px-4 py-2 -mx-2 rounded-lg bg-white/5 relative">
+                      <p className="text-sm sm:text-base text-white max-w-xs sm:max-w-md mx-auto leading-relaxed break-words whitespace-pre-wrap">
+                        {agentResponse}
+                        {isStreamingText && (
+                          <span className="inline-block w-2 h-4 bg-white/60 ml-1 animate-pulse"></span>
+                        )}
+                      </p>
+                    </div>
                     
                     {/* Audio wave visualization for speaking state */}
                     {voiceState === 'speaking' && (
@@ -721,6 +919,19 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
                 className="absolute bottom-6 sm:bottom-8 md:bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4 px-4"
                 style={{ pointerEvents: 'auto', zIndex: 10000 }}
               >
+                {/* API Key error warning */}
+                {(() => {
+                  const deploymentMode = localStorage.getItem('customgpt.deploymentMode') || 'production';
+                  const showWarning = deploymentMode === 'demo' ? !openAIApiKey : false;
+                  if (!showWarning) return null;
+                  
+                  return (
+                    <div className="bg-red-500/20 backdrop-blur-sm rounded-lg px-4 py-3 text-red-300 text-sm flex items-center gap-2 border border-red-500/30 max-w-xs">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      <span>Voice requires OpenAI API key. Add it in demo settings.</span>
+                    </div>
+                  );
+                })()}
                 
                 {/* Main voice control button */}
                 <div className="flex items-center justify-center">
@@ -787,15 +998,34 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
                   {!vad.loading && !isManualRecording && voiceState !== 'speaking' && voiceState !== 'listening' && voiceState !== 'processing' && (
                     <button
                       onClick={vad.errored ? handleManualRecording : handleToggleListening}
-                      className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-blue-500/20 hover:bg-blue-500/30 active:bg-blue-500/40 backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 pointer-events-auto shadow-lg border-2 border-blue-500/50"
+                      disabled={(() => {
+                        const deploymentMode = localStorage.getItem('customgpt.deploymentMode') || 'production';
+                        return deploymentMode === 'demo' && !openAIApiKey;
+                      })()}
+                      className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-full backdrop-blur-sm transition-all transform shadow-lg border-2 ${
+                        (() => {
+                          const deploymentMode = localStorage.getItem('customgpt.deploymentMode') || 'production';
+                          return deploymentMode === 'demo' && !openAIApiKey;
+                        })() 
+                          ? 'bg-gray-500/20 border-gray-500/50 cursor-not-allowed opacity-50' 
+                          : 'bg-blue-500/20 hover:bg-blue-500/30 active:bg-blue-500/40 hover:scale-105 active:scale-95 pointer-events-auto border-blue-500/50'
+                      }`}
                       style={{ pointerEvents: 'auto' }}
-                      aria-label="Start voice chat"
+                      aria-label={(() => {
+                        const deploymentMode = localStorage.getItem('customgpt.deploymentMode') || 'production';
+                        return deploymentMode === 'demo' && !openAIApiKey ? "Voice disabled - API key required" : "Start voice chat";
+                      })()}
                     >
                       {/* Subtle glow effect */}
                       <div className="absolute inset-0 rounded-full bg-blue-500/10 blur-sm"></div>
                       
                       <div className="relative z-10 w-full h-full flex items-center justify-center">
-                        <Mic className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500" />
+                        <Mic className={`w-8 h-8 sm:w-10 sm:h-10 ${
+                          (() => {
+                            const deploymentMode = localStorage.getItem('customgpt.deploymentMode') || 'production';
+                            return deploymentMode === 'demo' && !openAIApiKey ? 'text-gray-500' : 'text-blue-500';
+                          })()
+                        }`} />
                       </div>
                     </button>
                   )}
@@ -814,7 +1044,11 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
 
                 {/* State indicator text (subtle) */}
                 <div className="text-xs text-white/60 text-center">
-                  {vad.loading ? 'Initializing...' :
+                  {(() => {
+                    const deploymentMode = localStorage.getItem('customgpt.deploymentMode') || 'production';
+                    return deploymentMode === 'demo' && !openAIApiKey ? 'API key required' : '';
+                  })() ||
+                   vad.loading ? 'Initializing...' :
                    isManualRecording ? 'Tap to stop' :
                    voiceState === 'listening' ? 'Listening...' :
                    voiceState === 'processing' ? 'Processing...' :

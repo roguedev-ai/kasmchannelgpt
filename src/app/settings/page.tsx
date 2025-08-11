@@ -27,7 +27,9 @@ import {
   Server,
   CheckCircle,
   AlertCircle,
-  Info
+  Info,
+  RotateCcw,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,6 +39,7 @@ import { Card } from '@/components/ui/card';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { cn } from '@/lib/utils';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
+import { useDemoStore } from '@/store/demo';
 
 /**
  * Settings Page Component
@@ -45,7 +48,9 @@ import { useBreakpoint } from '@/hooks/useMediaQuery';
  */
 export default function SettingsPage() {
   const [serverStatus, setServerStatus] = useState<'checking' | 'configured' | 'not-configured'>('checking');
+  const [deploymentMode, setDeploymentMode] = useState<string | null>(null);
   const { theme, setTheme } = useConfigStore();
+  const { isDemoMode, clearApiKey } = useDemoStore();
   const { isMobile } = useBreakpoint();
 
   // Check server configuration status
@@ -65,10 +70,30 @@ export default function SettingsPage() {
     
     checkServerStatus();
   }, []);
+  
+  // Check deployment mode
+  useEffect(() => {
+    const mode = localStorage.getItem('customgpt.deploymentMode');
+    setDeploymentMode(mode);
+  }, []);
 
   const handleThemeChange = (newTheme: 'light' | 'dark') => {
     setTheme(newTheme);
     toast.success(`Theme changed to ${newTheme} mode`);
+  };
+  
+  const handleResetDeploymentMode = () => {
+    // Clear demo store if in demo mode
+    if (isDemoMode) {
+      clearApiKey();
+    }
+    // Clear deployment mode from localStorage
+    localStorage.removeItem('customgpt.deploymentMode');
+    toast.success('Deployment mode reset. Reloading...');
+    // Reload the page to apply changes
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
   };
 
   return (
@@ -293,6 +318,95 @@ export default function SettingsPage() {
               </div>
             </div>
           </Card>
+          
+          {/* Deployment Mode */}
+          {deploymentMode && (
+            <Card className={cn(
+              "bg-card text-card-foreground border-border",
+              isMobile ? "p-5" : "p-6"
+            )}>
+              <div className="flex items-start gap-4">
+                <div className={cn(
+                  "bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0",
+                  isMobile ? "p-2.5 w-10 h-10" : "p-3 w-12 h-12"
+                )}>
+                  <Server className={cn(
+                    "text-primary",
+                    isMobile ? "w-5 h-5" : "w-6 h-6"
+                  )} />
+                </div>
+                <div className="flex-1">
+                  <h2 className={cn(
+                    "font-semibold text-foreground mb-3",
+                    isMobile ? "text-base" : "text-lg"
+                  )}>
+                    Deployment Mode
+                  </h2>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      {deploymentMode === 'demo' ? (
+                        <>
+                          <AlertTriangle className={cn(
+                            "text-amber-600 dark:text-amber-400",
+                            isMobile ? "w-4 h-4" : "w-5 h-5"
+                          )} />
+                          <span className={cn(
+                            "font-medium text-amber-600 dark:text-amber-400",
+                            isMobile ? "text-sm" : ""
+                          )}>Demo Mode Active</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className={cn(
+                            "text-success",
+                            isMobile ? "w-4 h-4" : "w-5 h-5"
+                          )} />
+                          <span className={cn(
+                            "font-medium text-success",
+                            isMobile ? "text-sm" : ""
+                          )}>Production Mode Active</span>
+                        </>
+                      )}
+                    </div>
+                    <p className={cn(
+                      "text-muted-foreground",
+                      isMobile ? "text-xs" : "text-sm"
+                    )}>
+                      {deploymentMode === 'demo' 
+                        ? "API keys are stored in your browser and session expires after 2 hours."
+                        : "API keys are configured server-side for maximum security."
+                      }
+                    </p>
+                    <div className={cn(
+                      "bg-muted rounded-lg",
+                      isMobile ? "p-3" : "p-4"
+                    )}>
+                      <p className={cn(
+                        "text-muted-foreground mb-3",
+                        isMobile ? "text-xs" : "text-sm"
+                      )}>
+                        Reset deployment mode to choose between demo and production again.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size={isMobile ? "sm" : "sm"}
+                        onClick={handleResetDeploymentMode}
+                        className={cn(
+                          "flex items-center gap-2",
+                          isMobile ? "w-full" : ""
+                        )}
+                      >
+                        <RotateCcw className={cn(
+                          isMobile ? "w-4 h-4" : "w-4 h-4"
+                        )} />
+                        Reset Deployment Mode
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* Security Information */}
           <Card className={cn(

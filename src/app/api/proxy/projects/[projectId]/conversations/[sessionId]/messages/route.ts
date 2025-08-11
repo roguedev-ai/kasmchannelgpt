@@ -12,7 +12,11 @@ interface Params {
 export async function GET(request: NextRequest, { params }: Params) {
   const url = new URL(request.url);
   const query = url.search;
-  return proxyRequest(`/projects/${params.projectId}/conversations/${params.sessionId}/messages${query}`, request);
+  return proxyRequest(
+    `/projects/${params.projectId}/conversations/${params.sessionId}/messages${query}`, 
+    request,
+    { method: 'GET' }
+  );
 }
 
 // POST /api/proxy/projects/[projectId]/conversations/[sessionId]/messages - Send message
@@ -22,27 +26,26 @@ export async function POST(request: NextRequest, { params }: Params) {
   
   // Check if this is a streaming request from request body
   let isStream = false;
+  let body: any;
+  
   try {
-    const body = await request.json();
+    // Clone the request to avoid consuming the original body
+    const clonedRequest = request.clone();
+    body = await clonedRequest.json();
     isStream = body.stream === true;
-    // Re-create the request with the same body since we consumed it
-    const newRequest = new NextRequest(request.url, {
-      method: request.method,
-      headers: request.headers,
-      body: JSON.stringify(body),
-    });
-    
-    return proxyRequest(
-      `/projects/${params.projectId}/conversations/${params.sessionId}/messages${query}`,
-      newRequest,
-      { isStream }
-    );
-  } catch {
-    // If no JSON body or parsing fails, fall back to regular request
-    return proxyRequest(
-      `/projects/${params.projectId}/conversations/${params.sessionId}/messages${query}`,
-      request,
-      { isStream: false }
-    );
+  } catch (error) {
+    console.error('[Proxy] Failed to parse request body:', error);
+    // If parsing fails, assume non-streaming
+    isStream = false;
   }
+  
+  return proxyRequest(
+    `/projects/${params.projectId}/conversations/${params.sessionId}/messages${query}`,
+    request,
+    { 
+      isStream,
+      body: body, // Pass the parsed body to avoid re-parsing in proxy handler
+      method: 'POST'
+    }
+  );
 }

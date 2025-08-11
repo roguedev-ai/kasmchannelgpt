@@ -51,26 +51,77 @@ import { cn } from "@/lib/utils"
  * Uses Tailwind's color system for theming.
  */
 const badgeVariants = cva(
-  // Base styles for all badges
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  // Enhanced base styles for all badges
+  "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-all duration-200 cursor-default select-none",
   {
     variants: {
       variant: {
-        // Primary/default style with brand colors
-        default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-        // Secondary style with neutral colors
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        // Destructive/danger style with red colors
-        destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        // Outline style with border only
-        outline: "text-foreground",
+        // Primary/default style with subtle gradient
+        default: [
+          "bg-gradient-to-r from-primary to-primary-hover",
+          "text-primary-foreground",
+          "shadow-sm hover:shadow-md",
+          "hover:scale-105",
+          "border border-primary/20",
+        ].join(" "),
+        // Secondary style with softer appearance
+        secondary: [
+          "bg-secondary",
+          "text-secondary-foreground",
+          "border border-secondary",
+          "hover:bg-secondary/80",
+          "hover:shadow-sm",
+        ].join(" "),
+        // Destructive/danger style with attention-grabbing design
+        destructive: [
+          "bg-destructive/90",
+          "text-destructive-foreground",
+          "border border-destructive/20",
+          "hover:bg-destructive",
+          "hover:shadow-md hover:shadow-destructive/20",
+        ].join(" "),
+        // Outline style with enhanced border
+        outline: [
+          "border-2 border-border",
+          "bg-background",
+          "text-foreground",
+          "hover:bg-accent hover:text-accent-foreground",
+          "hover:border-accent-foreground/20",
+        ].join(" "),
+        // Success variant
+        success: [
+          "bg-success/90",
+          "text-success-foreground",
+          "border border-success/20",
+          "hover:bg-success",
+          "hover:shadow-md hover:shadow-success/20",
+        ].join(" "),
+        // Warning variant
+        warning: [
+          "bg-warning/90",
+          "text-warning-foreground",
+          "border border-warning/20",
+          "hover:bg-warning",
+          "hover:shadow-md hover:shadow-warning/20",
+        ].join(" "),
+        // Ghost variant
+        ghost: [
+          "bg-muted/50",
+          "text-foreground",
+          "hover:bg-muted",
+          "hover:text-foreground",
+          "transition-colors",
+        ].join(" "),
+      },
+      size: {
+        default: "px-3 py-1 text-xs",
+        sm: "px-2 py-0.5 text-[10px]",
+        lg: "px-4 py-1.5 text-sm",
       },
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
     },
   }
 )
@@ -90,9 +141,12 @@ export interface BadgeProps
  * Renders a small pill-shaped label with variant styling.
  * Commonly used for status indicators and tags.
  */
-function Badge({ className, variant, ...props }: BadgeProps) {
+function Badge({ className, variant, size, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <div 
+      className={cn(badgeVariants({ variant, size }), className)} 
+      {...props} 
+    />
   )
 }
 

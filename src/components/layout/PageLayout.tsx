@@ -157,10 +157,10 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       
       {/* Main content area */}
       <main className={cn(
-        'flex-1 overflow-hidden',
+        'flex-1',
         showNavbar && !isMobile ? '' : 'pt-0',
         isMobile && showMobileNavigation ? 'pb-16' : ''
-      )}>
+      )} style={isMobile ? { touchAction: 'pan-y' } : {}}>
         {children}
       </main>
       

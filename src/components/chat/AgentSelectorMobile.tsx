@@ -40,6 +40,7 @@ import { useRouter } from 'next/navigation';
 import type { Agent } from '@/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useAgentStore } from '@/store';
 import { Spinner } from '@/components/ui/loading';
 import { MobileBottomSheet } from '@/components/mobile/MobileDrawer';
@@ -80,6 +81,7 @@ const MobileAgentCard: React.FC<MobileAgentCardProps> = ({
   onSettingsClick
 }) => {
   const [isSelecting, setIsSelecting] = useState(false);
+  const router = useRouter();
   
   const handleSelect = async () => {
     if (isSelecting || isSelected) return;
@@ -90,6 +92,11 @@ const MobileAgentCard: React.FC<MobileAgentCardProps> = ({
     } finally {
       setIsSelecting(false);
     }
+  };
+  
+  const handleSettingsClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/projects?id=${agent.id}`);
   };
   
   const avatarUrl = agent.settings?.chatbot_avatar;
@@ -171,6 +178,17 @@ const MobileAgentCard: React.FC<MobileAgentCardProps> = ({
             </p>
           )}
         </div>
+        
+        {/* Settings Button */}
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={handleSettingsClick}
+          className="h-9 w-9 flex-shrink-0 ml-2"
+          title={`Settings for ${agent.project_name}`}
+        >
+          <Settings className="h-4 w-4" />
+        </Button>
       </div>
     </motion.div>
   );
@@ -283,15 +301,7 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
     fetchMissingSettings();
   }, [isOpen]); // FIXED: Remove agents from dependencies to prevent infinite loop
   
-  // Focus search input when sheet opens
-  useEffect(() => {
-    if (isOpen && searchInputRef.current) {
-      // Small delay to ensure sheet is fully open
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 300);
-    }
-  }, [isOpen]);
+  // Removed auto-focus to prevent keyboard from automatically opening
   
   const handleSelectAgent = async (agent: Agent) => {
     if (isSelecting || agent.id === currentAgent?.id) {
@@ -342,20 +352,7 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
         {/* Header with search */}
         <div className="px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3 mb-4">
-            <h2 className="text-xl font-semibold text-foreground mobile-text-xl">
-              Select Agent
-            </h2>
             <div className="ml-auto flex items-center gap-2">
-              {currentAgent && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleCurrentAgentSettings}
-                  title={`Settings for ${currentAgent.project_name}`}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              )}
               <Button
                 size="sm"
                 variant="outline"
@@ -378,18 +375,24 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
             </div>
           </div>
           
+          {/* Create New Agent Button */}
+          <Link href="/dashboard/projects/create" className="mb-4 block">
+            <Button className="w-full mobile-btn touch-target" variant="outline">
+              <Plus className="w-5 h-5 mr-2" />
+              Create New Agent
+            </Button>
+          </Link>
+          
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none z-10" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search agents..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 text-base border border-input bg-background text-foreground rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent placeholder:text-muted-foreground"
-            />
-          </div>
+          <Input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Search agents..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-12 text-base rounded-xl"
+            icon={<Search className="w-5 h-5 text-muted-foreground" />}
+          />
         </div>
         
         {/* Content */}
@@ -495,15 +498,7 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
           )}
         </div>
         
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-border safe-area-pb">
-          <Link href="/dashboard/projects/create">
-            <Button className="w-full mobile-btn touch-target" variant="outline">
-              <Plus className="w-5 h-5 mr-2" />
-              Create New Agent
-            </Button>
-          </Link>
-        </div>
+        {/* Footer removed - Create button moved to top */}
       </div>
     </MobileBottomSheet>
   );

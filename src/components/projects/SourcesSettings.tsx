@@ -553,8 +553,10 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
           {error.includes('401') && (
             <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
               <p className="text-yellow-800">
-                <strong>Authentication Error:</strong> Your session may have expired. 
-                Please log in again to continue.
+                <strong>Authentication Error:</strong> API key authentication failed. 
+                {process.env.NEXT_PUBLIC_DEMO_MODE === 'true' 
+                  ? 'Please check your API key in demo settings.'
+                  : 'Please check your API key configuration.'}
               </p>
             </div>
           )}

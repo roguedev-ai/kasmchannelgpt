@@ -34,8 +34,9 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 
 import { useConfigStore } from '@/store';
-import { ServerSetup } from '@/components/setup/ServerSetup';
+import { ApiKeySetupModal } from '@/components/setup/ApiKeySetupModal';
 import { PageLayout } from '@/components/layout/PageLayout';
+import { DemoModeProvider } from '@/components/demo/DemoModeProvider';
 import type { Agent } from '@/types';
 
 /**
@@ -75,32 +76,24 @@ const ChatLayout = dynamic(
 export default function Home() {
   // Track setup completion state
   const [isSetupComplete, setIsSetupComplete] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Next.js router for navigation
   const router = useRouter();
+  
+  // Check if demo mode is enabled
+  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
-  // Check if server is configured (in production, this would verify server config)
   useEffect(() => {
-    // For now, check if we have the environment variable set
-    // In production, you'd make an API call to verify server configuration
-    const checkServerConfig = async () => {
-      try {
-        // Try to fetch projects to verify server is configured
-        const response = await fetch('/api/proxy/projects');
-        if (response.ok) {
-          setIsSetupComplete(true);
-        } else if (response.status === 500) {
-          // Server error likely means API key not configured
-          setIsSetupComplete(false);
-        }
-      } catch (error) {
-        console.error('Failed to check server config:', error);
-        setIsSetupComplete(false);
-      }
-    };
-    
-    checkServerConfig();
-  }, []);
+    // In demo mode, skip API key validation
+    if (isDemoMode) {
+      setIsSetupComplete(true);
+      setIsLoading(false);
+    } else {
+      // For non-demo mode, the ApiKeySetupModal will handle validation
+      setIsLoading(false);
+    }
+  }, [isDemoMode]);
 
   // Handler for agent settings navigation
   const handleAgentSettings = (agent: Agent) => {
@@ -108,26 +101,38 @@ export default function Home() {
     router.push(`/projects?id=${agent.id}`);
   };
 
-  // Show setup screen if server not configured
-  if (!isSetupComplete) {
-    return (
-      <PageLayout showNavbar={false}>
-        <ServerSetup onComplete={() => setIsSetupComplete(true)} />
-      </PageLayout>
-    );
+  const handleSetupComplete = () => {
+    setIsSetupComplete(true);
+  };
+
+  // Don't render anything while checking initial state
+  if (isLoading) {
+    return null;
   }
 
-  // Show main chat interface
+  // Show main chat interface (wrapped in demo provider if needed)
   return (
-    <PageLayout showBackButton={false}>
-      {/* Container with calculated height to account for navbar */}
-      <div className="h-[calc(100vh-4rem)] bg-gray-50">
-        {/* Main chat interface in standalone mode */}
-        <ChatLayout 
-          mode="standalone" 
-          onAgentSettings={handleAgentSettings}
+    <DemoModeProvider>
+      {/* API Key Setup Modal - only shown in non-demo mode when keys are missing */}
+      {!isDemoMode && !isSetupComplete && (
+        <ApiKeySetupModal 
+          onComplete={handleSetupComplete}
+          isDemoMode={isDemoMode}
         />
-      </div>
-    </PageLayout>
+      )}
+      
+      <PageLayout showBackButton={false}>
+        {/* Container with calculated height to account for navbar */}
+        <div className="h-[calc(100vh-4rem)] bg-gray-50">
+          {/* Main chat interface in standalone mode */}
+          {isSetupComplete && (
+            <ChatLayout 
+              mode="standalone" 
+              onAgentSettings={handleAgentSettings}
+            />
+          )}
+        </div>
+      </PageLayout>
+    </DemoModeProvider>
   );
 }

@@ -7,12 +7,32 @@ import { getPersonaSystemPrompt, type VoiceOption, type PersonaOption } from '@/
 const VOICE_LANGUAGE = process.env.VOICE_LANGUAGE || 'en';
 
 // Helper function to get OpenAI client (lazy initialization)
-function getOpenAIClient(): OpenAI | null {
-  if (!process.env.OPENAI_API_KEY) {
+function getOpenAIClient(request?: NextRequest): OpenAI | null {
+  // Get deployment mode from header
+  const deploymentMode = request?.headers.get('X-Deployment-Mode') || 'production';
+  let apiKey: string | undefined;
+  
+  if (deploymentMode === 'demo') {
+    // In demo mode, get OpenAI key from window object (set by DemoModeProvider)
+    // or from header if available
+    if (request) {
+      apiKey = request.headers.get('X-OpenAI-API-Key') || undefined;
+    }
+    // If no key in header in demo mode, return null (don't fall back to env)
+    if (!apiKey) {
+      return null;
+    }
+  } else {
+    // In production mode, use environment variable
+    apiKey = process.env.OPENAI_API_KEY;
+  }
+  
+  if (!apiKey) {
     return null;
   }
+  
   return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: apiKey,
   });
 }
 
@@ -51,12 +71,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No projectId provided' }, { status: 400 });
     }
 
-    const openai = getOpenAIClient();
+    const openai = getOpenAIClient(request);
     if (!openai) {
+      const deploymentMode = request.headers.get('X-Deployment-Mode') || 'production';
       console.error('❌ [VOICE-API] OpenAI API key not configured');
+      console.error('❌ [VOICE-API] Deployment mode:', deploymentMode);
+      console.error('❌ [VOICE-API] Environment OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
+      
+      const errorMessage = deploymentMode === 'demo'
+        ? 'Voice feature requires OpenAI API key. Please enable voice capability and provide your OpenAI API key in the demo setup.'
+        : 'Voice feature requires OpenAI API key. Please add OPENAI_API_KEY to your .env.local file.';
       return NextResponse.json({ 
-        error: 'Voice feature requires OpenAI API key. Please add OPENAI_API_KEY to your .env.local file.',
-        userMessage: 'Voice chat is not available. OpenAI API key is required for this feature.'
+        error: errorMessage + ` (Mode: ${deploymentMode})`,
+        userMessage: errorMessage,
+        deploymentMode: deploymentMode
       }, { status: 503 }); // 503 Service Unavailable is more appropriate
     }
 

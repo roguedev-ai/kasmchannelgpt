@@ -49,22 +49,18 @@ import {
   Bot, 
   MessageSquare, 
   BarChart3, 
-  Settings, 
   FileText, 
   Database, 
-  Users, 
-  CreditCard,
   Menu,
   X,
   Search,
-  Bell,
-  User,
-  LogOut,
   ChevronDown
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
 
 /**
  * Props for DashboardLayout
@@ -98,31 +94,20 @@ interface NavItem {
 
 /**
  * Navigation menu configuration
- * Defines the sidebar menu structure and hierarchy
+ * Only includes pages with API support
  */
 const navigation: NavItem[] = [
   {
     id: 'dashboard',
     label: 'Dashboard',
     icon: LayoutDashboard,
-    href: '/dashboard',
+    href: '/projects',
   },
   {
     id: 'agents',
     label: 'Agents',
     icon: Bot,
-    href: '/dashboard/agents',
-    submenu: [
-      { id: 'agents-list', label: 'All Agents', icon: Bot, href: '/dashboard/agents' },
-      { id: 'agents-create', label: 'Create Agent', icon: Bot, href: '/dashboard/agents/create' },
-    ]
-  },
-  {
-    id: 'conversations',
-    label: 'Conversations',
-    icon: MessageSquare,
-    href: '/dashboard/conversations',
-    badge: 5,
+    href: '/projects',
   },
   {
     id: 'analytics',
@@ -136,33 +121,10 @@ const navigation: NavItem[] = [
     ]
   },
   {
-    id: 'pages',
-    label: 'Pages & Documents',
-    icon: FileText,
-    href: '/dashboard/pages',
-  },
-  {
     id: 'sources',
     label: 'Data Sources',
     icon: Database,
     href: '/dashboard/sources',
-  },
-  {
-    id: 'users',
-    label: 'Users',
-    icon: Users,
-    href: '/dashboard/users',
-  },
-  {
-    id: 'settings',
-    label: 'Settings',
-    icon: Settings,
-    href: '/dashboard/settings',
-    submenu: [
-      { id: 'settings-general', label: 'General', icon: Settings, href: '/dashboard/settings' },
-      { id: 'settings-appearance', label: 'Appearance', icon: Settings, href: '/dashboard/settings/appearance' },
-      { id: 'settings-integrations', label: 'Integrations', icon: Settings, href: '/dashboard/settings/integrations' },
-    ]
   },
 ];
 
@@ -245,7 +207,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const handleNavigation = (item: NavItem) => {
     // Navigation handled by router
@@ -260,15 +221,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex">
+    <div className="h-screen bg-background flex">
       {/* Desktop Sidebar */}
       <aside className={cn(
-        'hidden lg:flex flex-col bg-white border-r border-gray-200 transition-all duration-300',
+        'hidden lg:flex flex-col bg-card border-r border-border transition-all duration-300',
         sidebarCollapsed ? 'w-16' : 'w-64'
       )}>
         {/* Sidebar Header */}
         <div className={cn(
-          'flex items-center gap-3 p-4 border-b border-gray-200',
+          'flex items-center gap-3 p-4 border-b border-border',
           sidebarCollapsed && 'justify-center px-2'
         )}>
           <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -276,8 +237,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
           {!sidebarCollapsed && (
             <div className="flex-1">
-              <h1 className="text-lg font-semibold text-gray-900">CustomGPT</h1>
-              <p className="text-xs text-gray-500">AI Dashboard</p>
+              <h1 className="text-lg font-semibold text-foreground">CustomGPT</h1>
+              <p className="text-xs text-muted-foreground">AI Dashboard</p>
             </div>
           )}
           <Button
@@ -303,37 +264,20 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           ))}
         </nav>
 
-        {/* Sidebar Footer */}
-        {!sidebarCollapsed && (
-          <div className="p-4 border-t border-gray-200">
-            <div className="bg-gradient-to-r from-brand-500 to-brand-600 rounded-lg p-3 text-white">
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                <span className="text-sm font-medium">Pro Plan</span>
-              </div>
-              <p className="text-xs opacity-90 mt-1">
-                5,000 / 10,000 queries used
-              </p>
-              <div className="w-full bg-white/20 rounded-full h-1.5 mt-2">
-                <div className="bg-white h-1.5 rounded-full" style={{ width: '50%' }} />
-              </div>
-            </div>
-          </div>
-        )}
       </aside>
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={toggleMobileMenu}>
-          <aside className="w-64 h-full bg-white">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <aside className="w-64 h-full bg-card">
+            <div className="flex items-center justify-between p-4 border-b border-border">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
                   <Bot className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-semibold text-gray-900">CustomGPT</h1>
-                  <p className="text-xs text-gray-500">AI Dashboard</p>
+                  <h1 className="text-lg font-semibold text-foreground">CustomGPT</h1>
+                  <p className="text-xs text-muted-foreground">AI Dashboard</p>
                 </div>
               </div>
               <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
@@ -377,61 +321,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
+                <Input
                   type="text"
                   placeholder="Search agents, conversations..."
-                  className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-80 hidden sm:block"
+                  className="pl-10 w-80 hidden sm:block"
+                  icon={<Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />}
                 />
               </div>
             </div>
 
-            {/* Right side actions */}
-            <div className="flex items-center gap-4">
-              {/* Notifications */}
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full" />
-              </Button>
-
-              {/* User Menu */}
-              <div className="relative">
-                <Button
-                  variant="ghost"
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 px-3"
-                >
-                  <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center">
-                    <User className="h-4 w-4 text-brand-600" />
-                  </div>
-                  <div className="hidden sm:block text-left">
-                    <p className="text-sm font-medium text-gray-900">John Doe</p>
-                    <p className="text-xs text-gray-500">john@example.com</p>
-                  </div>
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
-                </Button>
-
-                {/* User Dropdown */}
-                {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                    <div className="p-2">
-                      <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded">
-                        <User className="h-4 w-4" />
-                        Profile
-                      </button>
-                      <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded">
-                        <Settings className="h-4 w-4" />
-                        Settings
-                      </button>
-                      <hr className="my-2" />
-                      <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded">
-                        <LogOut className="h-4 w-4" />
-                        Sign Out
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </header>
 

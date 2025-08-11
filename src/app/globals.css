@@ -87,6 +87,45 @@
   --sidebar-foreground: #0f172a;
   --sidebar-border: #e2e8f0;
   --sidebar-hover: #f1f5f9;
+  
+  /* Enhanced color variations */
+  --primary-hover: #0864e0;
+  --primary-active: #0652bd;
+  --primary-light: #e6f2ff;
+  --primary-gradient: linear-gradient(135deg, #0a75ff 0%, #0864e0 100%);
+  
+  /* Premium shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 20px rgba(10, 117, 255, 0.15);
+  
+  /* Animation timings */
+  --transition-fast: 150ms;
+  --transition-base: 200ms;
+  --transition-slow: 300ms;
+  --transition-slower: 500ms;
+  
+  /* Easing functions */
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  /* Backdrop filters */
+  --blur-sm: 8px;
+  --blur-md: 12px;
+  --blur-lg: 24px;
+  --blur-xl: 40px;
+  
+  /* Border radius refinements */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
 }
 
 /**
@@ -146,6 +185,20 @@
   --sidebar-foreground: #fafafa;
   --sidebar-border: #2d2d2d;
   --sidebar-hover: #1f1f1f;
+  
+  /* Enhanced color variations for dark mode */
+  --primary-hover: #60a5fa;
+  --primary-active: #2563eb;
+  --primary-light: #1e3a5f;
+  --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  
+  /* Premium shadows for dark mode */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
 /**
@@ -183,6 +236,8 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
+  transition: background-color var(--transition-slow) var(--ease-in-out),
+              color var(--transition-slow) var(--ease-in-out);
 }
 
 /**
@@ -277,6 +332,139 @@ body {
 }
 
 /**
+ * Premium Utility Classes
+ * 
+ * Enhanced utilities for rich UI effects
+ */
+
+/* Glass morphism effects */
+.glass-light {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  background: rgba(26, 26, 26, 0.7);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced shadows */
+.shadow-premium {
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-base) var(--ease-out);
+}
+
+.shadow-premium:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Subtle gradients */
+.gradient-subtle {
+  background: linear-gradient(135deg, var(--background) 0%, var(--muted) 100%);
+}
+
+.gradient-border {
+  position: relative;
+  background: var(--background);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Smooth transitions for all interactive elements */
+.transition-colors-shadow {
+  transition: color var(--transition-base) var(--ease-in-out),
+              background-color var(--transition-base) var(--ease-in-out),
+              border-color var(--transition-base) var(--ease-in-out),
+              box-shadow var(--transition-base) var(--ease-in-out);
+}
+
+/* Micro-interaction scales */
+.scale-on-hover {
+  transition: transform var(--transition-fast) var(--ease-spring);
+}
+
+.scale-on-hover:hover {
+  transform: scale(1.02);
+}
+
+.scale-on-hover:active {
+  transform: scale(0.98);
+}
+
+/* Premium focus rings */
+.focus-ring-premium {
+  outline: none;
+  position: relative;
+}
+
+.focus-ring-premium:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: calc(var(--radius-md) + 3px);
+  border: 2px solid var(--primary);
+  opacity: 0.5;
+  pointer-events: none;
+  animation: focus-pulse 2s infinite;
+}
+
+/* Ripple effect for buttons */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width var(--transition-slow) var(--ease-out),
+              height var(--transition-slow) var(--ease-out);
+}
+
+.ripple:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Noise texture for subtle background */
+.noise-texture {
+  position: relative;
+}
+
+.noise-texture::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.03;
+}
+
+/**
  * Markdown Content Styles
  * 
  * Styles for rendered markdown in chat messages.
@@ -296,6 +484,11 @@ body {
   max-width: none;
   color: #1f2937;
   line-height: 1.6;
+}
+
+/* Dark mode base color override */
+.dark .markdown-content {
+  color: #e5e7eb !important;
 }
 
 .markdown-content h1,
@@ -387,6 +580,160 @@ body {
 .markdown-content th {
   background-color: #f9fafb;
   font-weight: 600;
+}
+
+/**
+ * Dark Mode Markdown Styles
+ * 
+ * Override markdown content styles for better visibility in dark mode.
+ * Ensures all text, links, and code blocks are readable on dark backgrounds.
+ */
+
+.dark .markdown-content h1,
+.dark .markdown-content h2,
+.dark .markdown-content h3,
+.dark .markdown-content h4,
+.dark .markdown-content h5,
+.dark .markdown-content h6 {
+  color: #f9fafb; /* Bright white for headings */
+}
+
+.dark .markdown-content p,
+.dark .markdown-content li {
+  color: #e5e7eb !important; /* Light gray for body text */
+}
+
+.dark .markdown-content li * {
+  color: inherit !important; /* Ensure all child elements inherit the color */
+}
+
+.dark .markdown-content strong,
+.dark .markdown-content b,
+.dark .markdown-content li strong,
+.dark .markdown-content li b {
+  color: #f3f4f6 !important; /* Bright white for bold text */
+  font-weight: 600;
+}
+
+.dark .markdown-content em,
+.dark .markdown-content i {
+  color: #e5e7eb !important; /* Light gray for italic text */
+}
+
+.dark .markdown-content a {
+  color: #60a5fa; /* Lighter blue with better contrast (blue-400) */
+}
+
+.dark .markdown-content a:hover {
+  color: #93c5fd; /* Even lighter blue on hover (blue-300) */
+}
+
+.dark .markdown-content blockquote {
+  border-left-color: #4b5563; /* Gray-600 for border */
+  color: #9ca3af; /* Gray-400 for quote text */
+}
+
+.dark .markdown-content code {
+  background-color: #374151; /* Gray-700 background */
+  color: #f3f4f6; /* Gray-100 text */
+}
+
+.dark .markdown-content pre {
+  background-color: #1f2937 !important; /* Keep existing dark background */
+  color: #f9fafb !important; /* Keep existing light text */
+}
+
+.dark .markdown-content table {
+  border-color: #4b5563;
+}
+
+.dark .markdown-content th,
+.dark .markdown-content td {
+  border-color: #4b5563;
+}
+
+.dark .markdown-content th {
+  background-color: #374151;
+  color: #f3f4f6;
+}
+
+/* Ensure numbered list markers are visible */
+.dark .markdown-content ol li::marker {
+  color: #9ca3af; /* Gray-400 for list numbers */
+}
+
+.dark .markdown-content ul li::marker {
+  color: #9ca3af; /* Gray-400 for bullet points */
+}
+
+/**
+ * Dark Mode Prose Styles (Tailwind Typography)
+ * 
+ * Override Tailwind prose styles for dark mode visibility.
+ * The chat messages use 'prose' class, not 'markdown-content'.
+ */
+.dark .prose {
+  color: #e5e7eb !important;
+}
+
+.dark .prose strong,
+.dark .prose b {
+  color: #f3f4f6 !important;
+  font-weight: 600;
+}
+
+.dark .prose em,
+.dark .prose i {
+  color: #e5e7eb !important;
+}
+
+.dark .prose h1,
+.dark .prose h2,
+.dark .prose h3,
+.dark .prose h4,
+.dark .prose h5,
+.dark .prose h6 {
+  color: #f9fafb !important;
+}
+
+.dark .prose p {
+  color: #e5e7eb !important;
+}
+
+.dark .prose li {
+  color: #e5e7eb !important;
+}
+
+.dark .prose li::marker {
+  color: #9ca3af !important;
+}
+
+.dark .prose a {
+  color: #60a5fa !important;
+}
+
+.dark .prose a:hover {
+  color: #93c5fd !important;
+}
+
+.dark .prose code {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .prose blockquote {
+  border-left-color: #4b5563 !important;
+  color: #9ca3af !important;
+}
+
+.dark .prose th,
+.dark .prose td {
+  border-color: #4b5563 !important;
+}
+
+.dark .prose th {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
 }
 
 /**
@@ -526,6 +873,36 @@ body {
 .voice-overlay-wave {
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
   animation: gradient-wave 3s linear infinite;
+}
+
+/* Voice mode scrollbar styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-white\/20::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+/* Voice text display improvements for mobile */
+@media (max-width: 640px) {
+  .voice-text-mobile {
+    max-height: 40vh;
+    overflow-y: auto;
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.5;
+    padding: 0.5rem;
+  }
 }
 
 /* Slide up animation */
@@ -744,5 +1121,222 @@ body {
   
   .tablet-text-base {
     font-size: 17px;
+  }
+}
+
+/**
+ * Enhanced Keyframe Animations
+ * 
+ * Premium animations for micro-interactions
+ */
+
+/* Focus pulse animation */
+@keyframes focus-pulse {
+  0% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0px,
+    var(--muted-foreground) 50px,
+    var(--muted) 100px
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Gentle float animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Smooth slide animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Scale and fade animation */
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Subtle rotation */
+@keyframes rotate-gentle {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Ripple effect for buttons */
+@keyframes ripple-expand {
+  to {
+    width: 400px;
+    height: 400px;
+    opacity: 0;
+  }
+}
+
+/* Custom scrollbar styles */
+.scroll-area-root {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--foreground) / 0.2) transparent;
+}
+
+.scroll-area-root::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.scroll-area-root::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 6px;
+}
+
+.scroll-area-root::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--foreground) / 0.2);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.2s ease;
+}
+
+.scroll-area-root::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(var(--foreground) / 0.3);
+}
+
+.scroll-area-root::-webkit-scrollbar-thumb:active {
+  background-color: rgba(var(--foreground) / 0.4);
+}
+
+/* Minimal scrollbar for specific areas */
+.minimal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--foreground) / 0.1) transparent;
+}
+
+.minimal-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.minimal-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--foreground) / 0.1);
+  border-radius: 3px;
+}
+
+.minimal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(var(--foreground) / 0.2);
+}
+
+/* Dialog specific styles for better visibility */
+[role="dialog"] {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+[role="dialog"] [data-radix-dialog-title] {
+  color: var(--foreground) !important;
+}
+
+[role="dialog"] [data-radix-dialog-description] {
+  color: var(--muted-foreground) !important;
+}
+
+/* Alert Dialog specific styles */
+[role="alertdialog"] {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+[role="alertdialog"] h2 {
+  color: var(--foreground) !important;
+}
+
+[role="alertdialog"] p {
+  color: var(--muted-foreground) !important;
+}
+
+/* Mobile Touch Target Optimization */
+@media (max-width: 768px) {
+  /* Ensure minimum 44px touch targets for accessibility */
+  .touch-target {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  
+  /* Increase tap area for better mobile usability */
+  .touch-target::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    bottom: -6px;
+    left: -6px;
   }
 }

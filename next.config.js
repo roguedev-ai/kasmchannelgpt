@@ -1,5 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Suppress build warnings
+  typescript: {
+    // !! WARN !!
+    // Dangerously allow production builds to successfully complete even if
+    // your project has type errors.
+    // !! WARN !!
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: false,
+  },
   webpack: (config, { isServer }) => {
     // Handle the onnxruntime-web warning
     if (!isServer) {
@@ -13,6 +26,14 @@ const nextConfig = {
 
     // Ignore the critical dependency warning from onnxruntime-web
     config.module.exprContextCritical = false;
+
+    // Suppress webpack warnings for onnxruntime-web
+    config.ignoreWarnings = [
+      {
+        module: /onnxruntime-web/,
+        message: /Critical dependency/,
+      },
+    ];
 
     // Add WASM support for VAD
     config.experiments = {

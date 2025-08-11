@@ -10,6 +10,7 @@
 - [Features](#features)
 - [Security](#security)
 - [Quick Start](#quick-start)
+- [Demo Mode](#demo-mode)
 - [Installation](#installation)
 - [Widget Integration](#widget-integration)
   - [Iframe Embed (Recommended)](#iframe-embed-recommended)
@@ -33,6 +34,8 @@
 - 📱 **Responsive Design**: Works on desktop, tablet, and mobile
 - ⚡ **Optimized Performance**: Lazy loading and efficient bundling
 - 🏢 **Multi-Agent Support**: Switch between different CustomGPT agents
+- 🎭 **Demo Mode**: Try the app without server setup using your own API keys
+- 🎤 **Voice Features**: Speech-to-text and voice chat capabilities (requires OpenAI API key)
 
 ## Security
 
@@ -78,6 +81,66 @@ This project implements several security best practices:
 </script>
 ```
 
+## Demo Mode
+
+Demo mode allows you to try CustomGPT UI without setting up a server or adding API keys to environment files. Perfect for testing and evaluation!
+
+### How to Use Demo Mode
+
+1. **Build and run the app in demo mode**:
+```bash
+# Set demo mode environment variable
+NEXT_PUBLIC_DEMO_MODE=true npm run dev
+
+# Or build for production demo
+NEXT_PUBLIC_DEMO_MODE=true npm run build
+npm start
+```
+
+2. **Select Demo Mode**: On first visit, you'll see a deployment mode selection screen:
+   - Choose "Demo Mode" to try the app with your own API keys
+   - Choose "Production Mode" to use server-side API keys
+
+3. **Enter Your API Keys**:
+   - **CustomGPT API Key** (Required): Get from [CustomGPT Dashboard](https://app.customgpt.ai)
+   - **OpenAI API Key** (Optional): Required only for voice features
+
+### Demo Mode Features
+
+✅ **What Works in Demo Mode**:
+- Full chat functionality with your CustomGPT agents
+- Multi-conversation support
+- File uploads and citations
+- All UI customization options
+- Voice chat and speech-to-text (with OpenAI key)
+- Real-time message streaming
+- Agent switching
+
+❌ **Limitations**:
+- API keys are stored in browser (localStorage)
+- Keys need to be re-entered if browser data is cleared
+- Not recommended for production use
+- Some enterprise features may be limited
+
+### Security Considerations
+
+While demo mode is secure for testing, note that:
+- API keys are stored in the browser's localStorage
+- Keys are sent via secure headers to the proxy endpoints
+- For production use, always use server-side environment variables
+
+### Voice Features in Demo Mode
+
+To use voice features (speech-to-text, voice chat) in demo mode:
+
+1. Enable voice features in the demo configuration
+2. Add your OpenAI API key
+3. The key will be securely passed to voice endpoints
+4. Voice features include:
+   - Speech-to-text transcription
+   - Real-time voice conversations
+   - Multiple voice options and personas
+
 ## Installation
 
 ### Prerequisites
@@ -106,13 +169,19 @@ pnpm install
 cp .env.example .env.local
 ```
 
-4. Add your API key to `.env.local`:
+4. Add your API keys to `.env.local`:
 ```env
-# Server-side only (never exposed to client)
+# Required - Server-side only (never exposed to client)
 CUSTOMGPT_API_KEY=your-api-key-here
 
-# Optional: Custom API base URL
+# Optional - For voice features (speech-to-text, voice chat)
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional - Custom API base URL
 CUSTOMGPT_API_BASE_URL=https://app.customgpt.ai/api/v1
+
+# Optional - Enable demo mode
+NEXT_PUBLIC_DEMO_MODE=true
 ```
 
 5. Start development server:
@@ -306,8 +375,11 @@ docker-compose --profile dev up dev
 
 **Setup**:
 1. Copy environment file: `cp .env.docker.example .env`
-2. Add your API key: `CUSTOMGPT_API_KEY=your-api-key-here`
-3. Run desired service: `docker-compose up app`
+2. Add your API keys:
+   - `CUSTOMGPT_API_KEY=your-api-key-here`
+   - `OPENAI_API_KEY=your-openai-key-here` (optional, for voice features)
+3. For demo mode, add: `NEXT_PUBLIC_DEMO_MODE=true`
+4. Run desired service: `docker-compose up app`
 
 **Available Services**:
 - **`app`** (port 3000): Full Next.js application with dashboard
@@ -371,11 +443,17 @@ All API calls go through `/api/proxy/*` which adds the API key server-side:
 # Required - Your CustomGPT API key (server-side only)
 CUSTOMGPT_API_KEY=your-api-key-here
 
+# Optional - For voice features (speech-to-text, voice chat)
+OPENAI_API_KEY=your-openai-api-key-here
+
 # Optional - Custom API base URL
 CUSTOMGPT_API_BASE_URL=https://app.customgpt.ai/api/v1
 
 # Optional - Allowed origins for CORS
 ALLOWED_ORIGINS=https://yourdomain.com,https://anotherdomain.com
+
+# Optional - Enable demo mode
+NEXT_PUBLIC_DEMO_MODE=true
 ```
 
 ## Development
@@ -457,6 +535,23 @@ See the `examples/` directory for integration examples:
 2. Check API proxy routes are deployed
 3. Look for errors in server logs
 4. Ensure API key has correct permissions
+
+### Demo Mode Issues
+
+1. **"API key required" errors**: Ensure you've entered your API keys in demo settings
+2. **Voice features not working**: Add OpenAI API key in demo configuration
+3. **Keys not persisting**: Check browser's localStorage is not being cleared
+4. **Can't exit demo mode**: Clear localStorage or switch to production mode
+
+### Voice Features Issues
+
+1. **Speech-to-text not working**: 
+   - Check microphone permissions
+   - Ensure OpenAI API key is configured
+   - Verify browser supports Web Speech API
+2. **Voice chat errors**: 
+   - Both CustomGPT and OpenAI keys are required
+   - Check browser console for specific errors
 
 ### Styling Issues
 

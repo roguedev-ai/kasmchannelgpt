@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -112,7 +114,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: isMobile ? 1 : 0.95, y: isMobile ? '100%' : 0 }}
               className={cn(
-                "bg-white border border-gray-200 rounded-lg shadow-lg z-50",
+                "bg-card border border-border rounded-lg shadow-lg z-50",
                 isMobile 
                   ? "fixed bottom-0 left-0 right-0 rounded-t-xl rounded-b-none" 
                   : "absolute top-full mt-2 right-0 w-80",
@@ -123,7 +125,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 {/* Preset Ranges */}
                 <div className="space-y-2">
                   <h4 className={cn(
-                    "font-medium text-gray-700",
+                    "font-medium text-foreground",
                     isMobile ? "text-base" : "text-sm"
                   )}>Quick Select</h4>
                   <div className={cn(
@@ -149,7 +151,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 {/* Custom Range */}
                 <div className="space-y-2">
                   <h4 className={cn(
-                    "font-medium text-gray-700",
+                    "font-medium text-foreground",
                     isMobile ? "text-base" : "text-sm"
                   )}>Custom Range</h4>
                   <div className={cn(
@@ -157,32 +159,32 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                     isMobile ? "grid-cols-1" : "grid-cols-2"
                   )}>
                     <div>
-                      <label className={cn(
-                        "text-gray-500",
+                      <Label className={cn(
+                        "text-muted-foreground",
                         isMobile ? "text-sm" : "text-xs"
-                      )}>Start Date</label>
-                      <input
+                      )}>Start Date</Label>
+                      <Input
                         type="date"
                         value={localStartDate}
                         onChange={(e) => setLocalStartDate(e.target.value)}
                         className={cn(
-                          "w-full border border-gray-200 rounded-lg",
-                          isMobile ? "px-3 py-3 text-base touch-target" : "px-3 py-2 text-sm"
+                          "w-full",
+                          isMobile ? "h-12 text-base touch-target" : "h-9 text-sm"
                         )}
                       />
                     </div>
                     <div>
-                      <label className={cn(
-                        "text-gray-500",
+                      <Label className={cn(
+                        "text-muted-foreground",
                         isMobile ? "text-sm" : "text-xs"
-                      )}>End Date</label>
-                      <input
+                      )}>End Date</Label>
+                      <Input
                         type="date"
                         value={localEndDate}
                         onChange={(e) => setLocalEndDate(e.target.value)}
                         className={cn(
-                          "w-full border border-gray-200 rounded-lg",
-                          isMobile ? "px-3 py-3 text-base touch-target" : "px-3 py-2 text-sm"
+                          "w-full",
+                          isMobile ? "h-12 text-base touch-target" : "h-9 text-sm"
                         )}
                       />
                     </div>

@@ -63,12 +63,25 @@ export class ProxyCustomGPTClient {
   private baseURL: string = '/api/proxy';
   private timeout: number = 30000;
   private abortControllers: Map<string, AbortController> = new Map();
+  private isDemoMode: boolean = false;
+  private demoApiKey: string | null = null;
 
   constructor() {
+    // Check if demo mode is enabled
+    this.isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+    
     logger.info('PROXY_CLIENT', 'Proxy API Client initialized', {
       baseURL: this.baseURL,
       timeout: this.timeout,
+      isDemoMode: this.isDemoMode,
     });
+  }
+  
+  /**
+   * Set demo mode API key
+   */
+  public setDemoApiKey(apiKey: string | null) {
+    this.demoApiKey = apiKey;
   }
 
   /**
@@ -93,11 +106,29 @@ export class ProxyCustomGPTClient {
 
       // Don't set Content-Type for FormData - let browser set it with boundary
       const isFormData = options.body instanceof FormData;
+      const baseHeaders: Record<string, string> = {
+        ...(options.headers as Record<string, string> || {})
+      };
+      
+      // Add deployment mode header
+      const deploymentMode = typeof window !== 'undefined' 
+        ? localStorage.getItem('customgpt.deploymentMode') || 'production'
+        : 'production';
+      baseHeaders['X-Deployment-Mode'] = deploymentMode;
+      
+      // Add demo mode API key if available
+      if (deploymentMode === 'demo' && this.demoApiKey) {
+        baseHeaders['X-CustomGPT-API-Key'] = this.demoApiKey;
+        console.log('[ProxyClient] Added demo API key to request headers');
+      } else if (deploymentMode === 'demo' && !this.demoApiKey) {
+        console.warn('[ProxyClient] Demo mode but no API key available for request');
+      }
+      
       const headers: HeadersInit = isFormData 
-        ? { ...(options.headers as Record<string, string> || {}) }
+        ? baseHeaders
         : { 
             'Content-Type': 'application/json',
-            ...(options.headers as Record<string, string> || {})
+            ...baseHeaders
           };
       
       const response = await fetch(url, {
@@ -145,19 +176,43 @@ export class ProxyCustomGPTClient {
     
     logger.apiRequest(endpoint, 'POST-STREAM', options.body);
 
+    // Build headers with demo mode support
+    const baseHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'text/event-stream',
+      ...(options.headers as Record<string, string> || {})
+    };
+    
+    // Add deployment mode header
+    const deploymentMode = typeof window !== 'undefined' 
+      ? localStorage.getItem('customgpt.deploymentMode') || 'production'
+      : 'production';
+    baseHeaders['X-Deployment-Mode'] = deploymentMode;
+    
+    // Add demo mode API key if available
+    if (deploymentMode === 'demo' && this.demoApiKey) {
+      baseHeaders['X-CustomGPT-API-Key'] = this.demoApiKey;
+      console.log('[ProxyClient] Added demo API key to streaming request headers');
+    } else if (deploymentMode === 'demo' && !this.demoApiKey) {
+      console.warn('[ProxyClient] Demo mode but no API key available for streaming request');
+    }
+
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-        ...options.headers,
-      },
+      headers: baseHeaders,
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      logger.apiError(endpoint, { message: error, status: response.status });
-      throw new Error(`Stream request failed: ${response.status}`);
+      let errorMessage = `Stream request failed: ${response.status}`;
+      try {
+        const errorText = await response.text();
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorData.message || errorMessage;
+      } catch {
+        // If not JSON, use the status message
+      }
+      logger.apiError(endpoint, { message: errorMessage, status: response.status });
+      throw new Error(errorMessage);
     }
 
     logger.apiResponse(endpoint, response.status, 'Stream started');
@@ -342,6 +397,10 @@ export class ProxyCustomGPTClient {
       prompt: string;
       stream?: boolean;
       source_ids?: string[];
+      response_source?: string;
+      chatbot_model?: string;
+      custom_persona?: string;
+      agent_capability?: string;
     }
   ): Promise<MessageResponse> {
     return this.request(`/projects/${projectId}/conversations/${sessionId}/messages`, {
@@ -350,12 +409,17 @@ export class ProxyCustomGPTClient {
     });
   }
 
+
   async sendMessageStream(
     projectId: number,
     sessionId: string,
     data: {
       prompt: string;
       source_ids?: string[];
+      response_source?: string;
+      chatbot_model?: string;
+      custom_persona?: string;
+      agent_capability?: string;
     },
     onChunk: (chunk: StreamChunk) => void,
     onError?: (error: Error) => void,

@@ -45,6 +45,7 @@ import { MessageSkeleton, LoadingOverlay } from '@/components/ui/loading';
 import { getClient } from '@/lib/api/client';
 import { VoiceModal } from '@/components/voice/VoiceModal';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
+import { useDemoStore } from '@/store/demo';
 
 /**
  * Default example prompts shown to users when starting a new conversation
@@ -80,7 +81,8 @@ const ExamplePromptCard: React.FC<ExamplePromptCardProps> = ({ prompt, onClick }
         "text-card-foreground",
         "p-2.5",
         "text-xs",
-        "min-h-[50px] flex items-center"
+        "min-h-[50px] flex items-center",
+        "w-full" // Ensures button takes full width of grid cell
       )}
     >
       {prompt}
@@ -199,7 +201,8 @@ const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ onPromptClick }) => {
         <div className={cn(
           "grid gap-2 sm:gap-3 w-full",
           "grid-cols-2",
-          "max-w-full sm:max-w-md md:max-w-lg"
+          "max-w-full sm:max-w-md md:max-w-lg",
+          "auto-cols-fr" // Ensures equal column widths
         )}>
           {exampleQuestions.map((prompt, idx) => (
             <motion.div
@@ -256,7 +259,9 @@ const MessageArea: React.FC<MessageAreaProps> = ({ className }) => {
     error,
     sendMessage,
     updateMessageFeedback,
-    loading 
+    loading,
+    clearError,
+    setMessagesForConversation
   } = useMessageStore();
   const { currentConversation } = useConversationStore();
   const { currentAgent } = useAgentStore();
@@ -377,16 +382,27 @@ const MessageArea: React.FC<MessageAreaProps> = ({ className }) => {
           <MessageErrorDisplay 
             error={error}
             onRetry={() => {
-              // Clear error and retry sending last message if applicable
-              const conversationMessages = currentConversation 
-                ? messages.get(currentConversation.id.toString()) || []
-                : [];
-              const lastUserMessage = conversationMessages
-                .filter(m => m.role === 'user')
-                .pop();
+              // Clear error first
+              clearError();
               
-              if (lastUserMessage && lastUserMessage.status === 'error') {
-                sendMessage(lastUserMessage.content);
+              // Then retry sending last message if applicable
+              if (currentConversation) {
+                const conversationMessages = messages.get(currentConversation.id.toString()) || [];
+                const lastUserMessage = conversationMessages
+                  .filter(m => m.role === 'user')
+                  .pop();
+                
+                if (lastUserMessage) {
+                  // Remove the error message before retrying
+                  const filteredMessages = conversationMessages.filter(m => m.id !== lastUserMessage.id);
+                  setMessagesForConversation(
+                    currentConversation.id.toString(), 
+                    filteredMessages
+                  );
+                  
+                  // Retry sending the message
+                  sendMessage(lastUserMessage.content);
+                }
               }
             }}
           />
@@ -686,6 +702,40 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   
   // Voice modal state
   const [isVoiceModalOpen, setIsVoiceModalOpen] = React.useState(false);
+  const [voiceError, setVoiceError] = React.useState<string | null>(null);
+  
+  // Get demo store state
+  const { isDemoMode, openAIApiKey } = useDemoStore();
+  
+  // Check if OpenAI key is available
+  const checkVoiceAvailability = () => {
+    // In demo mode, check if user has provided OpenAI key
+    if (isDemoMode) {
+      if (!openAIApiKey) {
+        return {
+          available: false,
+          error: 'Voice feature requires an OpenAI API key. Please enable voice capability in demo settings and provide your OpenAI API key.'
+        };
+      }
+      return { available: true };
+    }
+    
+    // In normal mode, check if OpenAI key is in environment
+    // We can't check server-side env vars from client, so we'll let the API handle it
+    return { available: true };
+  };
+  
+  // Handle voice button click
+  const handleVoiceClick = () => {
+    const { available, error } = checkVoiceAvailability();
+    
+    if (!available) {
+      toast.error(error || 'Voice feature is not available');
+      return;
+    }
+    
+    setIsVoiceModalOpen(true);
+  };
   
   // Handle conversation management
   const handleConversationChange = (conversation: any) => {
@@ -803,30 +853,34 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       <MessageArea className="flex-1 overflow-y-auto" />
       <div className={cn(
         "mt-auto",
-        isMobile && mode === 'standalone' ? "pb-16" : ""
+        isMobile && mode === 'standalone' ? "pb-[30px]" : ""
       )}>
         <ChatInput
           onSend={handleSendMessage}
           disabled={isStreaming}
           placeholder={isStreaming ? "AI is thinking..." : "Send a message..."}
-          onVoiceClick={() => setIsVoiceModalOpen(true)}
+          onVoiceClick={handleVoiceClick}
           isMobile={isMobile}
         />
       </div>
       
       {/* Branding Footer */}
-      {(mode === 'widget' || mode === 'floating') && (
-        <div className="px-4 py-2 border-t border-border bg-muted">
-          <a
-            href="https://customgpt.ai"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors block text-center"
-          >
-            Powered by CustomGPT.ai
-          </a>
-        </div>
-      )}
+      <div className={cn(
+        "px-4 py-2 border-t border-border bg-muted",
+        mode === 'standalone' && "flex items-center justify-center"
+      )}>
+        <a
+          href="https://customgpt.ai"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            "text-xs text-muted-foreground hover:text-foreground transition-colors",
+            mode === 'standalone' ? "inline-flex items-center" : "block text-center"
+          )}
+        >
+          Powered by CustomGPT.ai
+        </a>
+      </div>
       
       {/* Voice Modal */}
       {currentAgent && (

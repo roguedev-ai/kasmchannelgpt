@@ -1,14 +1,17 @@
 import { useEffect, useRef, forwardRef } from "react";
-import { particleActions } from '@/lib/voice/particle-manager';
+import { getThemeManager } from '@/lib/voice/themes/ThemeManager';
+import { DefaultTheme } from '@/lib/voice/themes/DefaultTheme';
 import { throttle, debounce } from '@/lib/utils/throttle';
 
 interface CanvasProps {
-  draw: (context: CanvasRenderingContext2D, displayWidth: number, displayHeight: number, projCenterX: number, projCenterY: number) => void;
+  // Classic theme only - no theme switching
 }
 
-const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(({ draw }, ref) => {
+const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(({}, ref) => {
   const internalRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = (ref as any) || internalRef;
+  const themeManagerRef = useRef(getThemeManager());
+  const isInitializedRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -17,15 +20,11 @@ const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(({ draw }, ref) => {
     const context = canvas.getContext('2d');
     if (!context) return;
 
+    const themeManager = themeManagerRef.current;
+
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      
-      // Update projection center coordinates when canvas resizes
-      const displayWidth = canvas.width;
-      const displayHeight = canvas.height;
-      const projCenterX = displayWidth / 2;
-      const projCenterY = displayHeight / 2;
     };
     
     // Debounce resize to prevent excessive updates
@@ -34,26 +33,46 @@ const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(({ draw }, ref) => {
     resizeCanvas();
     window.addEventListener('resize', debouncedResize);
 
-    // Set up projection center coordinates at the center of the canvas
-    const displayWidth = canvas.width;
-    const displayHeight = canvas.height;
-    const projCenterX = displayWidth / 2;
-    const projCenterY = displayHeight / 2;
+    // Initialize theme manager with canvas context
+    if (!isInitializedRef.current) {
+      themeManager.initialize(canvas, context);
+      
+      // Register default theme if not already registered
+      if (!themeManager.getThemeMetadata('default')) {
+        themeManager.registerTheme({
+          id: 'default',
+          factory: () => new DefaultTheme(),
+          metadata: {
+            id: 'default',
+            name: 'Classic Sphere',
+            description: 'The original 3D particle sphere with smooth color transitions',
+            category: 'particle',
+            performanceProfile: 'medium',
+            previewColors: ['#4285F4', '#34A853', '#EA4335'],
+            previewDescription: 'Rotating particle sphere with dynamic colors'
+          }
+        });
+      }
+
+      // Use default theme only
+      themeManager.switchTheme('default');
+      isInitializedRef.current = true;
+    }
 
     // Throttled mouse move handler for better performance
     const handleMouseMove = throttle((event: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
-      particleActions.setMousePosition(x, y, canvas.width, canvas.height);
+      themeManager.setMousePosition(x, y, canvas.width, canvas.height);
     }, 16); // ~60fps for mouse movements
 
     const handleMouseEnter = () => {
-      particleActions.setHovering(true);
+      themeManager.setHovering(true);
     };
 
     const handleMouseLeave = () => {
-      particleActions.setHovering(false);
+      themeManager.setHovering(false);
     };
 
     // Add mouse event listeners
@@ -85,7 +104,8 @@ const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(({ draw }, ref) => {
         const currentProjCenterX = currentWidth / 2;
         const currentProjCenterY = currentHeight / 2;
         
-        draw(context, currentWidth, currentHeight, currentProjCenterX, currentProjCenterY);
+        // Delegate drawing to theme manager
+        themeManager.draw(context, currentWidth, currentHeight, currentProjCenterX, currentProjCenterY, deltaTime);
         
         // Performance monitoring
         frameCount++;
@@ -115,7 +135,14 @@ const Canvas = forwardRef<HTMLCanvasElement, CanvasProps>(({ draw }, ref) => {
       canvas.removeEventListener('mouseenter', handleMouseEnter);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [draw]);
+  }, []);
+
+  // Expose theme actions for parent component to call
+  (Canvas as any).getThemeManager = () => themeManagerRef.current;
+  (Canvas as any).onUserSpeaking = () => themeManagerRef.current.onUserSpeaking();
+  (Canvas as any).onProcessing = () => themeManagerRef.current.onProcessing();
+  (Canvas as any).onAiSpeaking = () => themeManagerRef.current.onAiSpeaking();
+  (Canvas as any).reset = () => themeManagerRef.current.reset();
 
   return (
     <canvas

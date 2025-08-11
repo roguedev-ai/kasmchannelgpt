@@ -1,20 +1,21 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ConfigStore } from '@/types';
+import { setTheme as setThemeUtil, getThemeFromCookie, initializeTheme } from '@/lib/theme';
 
 /**
  * Configuration Store
  * 
  * Updated to remove API key storage for security.
  * API key is now stored securely on the server.
- * Only theme and other non-sensitive settings are persisted.
+ * Theme is persisted using cookies for better SSR support.
  */
 export const useConfigStore = create<ConfigStore>()(
   persist(
     (set, get) => ({
       apiKey: null, // Deprecated - kept for interface compatibility
       baseURL: 'https://app.customgpt.ai/api/v1', // Not used anymore, server handles this
-      theme: 'light',
+      theme: (typeof window !== 'undefined' ? getThemeFromCookie() : 'light') as 'light' | 'dark',
 
       setApiKey: (key: string) => {
         // No-op - API key is not stored client-side anymore
@@ -30,9 +31,9 @@ export const useConfigStore = create<ConfigStore>()(
       setTheme: (theme: 'light' | 'dark') => {
         set({ theme });
         
-        // Update document class for theme
+        // Update cookie and document class for theme
         if (typeof window !== 'undefined') {
-          document.documentElement.className = theme;
+          setThemeUtil(theme);
         }
       },
     }),
@@ -43,11 +44,12 @@ export const useConfigStore = create<ConfigStore>()(
         theme: state.theme,
       }),
       onRehydrateStorage: () => (state) => {
-        // Apply theme on rehydration
+        // Initialize theme from cookie on rehydration
         if (typeof window !== 'undefined') {
-          // Use stored theme if available, otherwise default to 'light'
-          const theme = state?.theme || 'light';
-          document.documentElement.className = theme;
+          const theme = initializeTheme();
+          if (state && state.theme !== theme) {
+            state.theme = theme;
+          }
         }
       },
     }

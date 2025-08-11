@@ -3,19 +3,16 @@ import { persist } from 'zustand/middleware';
 
 export type VoiceOption = 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
 export type PersonaOption = 'assistant' | 'creative' | 'analytical' | 'casual' | 'professional';
-export type ColorSchemeOption = 'gemini' | 'instagram' | 'ocean' | 'sunset' | 'aurora';
 
 interface VoiceSettings {
   selectedVoice: VoiceOption;
   selectedPersona: PersonaOption;
-  selectedColorScheme: ColorSchemeOption;
   isVoiceModalOpen: boolean;
 }
 
 interface VoiceSettingsActions {
   setVoice: (voice: VoiceOption) => void;
   setPersona: (persona: PersonaOption) => void;
-  setColorScheme: (colorScheme: ColorSchemeOption) => void;
   setVoiceModalOpen: (isOpen: boolean) => void;
   getSettings: () => Omit<VoiceSettings, 'isVoiceModalOpen'>;
 }
@@ -28,7 +25,6 @@ export type VoiceSettingsStore = VoiceSettings & VoiceSettingsActions;
  * Persists user's voice preferences including:
  * - Voice selection (OpenAI TTS voices)
  * - Persona selection (conversation style)
- * - Color scheme (visual effects in voice modal)
  */
 export const useVoiceSettingsStore = create<VoiceSettingsStore>()(
   persist(
@@ -36,7 +32,6 @@ export const useVoiceSettingsStore = create<VoiceSettingsStore>()(
       // Default settings
       selectedVoice: 'alloy',
       selectedPersona: 'assistant',
-      selectedColorScheme: 'gemini',
       isVoiceModalOpen: false,
 
       setVoice: (voice: VoiceOption) => {
@@ -45,10 +40,6 @@ export const useVoiceSettingsStore = create<VoiceSettingsStore>()(
 
       setPersona: (persona: PersonaOption) => {
         set({ selectedPersona: persona });
-      },
-
-      setColorScheme: (colorScheme: ColorSchemeOption) => {
-        set({ selectedColorScheme: colorScheme });
       },
 
       setVoiceModalOpen: (isOpen: boolean) => {
@@ -60,7 +51,6 @@ export const useVoiceSettingsStore = create<VoiceSettingsStore>()(
         return {
           selectedVoice: state.selectedVoice,
           selectedPersona: state.selectedPersona,
-          selectedColorScheme: state.selectedColorScheme,
         };
       },
     }),
@@ -70,7 +60,6 @@ export const useVoiceSettingsStore = create<VoiceSettingsStore>()(
       partialize: (state) => ({
         selectedVoice: state.selectedVoice,
         selectedPersona: state.selectedPersona,
-        selectedColorScheme: state.selectedColorScheme,
         // Don't persist isVoiceModalOpen - always start as false
       }),
     }
@@ -88,32 +77,4 @@ export const getPersonaSystemPrompt = (persona: PersonaOption): string => {
   };
   
   return prompts[persona];
-};
-
-// Export color schemes for particle manager
-export const getColorScheme = (scheme: ColorSchemeOption) => {
-  const schemes: Record<ColorSchemeOption, { colors: number[][]; name: string }> = {
-    gemini: {
-      name: 'Gemini',
-      colors: [[66, 133, 244], [52, 168, 83], [234, 67, 53]], // Google colors
-    },
-    instagram: {
-      name: 'Instagram',
-      colors: [[228, 64, 95], [247, 119, 55], [252, 175, 69]], // Instagram gradient
-    },
-    ocean: {
-      name: 'Ocean Wave', 
-      colors: [[0, 119, 190], [0, 168, 232], [0, 201, 255]], // Ocean blues
-    },
-    sunset: {
-      name: 'Sunset',
-      colors: [[255, 107, 107], [255, 230, 109], [255, 142, 83]], // Warm sunset
-    },
-    aurora: {
-      name: 'Aurora',
-      colors: [[0, 201, 255], [146, 254, 157], [0, 255, 193]], // Northern lights
-    },
-  };
-  
-  return schemes[scheme];
 };

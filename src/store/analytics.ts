@@ -100,42 +100,63 @@ export const useAnalyticsStore = create<AnalyticsState>((set, get) => ({
       ]);
 
       // Transform the data to match our interface using actual API response structure
+      // Handle cases where API returns empty arrays instead of numbers
+      const conversationsTotal = Array.isArray(conversationsReport.data?.total) ? 0 : (conversationsReport.data?.total || 0);
+      const queriesTotal = Array.isArray(queriesReport.data?.total) ? 0 : (queriesReport.data?.total || 0);
+      const avgQueriesPerConv = Array.isArray(conversationsReport.data?.average_queries_per_conversation) 
+        ? 0 
+        : (Number(conversationsReport.data?.average_queries_per_conversation) || 0);
+
       const analyticsData: AnalyticsData = {
         conversations: {
-          total: conversationsReport.data?.total || 0,
-          active: Math.floor((conversationsReport.data?.total || 0) * 0.7), // Estimate active conversations
+          total: conversationsTotal,
+          active: Math.floor(conversationsTotal * 0.7), // Estimate active conversations
           trend: 0, // Calculate trend from data if needed
-          data: analysisReport.data?.conversations?.map((item: any) => ({
-            date: item.created_at_interval,
-            count: Number(item.queries_number) || 0,
-          })) || [],
+          data: Array.isArray(analysisReport.data?.conversations) 
+            ? analysisReport.data.conversations.map((item: any) => ({
+                date: item.created_at_interval,
+                count: Number(item.queries_number) || 0,
+              }))
+            : [],
         },
         queries: {
-          total: queriesReport.data?.total || 0,
-          successful: queriesReport.data?.query_status?.find((s: any) => s.status === 'success')?.count || 0,
-          failed: queriesReport.data?.query_status?.find((s: any) => s.status === 'failed')?.count || 0,
+          total: queriesTotal,
+          successful: Array.isArray(queriesReport.data?.query_status) 
+            ? (queriesReport.data.query_status.find((s: any) => s.status === 'success')?.count || 0)
+            : 0,
+          failed: Array.isArray(queriesReport.data?.query_status)
+            ? (queriesReport.data.query_status.find((s: any) => s.status === 'failed')?.count || 0)
+            : 0,
           avgResponseTime: 0, // Not provided by API
           topQueries: [], // Not provided by these endpoints
-          data: analysisReport.data?.queries?.map((item: any) => ({
-            date: item.created_at_interval,
-            count: Number(item.queries_number) || 0,
-          })) || [],
+          data: Array.isArray(analysisReport.data?.queries)
+            ? analysisReport.data.queries.map((item: any) => ({
+                date: item.created_at_interval,
+                count: Number(item.queries_number) || 0,
+              }))
+            : [],
         },
         traffic: {
-          uniqueUsers: trafficReport.data?.sources?.reduce((acc: number, source: any) => acc + (source.request_source_number || 0), 0) || 0,
-          pageViews: trafficReport.data?.sources?.reduce((acc: number, source: any) => acc + (source.request_source_number || 0), 0) || 0,
+          uniqueUsers: Array.isArray(trafficReport.data?.sources)
+            ? trafficReport.data.sources.reduce((acc: number, source: any) => acc + (source.request_source_number || 0), 0)
+            : 0,
+          pageViews: Array.isArray(trafficReport.data?.sources)
+            ? trafficReport.data.sources.reduce((acc: number, source: any) => acc + (source.request_source_number || 0), 0)
+            : 0,
           avgSessionDuration: 0, // Not provided by API
           bounceRate: 0, // Not provided by API
-          data: trafficReport.data?.sources?.map((source: any) => ({
-            date: new Date().toISOString().split('T')[0], // Current date as traffic report doesn't have dates
-            users: source.request_source_number || 0,
-            pageViews: source.request_source_number || 0,
-          })) || [],
+          data: Array.isArray(trafficReport.data?.sources)
+            ? trafficReport.data.sources.map((source: any) => ({
+                date: new Date().toISOString().split('T')[0], // Current date as traffic report doesn't have dates
+                users: source.request_source_number || 0,
+                pageViews: source.request_source_number || 0,
+              }))
+            : [],
         },
         statistics: {
-          totalMessages: queriesReport.data?.total || 0,
-          totalConversations: conversationsReport.data?.total || 0,
-          avgMessagesPerConversation: Number(conversationsReport.data?.average_queries_per_conversation) || 0,
+          totalMessages: queriesTotal,
+          totalConversations: conversationsTotal,
+          avgMessagesPerConversation: avgQueriesPerConv,
           satisfactionRate: 0, // Not provided by API
           responseAccuracy: 0, // Not provided by API
         },
@@ -147,8 +168,15 @@ export const useAnalyticsStore = create<AnalyticsState>((set, get) => ({
       
       let errorMessage = 'Failed to fetch analytics';
       if (error.status === 401) {
-        errorMessage = 'Authentication required. Please log in again.';
-        toast.error('Your session has expired. Please log in again.');
+        const deploymentMode = typeof window !== 'undefined' ? localStorage.getItem('customgpt.deploymentMode') : 'production';
+        const isDemoMode = deploymentMode === 'demo';
+        if (isDemoMode) {
+          errorMessage = 'API key authentication failed. Please check your API key.';
+          toast.error('Authentication failed. Please check your API key in demo settings.');
+        } else {
+          errorMessage = 'Authentication required. Please check your API key configuration.';
+          toast.error('Authentication failed. Please check your API key configuration.');
+        }
       } else if (error.status === 404) {
         errorMessage = 'Analytics data not found for this project.';
         toast.error('No analytics data available yet.');

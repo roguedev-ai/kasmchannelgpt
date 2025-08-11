@@ -45,6 +45,8 @@ import { cn } from '@/lib/utils';
  */
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
+  variant?: 'default' | 'elevated' | 'bordered' | 'glass';
+  interactive?: boolean;
 }
 
 /**
@@ -55,13 +57,29 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
  */
 export const Card: React.FC<CardProps> = ({ 
   className, 
-  children, 
+  children,
+  variant = 'default',
+  interactive = false,
   ...props 
 }) => {
+  const variantStyles = {
+    default: 'border border-border bg-card shadow-sm',
+    elevated: 'bg-card shadow-md hover:shadow-lg transition-shadow duration-300',
+    bordered: 'border-2 border-border bg-card hover:border-primary/20 transition-colors duration-200',
+    glass: 'backdrop-blur-md bg-card/50 border border-white/10 shadow-lg',
+  };
+  
   return (
     <div
       className={cn(
-        'rounded-lg border border-border bg-card text-card-foreground shadow-sm',
+        'rounded-xl text-card-foreground transition-all duration-200',
+        variantStyles[variant],
+        interactive && [
+          'cursor-pointer',
+          'hover:scale-[1.01]',
+          'hover:shadow-lg',
+          'active:scale-[0.99]',
+        ],
         className
       )}
       {...props}
@@ -84,7 +102,11 @@ export const CardHeader: React.FC<CardProps> = ({
 }) => {
   return (
     <div
-      className={cn('flex flex-col space-y-1.5 p-6', className)}
+      className={cn(
+        'flex flex-col space-y-2 p-6 pb-4',
+        'border-b border-border/50',
+        className
+      )}
       {...props}
     >
       {children}
@@ -106,7 +128,8 @@ export const CardTitle: React.FC<CardProps> = ({
   return (
     <h3
       className={cn(
-        'text-2xl font-semibold leading-none tracking-tight',
+        'text-xl font-semibold leading-tight tracking-tight',
+        'text-foreground',
         className
       )}
       {...props}
@@ -128,7 +151,63 @@ export const CardContent: React.FC<CardProps> = ({
   ...props
 }) => {
   return (
-    <div className={cn('p-6 pt-0', className)} {...props}>
+    <div 
+      className={cn(
+        'p-6 pt-5',
+        'text-muted-foreground',
+        className
+      )} 
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+/**
+ * Card Description Component
+ * 
+ * Description text for card headers.
+ * Typically used within CardHeader after CardTitle.
+ */
+export const CardDescription: React.FC<CardProps> = ({
+  className,
+  children,
+  ...props
+}) => {
+  return (
+    <p
+      className={cn(
+        'text-sm text-muted-foreground',
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </p>
+  );
+};
+
+/**
+ * Card Footer Component
+ * 
+ * Footer section for action buttons or metadata.
+ * Includes top border and consistent padding.
+ */
+export const CardFooter: React.FC<CardProps> = ({
+  className,
+  children,
+  ...props
+}) => {
+  return (
+    <div
+      className={cn(
+        'flex items-center justify-between p-6 pt-4',
+        'border-t border-border/50',
+        className
+      )}
+      {...props}
+    >
       {children}
     </div>
   );

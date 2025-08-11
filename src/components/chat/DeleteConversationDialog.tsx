@@ -58,13 +58,13 @@ export const DeleteConversationDialog: React.FC<DeleteConversationDialogProps> =
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 z-50"
+            className="absolute inset-0 bg-black bg-opacity-50"
             onClick={!isDeleting ? onCancel : undefined}
           />
 
@@ -74,10 +74,10 @@ export const DeleteConversationDialog: React.FC<DeleteConversationDialogProps> =
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: isMobile ? 1 : 0.95, y: isMobile ? '100%' : 0 }}
             className={cn(
-              "fixed bg-background shadow-xl z-50",
+              "relative bg-background shadow-xl",
               isMobile 
-                ? "inset-x-0 bottom-0 rounded-t-xl safe-area-pb" 
-                : "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md rounded-lg"
+                ? "fixed inset-x-0 bottom-0 rounded-t-xl safe-area-pb" 
+                : "w-full max-w-md rounded-lg"
             )}
             onClick={(e) => e.stopPropagation()}
           >
@@ -198,7 +198,7 @@ export const DeleteConversationDialog: React.FC<DeleteConversationDialogProps> =
               </div>
             </div>
           </motion.div>
-        </>
+        </div>
       )}
     </AnimatePresence>
   );

@@ -26,6 +26,8 @@ export interface ProjectSettings {
   persona_instructions?: string;
   response_source?: 'default' | 'own_content' | 'openai_content';
   chatbot_model?: string;
+  custom_persona?: string;
+  agent_capability?: 'fastest-responses' | 'optimal-choice' | 'advanced-reasoning' | 'complex-tasks';
   chatbot_msg_lang?: string;
   input_field_addendum?: string;
   

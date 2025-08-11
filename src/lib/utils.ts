@@ -655,7 +655,13 @@ export function getResponsiveContainer(): string {
  * @returns Formatted conversation name
  */
 export function generateConversationName(firstMessage: string): string {
-  const words = firstMessage.trim().split(/\s+/);
+  // Remove common API/system prefixes
+  let cleanedMessage = firstMessage.trim();
+  
+  // Remove OpenAI- prefix or similar system prefixes
+  cleanedMessage = cleanedMessage.replace(/^(OpenAI-|System-|API-|Assistant:|User:)\s*/i, '');
+  
+  const words = cleanedMessage.split(/\s+/);
   const title = words.slice(0, 6).join(' ');
   return title.length > 50 ? title.substring(0, 50).trim() + '...' : title;
 }

@@ -327,19 +327,28 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
 
       {/* Manual URLs */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">
+        <label className={cn(
+          "block font-medium text-gray-900 mb-2",
+          isMobile ? "text-sm" : "text-sm"
+        )}>
           Or Add Specific URLs
         </label>
         <div className="space-y-2">
           {formData.urls.map((url, index) => (
             <div key={index} className="flex gap-2">
               <div className="relative flex-1">
-                <Link className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Link className={cn(
+                  "absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400",
+                  isMobile ? "h-4 w-4" : "h-4 w-4"
+                )} />
                 <input
                   type="url"
                   value={url}
                   onChange={(e) => handleUrlChange(index, e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  className={cn(
+                    "w-full pr-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent",
+                    isMobile ? "pl-10 py-3 text-base touch-target" : "pl-10 py-2"
+                  )}
                   placeholder="https://example.com/page"
                 />
               </div>
@@ -348,14 +357,24 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
                   variant="outline"
                   size="icon"
                   onClick={() => removeUrl(index)}
-                  className="h-10 w-10"
+                  className={cn(
+                    "flex-shrink-0",
+                    isMobile ? "h-12 w-12 touch-target" : "h-10 w-10"
+                  )}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               )}
             </div>
           ))}
-          <Button variant="outline" onClick={addUrl} className="w-full">
+          <Button 
+            variant="outline" 
+            onClick={addUrl} 
+            className={cn(
+              "w-full",
+              isMobile && "h-12 touch-target"
+            )}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Another URL
           </Button>
@@ -364,12 +383,24 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
 
       {/* File Upload */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">
+        <label className={cn(
+          "block font-medium text-gray-900 mb-2",
+          isMobile ? "text-sm" : "text-sm"
+        )}>
           Upload Documents
         </label>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-          <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-600 mb-2">
+        <div className={cn(
+          "border-2 border-dashed border-gray-300 rounded-lg text-center",
+          isMobile ? "p-4" : "p-6"
+        )}>
+          <Upload className={cn(
+            "text-gray-400 mx-auto mb-2",
+            isMobile ? "h-6 w-6" : "h-8 w-8"
+          )} />
+          <p className={cn(
+            "text-gray-600 mb-2",
+            isMobile ? "text-sm" : "text-sm"
+          )}>
             Upload PDF, DOC, TXT files for your agent to learn from
           </p>
           <input
@@ -381,7 +412,10 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
             id="file-upload"
           />
           <label htmlFor="file-upload" className="cursor-pointer">
-            <span className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none border border-gray-300 bg-white hover:bg-gray-50 text-gray-900 h-10 py-2 px-4">
+            <span className={cn(
+              "inline-flex items-center justify-center rounded-lg font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none border border-gray-300 bg-white hover:bg-gray-50 text-gray-900 py-2 px-4",
+              isMobile ? "h-12 text-base touch-target" : "h-10 text-sm"
+            )}>
               Choose Files
             </span>
           </label>
@@ -390,18 +424,36 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
         {formData.files.length > 0 && (
           <div className="mt-4 space-y-2">
             {formData.files.map((file, index) => (
-              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm text-gray-700">{file.name}</span>
-                  <span className="text-xs text-gray-500">
-                    ({(file.size / 1024 / 1024).toFixed(1)} MB)
-                  </span>
+              <div key={index} className={cn(
+                "flex items-center justify-between bg-gray-50 rounded",
+                isMobile ? "p-3" : "p-2"
+              )}>
+                <div className={cn(
+                  "flex items-center gap-2 min-w-0",
+                  isMobile && "flex-1"
+                )}>
+                  <FileText className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <span className={cn(
+                      "text-gray-700 block truncate",
+                      isMobile ? "text-sm" : "text-sm"
+                    )}>{file.name}</span>
+                    <span className={cn(
+                      "text-gray-500",
+                      isMobile ? "text-xs" : "text-xs"
+                    )}>
+                      ({(file.size / 1024 / 1024).toFixed(1)} MB)
+                    </span>
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size={isMobile ? "icon" : "sm"}
                   onClick={() => removeFile(index)}
+                  className={cn(
+                    "flex-shrink-0",
+                    isMobile && "h-10 w-10 touch-target"
+                  )}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -415,29 +467,61 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
 
 
   const renderReviewStep = () => (
-    <div className="space-y-6">
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Review Your Agent</h3>
+    <div className={cn(
+      "space-y-6",
+      isMobile && "space-y-4"
+    )}>
+      <div className={cn(
+        "bg-gray-50 rounded-lg",
+        isMobile ? "p-4" : "p-6"
+      )}>
+        <h3 className={cn(
+          "font-semibold text-gray-900 mb-4",
+          isMobile ? "text-base" : "text-lg"
+        )}>Review Your Agent</h3>
         
-        <div className="space-y-4">
+        <div className={cn(
+          "space-y-4",
+          isMobile && "space-y-3"
+        )}>
           <div>
-            <span className="text-sm font-medium text-gray-600">Name:</span>
-            <p className="text-gray-900">{formData.project_name}</p>
+            <span className={cn(
+              "font-medium text-gray-600",
+              isMobile ? "text-xs" : "text-sm"
+            )}>Name:</span>
+            <p className={cn(
+              "text-gray-900",
+              isMobile ? "text-sm mt-1" : "text-base"
+            )}>{formData.project_name}</p>
           </div>
           
           {formData.description && (
             <div>
-              <span className="text-sm font-medium text-gray-600">Description:</span>
-              <p className="text-gray-900">{formData.description}</p>
+              <span className={cn(
+                "font-medium text-gray-600",
+                isMobile ? "text-xs" : "text-sm"
+              )}>Description:</span>
+              <p className={cn(
+                "text-gray-900",
+                isMobile ? "text-sm mt-1" : "text-base"
+              )}>{formData.description}</p>
             </div>
           )}
           
           <div>
-            <span className="text-sm font-medium text-gray-600">Data Sources:</span>
-            <div className="text-gray-900">
-              {formData.sitemap_path && <p>• Sitemap: {formData.sitemap_path}</p>}
+            <span className={cn(
+              "font-medium text-gray-600",
+              isMobile ? "text-xs" : "text-sm"
+            )}>Data Sources:</span>
+            <div className={cn(
+              "text-gray-900",
+              isMobile ? "text-sm mt-1" : "text-base"
+            )}>
+              {formData.sitemap_path && (
+                <p className={isMobile ? "break-all" : ""}>• Sitemap: {formData.sitemap_path}</p>
+              )}
               {formData.urls.filter(url => url.trim()).map((url, index) => (
-                <p key={index}>• URL: {url}</p>
+                <p key={index} className={isMobile ? "break-all" : ""}>• URL: {url}</p>
               ))}
               {formData.files.length > 0 && (
                 <p>• {formData.files.length} uploaded file{formData.files.length > 1 ? 's' : ''}</p>
@@ -446,18 +530,36 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
           </div>
           
           <div>
-            <span className="text-sm font-medium text-gray-600">Access:</span>
-            <p className="text-gray-900">{formData.is_shared ? 'Public' : 'Private'}</p>
+            <span className={cn(
+              "font-medium text-gray-600",
+              isMobile ? "text-xs" : "text-sm"
+            )}>Access:</span>
+            <p className={cn(
+              "text-gray-900",
+              isMobile ? "text-sm mt-1" : "text-base"
+            )}>{formData.is_shared ? 'Public' : 'Private'}</p>
           </div>
         </div>
       </div>
       
-      <div className="bg-blue-50 rounded-lg p-4">
+      <div className={cn(
+        "bg-blue-50 rounded-lg",
+        isMobile ? "p-3" : "p-4"
+      )}>
         <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+          <AlertCircle className={cn(
+            "text-blue-600 mt-0.5 flex-shrink-0",
+            isMobile ? "h-4 w-4" : "h-5 w-5"
+          )} />
           <div>
-            <p className="text-sm font-medium text-blue-900">Ready to Create</p>
-            <p className="text-sm text-blue-700">
+            <p className={cn(
+              "font-medium text-blue-900",
+              isMobile ? "text-sm" : "text-sm"
+            )}>Ready to Create</p>
+            <p className={cn(
+              "text-blue-700",
+              isMobile ? "text-xs mt-1" : "text-sm"
+            )}>
               Your agent will be created and you can start chatting with it immediately. 
               You can always modify these settings later.
             </p>
@@ -470,40 +572,52 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
   const currentStepData = SETUP_STEPS[currentStep];
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className={isMobile ? 'w-full' : 'max-w-2xl mx-auto'}>
       {/* Progress Steps */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+      <div className={isMobile ? 'mb-6' : 'mb-8'}>
+        <div className={`flex items-center ${isMobile ? 'justify-around' : 'justify-between'}`}>
           {SETUP_STEPS.map((step, index) => {
             const Icon = step.icon;
             const isActive = index === currentStep;
             const isCompleted = index < currentStep;
             
             return (
-              <div key={step.id} className="flex items-center">
+              <div key={step.id} className={`flex ${isMobile ? 'flex-col' : ''} items-center`}>
                 <div className={cn(
-                  'w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors',
+                  'rounded-full flex items-center justify-center border-2 transition-colors',
+                  isMobile ? 'w-8 h-8' : 'w-10 h-10',
                   isActive && 'border-brand-500 bg-brand-50 text-brand-600',
                   isCompleted && 'border-green-500 bg-green-50 text-green-600',
                   !isActive && !isCompleted && 'border-gray-300 text-gray-400'
                 )}>
                   {isCompleted ? (
-                    <CheckCircle className="h-5 w-5" />
+                    <CheckCircle className={isMobile ? 'h-4 w-4' : 'h-5 w-5'} />
                   ) : (
-                    <Icon className="h-5 w-5" />
+                    <Icon className={isMobile ? 'h-4 w-4' : 'h-5 w-5'} />
                   )}
                 </div>
-                <div className="ml-3 min-w-0">
-                  <p className={cn(
-                    'text-sm font-medium',
-                    isActive && 'text-brand-600',
+                {isMobile ? (
+                  <span className={cn(
+                    'text-xs mt-1',
+                    isActive && 'text-brand-600 font-medium',
                     isCompleted && 'text-green-600',
-                    !isActive && !isCompleted && 'text-gray-500'
+                    !isActive && !isCompleted && 'text-gray-400'
                   )}>
-                    {step.label}
-                  </p>
-                </div>
-                {index < SETUP_STEPS.length - 1 && (
+                    {step.label.split(' ')[0]}
+                  </span>
+                ) : (
+                  <div className="ml-3 min-w-0">
+                    <p className={cn(
+                      'text-sm font-medium',
+                      isActive && 'text-brand-600',
+                      isCompleted && 'text-green-600',
+                      !isActive && !isCompleted && 'text-gray-500'
+                    )}>
+                      {step.label}
+                    </p>
+                  </div>
+                )}
+                {!isMobile && index < SETUP_STEPS.length - 1 && (
                   <div className={cn(
                     'flex-1 h-px mx-4',
                     isCompleted ? 'bg-green-200' : 'bg-gray-200'
@@ -516,12 +630,21 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
       </div>
 
       {/* Step Content */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+      <div className={`
+        bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700
+        ${isMobile ? 'p-4' : 'p-6'}
+      `}>
+        <div className={isMobile ? "mb-5" : "mb-6"}>
+          <h2 className={cn(
+            "font-semibold text-gray-900 dark:text-gray-100 mb-2",
+            isMobile ? "text-lg" : "text-xl"
+          )}>
             {currentStepData.label}
           </h2>
-          <p className="text-gray-600">
+          <p className={cn(
+            "text-gray-600 dark:text-gray-400",
+            isMobile ? "text-sm" : "text-base"
+          )}>
             {currentStep === 0 && "Let's start with basic information about your agent"}
             {currentStep === 1 && "Add data sources for your agent to learn from"}
             {currentStep === 2 && "Review and create your agent"}
@@ -529,15 +652,21 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className={cn(
+            "bg-red-50 border border-red-200 rounded-lg",
+            isMobile ? "mb-5 p-3" : "mb-6 p-4"
+          )}>
             <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <p className="text-sm text-red-600">{error}</p>
+              <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
+              <p className={cn(
+                "text-red-600",
+                isMobile ? "text-xs" : "text-sm"
+              )}>{error}</p>
             </div>
           </div>
         )}
 
-        <div className="mb-8">
+        <div className={isMobile ? "mb-6" : "mb-8"}>
           {currentStep === 0 && renderBasicInfoStep()}
           {currentStep === 1 && renderDataSourcesStep()}
           {currentStep === 2 && renderReviewStep()}
@@ -547,33 +676,51 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
         <div className="flex items-center justify-between">
           <div>
             {currentStep > 0 && (
-              <Button variant="outline" onClick={handlePrevious}>
-                Previous
+              <Button 
+                variant="outline" 
+                onClick={handlePrevious}
+                className={isMobile ? "h-12 px-4 touch-target" : ""}
+              >
+                <span className={isMobile ? "text-sm" : ""}>Previous</span>
               </Button>
             )}
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className={cn(
+            "flex items-center",
+            isMobile ? "gap-2" : "gap-3"
+          )}>
             {onCancel && (
-              <Button variant="ghost" onClick={onCancel}>
-                Cancel
+              <Button 
+                variant="ghost" 
+                onClick={onCancel}
+                className={isMobile ? "h-12 px-4 touch-target" : ""}
+              >
+                <span className={isMobile ? "text-sm" : ""}>Cancel</span>
               </Button>
             )}
             
             {currentStep < SETUP_STEPS.length - 1 ? (
-              <Button onClick={handleNext}>
-                Next
+              <Button 
+                onClick={handleNext}
+                className={isMobile ? "h-12 px-4 touch-target" : ""}
+              >
+                <span className={isMobile ? "text-sm" : ""}>Next</span>
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={isCreating}>
+              <Button 
+                onClick={handleSubmit} 
+                disabled={isCreating}
+                className={isMobile ? "h-12 px-4 touch-target" : ""}
+              >
                 {isCreating ? (
                   <>
                     <Loader className="h-4 w-4 mr-2 animate-spin" />
-                    Creating Agent...
+                    <span className={isMobile ? "text-sm" : ""}>Creating Agent...</span>
                   </>
                 ) : (
-                  'Create Agent'
+                  <span className={isMobile ? "text-sm" : ""}>Create Agent</span>
                 )}
               </Button>
             )}

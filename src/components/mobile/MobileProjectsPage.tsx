@@ -39,6 +39,7 @@ import { toast } from 'sonner';
 
 import { useAgentStore } from '@/store';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/loading';
 import { cn, formatTimestamp } from '@/lib/utils';
 import type { Agent } from '@/types';
@@ -380,17 +381,19 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
   }
   
   return (
-    <div className={cn('h-full flex flex-col bg-background', className)}>
+    <div className={cn('min-h-screen flex flex-col bg-background', className)} style={{ touchAction: 'manipulation' }}>
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-border">
+      <div className="sticky top-0 z-10 flex items-center gap-3 p-4 border-b border-border bg-background/95 backdrop-blur-sm">
         {currentScreen !== 'projects' && (
           <Button
             size="icon"
             variant="ghost"
             onClick={goBack}
-            className="h-10 w-10"
+            className="h-12 w-12 active:scale-95 transition-transform relative z-20"
+            title="Go back"
+            style={{ touchAction: 'manipulation' }}
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-6 w-6" />
           </Button>
         )}
         
@@ -424,20 +427,18 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
       </div>
       
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1" style={{ touchAction: 'pan-y' }}>
         {currentScreen === 'projects' && (
           <div className="p-4 space-y-4">
             {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search projects..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-base border border-input bg-background text-foreground rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-              />
-            </div>
+            <Input
+              type="text"
+              placeholder="Search projects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-12 text-base rounded-xl"
+              icon={<Search className="w-5 h-5 text-muted-foreground" />}
+            />
             
             {/* Projects List */}
             {filteredProjects.length === 0 ? (
@@ -508,10 +509,8 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
         )}
         
         {currentScreen === 'settings' && (
-          <div className="flex-1 overflow-y-auto bg-background">
-            <div className="min-h-full">
-              {renderSettingsContent()}
-            </div>
+          <div className="pb-20" style={{ touchAction: 'pan-y' }}>
+            {renderSettingsContent()}
           </div>
         )}
       </div>

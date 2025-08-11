@@ -21,8 +21,23 @@ export async function proxyRequest(
     const apiUrl = `https://app.customgpt.ai/api/v1${apiPath}`;
     const method = options.method || request.method;
     
+    // Check deployment mode from header
+    const deploymentMode = request.headers.get('X-Deployment-Mode') || 'production';
+    let apiKey: string | undefined;
+    
+    if (deploymentMode === 'demo') {
+      // In demo mode, get API key from request header
+      apiKey = request.headers.get('X-CustomGPT-API-Key') || undefined;
+      if (!apiKey) {
+        return NextResponse.json(
+          { error: 'API key required in demo mode' },
+          { status: 401 }
+        );
+      }
+    }
+    
     // Build headers
-    const headers: Record<string, string> = { ...getApiHeaders() };
+    const headers: Record<string, string> = { ...getApiHeaders(apiKey) };
     
     // Handle form data - don't set content-type for FormData
     if (options.isFormData) {
@@ -77,6 +92,14 @@ export async function proxyRequest(
       } catch {
         errorData = { error: errorText || `API error: ${response.status}` };
       }
+      
+      console.error(`[Proxy] API error for ${apiPath}:`, {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData,
+        deploymentMode,
+        hasApiKey: !!apiKey
+      });
       
       return NextResponse.json(errorData, { status: response.status });
     }
