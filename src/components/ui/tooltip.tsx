@@ -22,10 +22,10 @@ const TooltipContent = React.forwardRef<
       className={cn(
         "z-50 overflow-hidden",
         "rounded-lg px-3.5 py-2",
-        "bg-foreground/95 backdrop-blur-sm",
-        "text-xs font-medium text-background",
+        "bg-gray-900 dark:bg-gray-100 backdrop-blur-sm",
+        "text-xs font-medium text-white dark:text-gray-900",
         "shadow-lg shadow-black/20",
-        "border border-foreground/10",
+        "border border-gray-800 dark:border-gray-200",
         "animate-in fade-in-0 zoom-in-95",
         "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
         "data-[side=bottom]:slide-in-from-top-2",
@@ -38,7 +38,7 @@ const TooltipContent = React.forwardRef<
     >
       {props.children}
       <TooltipPrimitive.Arrow 
-        className="fill-foreground/95"
+        className="fill-gray-900 dark:fill-gray-100"
         width={8}
         height={4}
       />

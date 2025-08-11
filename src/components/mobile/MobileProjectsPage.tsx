@@ -381,7 +381,7 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
   }
   
   return (
-    <div className={cn('min-h-screen flex flex-col bg-background', className)} style={{ touchAction: 'manipulation' }}>
+    <div className={cn('flex flex-col bg-background', className)} style={{ touchAction: 'manipulation' }}>
       {/* Header */}
       <div className="sticky top-0 z-10 flex items-center gap-3 p-4 border-b border-border bg-background/95 backdrop-blur-sm">
         {currentScreen !== 'projects' && (
@@ -427,7 +427,7 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
       </div>
       
       {/* Content */}
-      <div className="flex-1" style={{ touchAction: 'pan-y' }}>
+      <div className="flex-1 overflow-y-auto" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
         {currentScreen === 'projects' && (
           <div className="p-4 space-y-4">
             {/* Search */}
@@ -509,7 +509,7 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
         )}
         
         {currentScreen === 'settings' && (
-          <div className="pb-20" style={{ touchAction: 'pan-y' }}>
+          <div className="pb-20 overflow-y-auto" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
             {renderSettingsContent()}
           </div>
         )}

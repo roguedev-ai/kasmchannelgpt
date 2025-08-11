@@ -426,7 +426,7 @@ function ProjectsPageContent() {
   if (isMobile) {
     console.log('🔍 [Projects Page] Rendering mobile version');
     return (
-      <PageLayout showMobileNavigation={true}>
+      <PageLayout showNavbar={false} showMobileNavigation={false}>
         <MobileProjectsPage />
       </PageLayout>
     );

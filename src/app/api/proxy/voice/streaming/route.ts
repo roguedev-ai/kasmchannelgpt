@@ -166,10 +166,33 @@ export async function POST(request: NextRequest) {
 
             // Generate TTS for accumulated chunks
             if (chunkBuffer.length >= CHUNK_SIZE) {
-              const currentChunk = chunkBuffer.trim();
-              chunkBuffer = '';
+              // Find a natural break point (sentence end, comma, etc.)
+              let breakPoint = -1;
+              const breakPatterns = ['. ', '? ', '! ', ', ', '; ', ': '];
+              
+              // Look for the last natural break point before CHUNK_SIZE
+              for (const pattern of breakPatterns) {
+                const lastIndex = chunkBuffer.lastIndexOf(pattern);
+                if (lastIndex > 0 && lastIndex < CHUNK_SIZE * 1.5) {
+                  breakPoint = lastIndex + pattern.length;
+                  break;
+                }
+              }
+              
+              // If no natural break found, use the CHUNK_SIZE
+              if (breakPoint === -1) {
+                // Try to at least break at a word boundary
+                const spaceIndex = chunkBuffer.lastIndexOf(' ', CHUNK_SIZE);
+                breakPoint = spaceIndex > CHUNK_SIZE * 0.7 ? spaceIndex + 1 : CHUNK_SIZE;
+              }
+              
+              const currentChunk = chunkBuffer.substring(0, breakPoint).trim();
+              chunkBuffer = chunkBuffer.substring(breakPoint);
               
               if (currentChunk) {
+                // Log the chunk being sent to TTS for debugging
+                console.log(`🎤 [STREAMING-VOICE] TTS chunk ${chunkId}: "${currentChunk}"`);
+                
                 // Generate TTS in parallel and track the promise
                 const currentChunkId = chunkId++;
                 const ttsPromise = generateTTSChunkBinary(currentChunk, voice, currentChunkId, controller, encoder, openAIKey || undefined)
@@ -196,6 +219,10 @@ export async function POST(request: NextRequest) {
           // Add extra delay to ensure all chunks are sent
           await new Promise(resolve => setTimeout(resolve, 500));
 
+          // Log the complete response for debugging
+          console.log(`✅ [STREAMING-VOICE] Complete response (${fullResponse.length} chars):`, fullResponse);
+          console.log(`✅ [STREAMING-VOICE] Transcript:`, transcript);
+          
           // Send completion signal
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({
             type: 'complete',

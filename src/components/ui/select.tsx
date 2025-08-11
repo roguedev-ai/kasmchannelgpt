@@ -48,7 +48,7 @@ const SelectScrollUpButton = React.forwardRef<
     ref={ref}
     className={cn(
       "flex cursor-default items-center justify-center py-1",
-      "border-b border-border/20 bg-background/50",
+      "border-b border-gray-200/30 dark:border-gray-800/20 bg-background/50",
       "hover:bg-accent/50 transition-colors",
       className
     )}
@@ -67,7 +67,7 @@ const SelectScrollDownButton = React.forwardRef<
     ref={ref}
     className={cn(
       "flex cursor-default items-center justify-center py-1",
-      "border-t border-border/20 bg-background/50",
+      "border-t border-gray-200/30 dark:border-gray-800/20 bg-background/50",
       "hover:bg-accent/50 transition-colors",
       className
     )}
@@ -88,7 +88,7 @@ const SelectContent = React.forwardRef<
       ref={ref}
       className={cn(
         "relative z-50 max-h-96 min-w-[8rem] overflow-hidden",
-        "rounded-lg border border-border/50",
+        "rounded-lg border border-gray-200/50 dark:border-gray-800/30",
         "bg-background/95 backdrop-blur-md",
         "text-foreground shadow-lg",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",

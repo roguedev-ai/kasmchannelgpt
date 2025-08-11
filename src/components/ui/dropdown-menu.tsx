@@ -53,7 +53,7 @@ const DropdownMenuSubContent = React.forwardRef<
     ref={ref}
     className={cn(
       "z-50 min-w-[8rem] overflow-hidden",
-      "rounded-lg border border-border/50",
+      "rounded-lg border border-gray-200/50 dark:border-gray-800/30",
       "bg-background/95 backdrop-blur-md",
       "p-1.5 text-foreground",
       "shadow-lg shadow-black/10",
@@ -82,7 +82,7 @@ const DropdownMenuContent = React.forwardRef<
       sideOffset={sideOffset}
       className={cn(
         "z-50 min-w-[8rem] overflow-hidden",
-        "rounded-lg border border-border/50",
+        "rounded-lg border border-gray-200/50 dark:border-gray-800/30",
         "bg-background/95 backdrop-blur-md",
         "p-1.5 text-foreground",
         "shadow-lg shadow-black/10",
@@ -208,7 +208,7 @@ const DropdownMenuSeparator = React.forwardRef<
     ref={ref}
     className={cn(
       "-mx-1.5 my-1.5 h-px",
-      "bg-gradient-to-r from-transparent via-border to-transparent",
+      "bg-gradient-to-r from-transparent via-gray-200/50 dark:via-gray-800/20 to-transparent",
       className
     )}
     {...props}

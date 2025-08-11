@@ -575,7 +575,7 @@ export const ChatInput: React.FC<InputProps> = ({
       )}>
         {/* Text Input Area */}
         <form onSubmit={handleSubmit} className="relative">
-          <div className="flex items-start p-3 pb-1">
+          <div className="flex items-center p-3 pb-1">
             {/* File Upload Button */}
             <FileUploadButton
               onUpload={handleFileUpload}
@@ -591,7 +591,7 @@ export const ChatInput: React.FC<InputProps> = ({
               disabled={disabled}
               isMobile={isMobile}
               className={cn(
-                "!h-8 !w-8 !min-w-0 mr-2 mt-0.5",
+                "!h-8 !w-8 !min-w-0 mr-2",
                 isMobile && "!h-9 !w-9"
               )}
             />
@@ -642,7 +642,7 @@ export const ChatInput: React.FC<InputProps> = ({
             {/* Character Count */}
             {input.length > 0 && (
               <div className={cn(
-                "text-xs text-muted-foreground mr-2 mt-1",
+                "text-xs text-muted-foreground mr-2",
                 isMobile ? "text-xs" : "text-xs"
               )}>
                 {input.length}/{maxLength}
@@ -707,7 +707,7 @@ export const ChatInput: React.FC<InputProps> = ({
         </form>
         
         {/* Settings Toggle Button */}
-        <div className="border-t border-border/50">
+        <div className="border-t border-gray-200/50 dark:border-gray-800/30">
           <Button
             variant="ghost"
             size="sm"
@@ -718,6 +718,7 @@ export const ChatInput: React.FC<InputProps> = ({
               "hover:bg-accent/50 transition-all duration-200",
               showSettings && "bg-accent/30"
             )}
+            title="Customize chat settings including response source, AI model, and persona"
           >
             <SlidersHorizontal className={cn(
               "transition-colors",
@@ -745,7 +746,7 @@ export const ChatInput: React.FC<InputProps> = ({
                 className="overflow-hidden bg-accent/20"
               >
                 <div className={cn(
-                  "flex items-center border-t border-border/50",
+                  "flex items-center border-t border-gray-200/50 dark:border-gray-800/30",
                   isMobile 
                     ? "justify-between px-2 pb-2 pt-2" 
                     : "gap-2 px-3 pb-2.5 pt-2.5"

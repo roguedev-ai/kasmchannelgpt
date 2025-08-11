@@ -334,6 +334,11 @@ class SpeechManager {
                   transcript 
                 });
                 
+                console.log(`📝 [SPEECH-MANAGER] Complete fullResponse (${fullResponse.length} chars):`, fullResponse);
+                console.log(`📝 [SPEECH-MANAGER] Includes "individuals":`, fullResponse.includes('individuals'));
+                console.log(`📝 [SPEECH-MANAGER] Includes "like":`, fullResponse.includes('like'));
+                console.log(`📝 [SPEECH-MANAGER] Includes "CustomGPT":`, fullResponse.includes('CustomGPT'));
+                
                 // Trigger callbacks for UI updates
                 // Don't update conversationThusFar here - let the message store be the single source of truth
                 if (transcript) {

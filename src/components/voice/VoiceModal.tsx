@@ -297,10 +297,13 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
         },
         onResponseReceived: async (response: string) => {
           console.log('🎯 [VOICE-MODAL] Response received:', response);
+          console.log('🎯 [VOICE-MODAL] Response includes "individuals":', response.includes('individuals'));
+          console.log('🎯 [VOICE-MODAL] Response includes "like":', response.includes('like'));
+          console.log('🎯 [VOICE-MODAL] Response includes "CustomGPT":', response.includes('CustomGPT'));
           
-          // Display the agent's response in the voice window, parsing markdown
-          const cleanResponse = parseMarkdownForVoice(response);
-          setAgentResponse(cleanResponse);
+          // For streaming responses, this will be called with the final response
+          // Don't update the display here as it's already being updated via streaming chunks
+          // This is mainly for adding the message to the conversation history
           
           // Use voiceConversation to ensure we're adding to the same conversation as the user message
           // This prevents race condition where messages could be added out of order
@@ -333,6 +336,7 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           setIsStreamingText(true);
           setStreamingResponse(prev => {
             const newText = prev + textChunk;
+            console.log('📝 [VOICE-MODAL] Accumulated streaming text length:', newText.length);
             // Update the displayed response immediately for streaming
             const cleanResponse = parseMarkdownForVoice(newText);
             setAgentResponse(cleanResponse);
@@ -350,9 +354,13 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
         },
         onStreamingComplete: (fullResponse: string, transcript: string) => {
           console.log('✅ [VOICE-MODAL] Streaming complete:', { fullResponse: fullResponse.length, transcript });
+          console.log('✅ [VOICE-MODAL] Full response includes "individuals":', fullResponse.includes('individuals'));
+          console.log('✅ [VOICE-MODAL] Full response includes "like":', fullResponse.includes('like'));
+          console.log('✅ [VOICE-MODAL] Full response includes "CustomGPT":', fullResponse.includes('CustomGPT'));
           
           // Final cleanup - ensure we have the complete response
           const cleanResponse = parseMarkdownForVoice(fullResponse);
+          console.log('✅ [VOICE-MODAL] Final clean response:', cleanResponse);
           setAgentResponse(cleanResponse);
           setStreamingResponse(fullResponse);
           setIsStreamingText(false);

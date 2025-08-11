@@ -130,7 +130,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   return (
     <div className={cn(
       "min-h-screen bg-background",
-      isMobile && "h-screen flex flex-col"
+      isMobile && "flex flex-col"
     )}>
       {/* Desktop Navigation */}
       {!isMobile && showNavbar && (
@@ -159,8 +159,9 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       <main className={cn(
         'flex-1',
         showNavbar && !isMobile ? '' : 'pt-0',
-        isMobile && showMobileNavigation ? 'pb-16' : ''
-      )} style={isMobile ? { touchAction: 'pan-y' } : {}}>
+        isMobile && showMobileNavigation ? 'pb-16' : '',
+        isMobile && 'overflow-y-auto'
+      )} style={isMobile ? { touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' } : {}}>
         {children}
       </main>
       
