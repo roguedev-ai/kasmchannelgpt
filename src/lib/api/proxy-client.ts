@@ -792,6 +792,26 @@ export class ProxyCustomGPTClient {
       }
     });
   }
+  
+  async cleanupDemoSession(): Promise<{
+    status: string;
+    data: {
+      sessionId: string;
+      totalResources: number;
+      successCount: number;
+      failureCount: number;
+      results: Array<{
+        success: boolean;
+        resourceId: string;
+        resourceType: string;
+        error?: string;
+      }>;
+    };
+  }> {
+    return this.request('/demo/cleanup', {
+      method: 'POST'
+    });
+  }
 }
 
 // Export singleton instance

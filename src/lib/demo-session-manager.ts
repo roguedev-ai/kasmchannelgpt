@@ -13,15 +13,20 @@ import {
   getTimeRemaining,
   shouldShowWarning
 } from '@/lib/constants/demo-limits';
+import { proxyClient } from '@/lib/api/proxy-client';
 
 export class DemoSessionManager {
   private static instance: DemoSessionManager | null = null;
   private sessionCheckInterval: NodeJS.Timeout | null = null;
   private warningShown: boolean = false;
+  private isCleaningUp: boolean = false;
 
   private constructor() {
     // Start session monitoring
     this.startSessionMonitoring();
+    
+    // Add cleanup on page unload
+    this.setupUnloadHandler();
   }
 
   static getInstance(): DemoSessionManager {
@@ -180,7 +185,7 @@ export class DemoSessionManager {
   /**
    * Handle session expiry
    */
-  private handleSessionExpiry(): void {
+  private async handleSessionExpiry(): Promise<void> {
     console.log('[DemoSessionManager] Free trial session expired');
     
     // Clear interval
@@ -188,6 +193,9 @@ export class DemoSessionManager {
       clearInterval(this.sessionCheckInterval);
       this.sessionCheckInterval = null;
     }
+    
+    // Perform cleanup
+    await this.performCleanup('session_expired');
     
     // Dispatch expiry event
     if (typeof window !== 'undefined') {
@@ -203,6 +211,66 @@ export class DemoSessionManager {
       setTimeout(() => {
         window.location.reload();
       }, 3000);
+    }
+  }
+  
+  /**
+   * Setup handler for page unload
+   */
+  private setupUnloadHandler(): void {
+    if (typeof window === 'undefined') return;
+    
+    // Use both beforeunload and unload for better coverage
+    const handleUnload = async (event: BeforeUnloadEvent | Event) => {
+      const session = this.getSession();
+      if (!session || this.isCleaningUp) return;
+      
+      // For beforeunload, we can't use async operations reliably
+      // So we'll use sendBeacon API to trigger cleanup
+      if ('sendBeacon' in navigator) {
+        const cleanupData = new FormData();
+        cleanupData.append('sessionId', session.sessionId);
+        cleanupData.append('reason', 'tab_close');
+        
+        // Use sendBeacon for reliable cleanup on tab close
+        navigator.sendBeacon('/api/proxy/demo/cleanup', cleanupData);
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleUnload);
+    window.addEventListener('unload', handleUnload);
+    
+    // Also handle visibility change (tab switching)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // Tab is hidden, could be closing
+        const session = this.getSession();
+        if (session && this.isExpired()) {
+          this.performCleanup('visibility_change');
+        }
+      }
+    });
+  }
+  
+  /**
+   * Perform cleanup of demo resources
+   */
+  private async performCleanup(reason: string): Promise<void> {
+    if (this.isCleaningUp) return;
+    
+    const session = this.getSession();
+    if (!session) return;
+    
+    this.isCleaningUp = true;
+    console.log(`[DemoSessionManager] Performing cleanup for session ${session.sessionId}, reason: ${reason}`);
+    
+    try {
+      const result = await proxyClient.cleanupDemoSession();
+      console.log('[DemoSessionManager] Cleanup result:', result);
+    } catch (error) {
+      console.error('[DemoSessionManager] Cleanup failed:', error);
+    } finally {
+      this.isCleaningUp = false;
     }
   }
 
