@@ -168,7 +168,10 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
           {/* Modal Content */}
           <div className="p-6">
             {activeTab === 'try' ? (
-              <div className="space-y-6">
+              <div className={cn(
+                "grid gap-6",
+                isMobile ? "grid-cols-1" : "grid-cols-2"
+              )}>
                 {/* Free Trial Option */}
                 <Card className="p-6 border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20">
                   <div className="space-y-4">
@@ -178,16 +181,16 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                          Free Trial - No API Key Required
+                          Free Trial
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          Experience CustomGPT UI instantly with limited features
+                          No API key required
                         </p>
                       </div>
                     </div>
                     
                     {/* Trial Limitations */}
-                    <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                         <FolderOpen className="h-4 w-4" />
                         <span>1 Project</span>
@@ -197,12 +200,12 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                         <span>2 Conversations</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                        <Clock className="h-4 w-4" />
-                        <span>30 minute session</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                         <AlertTriangle className="h-4 w-4" />
                         <span>2 messages per chat</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <Clock className="h-4 w-4" />
+                        <span>30 minute session</span>
                       </div>
                     </div>
                     
@@ -216,26 +219,28 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                     </Button>
                     
                     <p className="text-xs text-center text-gray-500 dark:text-gray-500">
-                      No registration required • Session data deleted after 30 minutes
+                      No registration • Auto-cleanup
                     </p>
                   </div>
                 </Card>
                 
-                {/* Divider */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200 dark:border-gray-700" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white dark:bg-gray-900 px-2 text-gray-500">
-                      Or use your own API key
-                    </span>
-                  </div>
-                </div>
-                
                 {/* API Key Demo Mode */}
                 <Card className="p-6">
                   <form onSubmit={handleDemoSubmit} className="space-y-4">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                        <Key className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                          Use Your API Key
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          Full features for 2 hours
+                        </p>
+                      </div>
+                    </div>
+                    
                     <div>
                       <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         CustomGPT.ai API Key
@@ -341,27 +346,17 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                     <Button 
                       type="submit" 
                       className="w-full"
+                      size="lg"
                       disabled={!apiKeyInput.trim() || (enableVoice && !openAIKeyInput.trim())}
                     >
                       <Key className="h-4 w-4 mr-2" />
-                      Start Demo Session (2 hours)
+                      Start Demo Session
                     </Button>
+                    
+                    <p className="text-xs text-center text-gray-500 dark:text-gray-500">
+                      Browser storage • 2 hour session
+                    </p>
                   </form>
-                </Card>
-                
-                {/* Demo Info */}
-                <Card className="p-4 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
-                  <div className="flex gap-3">
-                    <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 flex-shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <p className="font-semibold text-amber-900 dark:text-amber-100">
-                        Demo Mode Notice
-                      </p>
-                      <p className="text-sm text-amber-800 dark:text-amber-200">
-                        API keys are stored in your browser only. Demo sessions expire after 2 hours.
-                      </p>
-                    </div>
-                  </div>
                 </Card>
               </div>
             ) : (
