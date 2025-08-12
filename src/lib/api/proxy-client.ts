@@ -47,6 +47,8 @@ import type {
 } from '@/types/sources.types';
 import { parseStreamChunk, retryWithBackoff } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { usageTracker } from '@/lib/analytics/usage-tracker';
+import { getErrorMessage } from '@/lib/constants/error-messages';
 
 interface UserProfileResponse {
   status: 'success' | 'error';
@@ -167,11 +169,27 @@ export class ProxyCustomGPTClient {
 
       const responseData = await response.json();
 
+      // Track API call
+      usageTracker.trackApiCall(endpoint, options.method || 'GET', response.status);
+
       if (!response.ok) {
+        // Track error
+        usageTracker.trackError(`API Error: ${response.status}`, {
+          endpoint,
+          method: options.method || 'GET',
+          error: responseData.error
+        });
+        
+        // Get user-friendly error message for demo mode
+        const isFreeTrialMode = baseHeaders['X-Free-Trial-Mode'] === 'true';
+        const errorInfo = getErrorMessage(response.status, isFreeTrialMode);
+        
         throw {
-          message: responseData.error || `Request failed with status ${response.status}`,
+          message: responseData.error || errorInfo.message,
           status: response.status,
           data: responseData,
+          title: errorInfo.title,
+          isFreeTrialError: isFreeTrialMode && response.status === 429,
         };
       }
 

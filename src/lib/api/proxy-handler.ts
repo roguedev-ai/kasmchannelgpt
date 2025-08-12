@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getApiHeaders } from '@/lib/api/headers';
+import { getApiHeaders, getStreamHeaders } from '@/lib/api/headers';
 import { 
   enforceDemoLimits, 
   trackResourceCreation, 
@@ -63,18 +63,78 @@ export async function proxyRequest(
       }
     }
     
-    // Build headers
-    const headers: Record<string, string> = { ...getApiHeaders(apiKey) };
+    // Build headers for CustomGPT API (only essential headers)
+    // IMPORTANT: Only send Authorization and Content-Type, nothing else!
+    const headers: Record<string, string> = options.isStream 
+      ? getStreamHeaders(apiKey)
+      : getApiHeaders(apiKey);
+    
+    // Store tracking headers separately (for internal use only)
+    const trackingHeaders: Record<string, string> = {
+      'X-Deployment-Mode': deploymentMode,
+      'X-Client-Mode': isFreeTrialMode ? 'free-trial' : deploymentMode,
+      'X-Client-Version': process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
+      'X-Request-Path': apiPath,
+      'X-Request-Timestamp': Date.now().toString(),
+    };
+    
+    // Add session tracking for demos (internal use only)
+    if (deploymentMode === 'demo') {
+      const sessionId = request.headers.get(DEMO_API_HEADERS.SESSION_ID);
+      if (sessionId) {
+        trackingHeaders['X-Demo-Session-ID'] = sessionId;
+      }
+      
+      if (isFreeTrialMode) {
+        trackingHeaders['X-Demo-Type'] = 'free-trial';
+        trackingHeaders['X-Demo-Restrictions'] = 'true';
+      } else {
+        trackingHeaders['X-Demo-Type'] = 'user-api-key';
+        trackingHeaders['X-Demo-Restrictions'] = 'false';
+      }
+    } else {
+      trackingHeaders['X-Demo-Type'] = 'none';
+      trackingHeaders['X-Production-Mode'] = 'true';
+    }
+    
+    // Add user agent info (internal use only)
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+    trackingHeaders['X-Client-User-Agent'] = userAgent;
+    
+    // Add referer for tracking entry points (internal use only)
+    const referer = request.headers.get('referer') || 'direct';
+    trackingHeaders['X-Client-Referer'] = referer;
+    
+    // Log tracking headers for analytics but don't send them to CustomGPT
+    console.log('[Proxy] Request tracking:', {
+      path: apiPath,
+      method,
+      deploymentMode,
+      isFreeTrialMode,
+      hasApiKey: !!apiKey
+    });
     
     // Handle form data - don't set content-type for FormData
     if (options.isFormData) {
       delete headers['Content-Type'];
     }
     
-    // Build fetch options
+    // Build fetch options with explicit control to prevent automatic headers
     const fetchOptions: RequestInit = {
       method,
       headers,
+      // Explicitly control redirect behavior
+      redirect: 'follow',
+      // Don't include credentials
+      credentials: 'omit',
+      // Don't send referrer information
+      referrerPolicy: 'no-referrer',
+      // Set referrer to empty string to avoid the error
+      referrer: '',
+      // Mode
+      mode: 'cors',
+      // Disable cache to ensure fresh requests
+      cache: 'no-store',
     };
     
     // Add body if present
@@ -95,6 +155,19 @@ export async function proxyRequest(
         // If no JSON body, that's okay for some endpoints
       }
     }
+    
+    // Log the exact headers being sent to CustomGPT
+    console.log('[Proxy] Sending request to CustomGPT:', {
+      url: apiUrl,
+      method: fetchOptions.method,
+      headers: fetchOptions.headers,
+      bodyLength: fetchOptions.body ? String(fetchOptions.body).length : 0,
+      deploymentMode,
+      keySource: deploymentMode === 'demo' ? 
+        (isFreeTrialMode ? 'env:DEMO_KEY' : 'header:X-CustomGPT-API-Key') : 
+        'env:CUSTOMGPT_API_KEY',
+      timestamp: new Date().toISOString()
+    });
     
     const response = await fetch(apiUrl, fetchOptions);
     
@@ -128,7 +201,16 @@ export async function proxyRequest(
         hasApiKey: !!apiKey
       });
       
-      return NextResponse.json(errorData, { status: response.status });
+      // Include tracking headers in response for client-side analytics
+      const responseHeaders = new Headers();
+      Object.entries(trackingHeaders).forEach(([key, value]) => {
+        responseHeaders.set(key, value);
+      });
+      
+      return NextResponse.json(errorData, { 
+        status: response.status,
+        headers: responseHeaders
+      });
     }
     
     // Handle successful responses
@@ -161,14 +243,26 @@ export async function proxyRequest(
         }
       }
       
-      return NextResponse.json(data);
+      // Include tracking headers in response for client-side analytics
+      const responseHeaders = new Headers();
+      Object.entries(trackingHeaders).forEach(([key, value]) => {
+        responseHeaders.set(key, value);
+      });
+      
+      return NextResponse.json(data, { headers: responseHeaders });
     } else {
       // For non-JSON responses (e.g., file downloads)
       const data = await response.arrayBuffer();
+      
+      // Include tracking headers in response
+      const responseHeaders = new Headers();
+      responseHeaders.set('Content-Type', contentType || 'application/octet-stream');
+      Object.entries(trackingHeaders).forEach(([key, value]) => {
+        responseHeaders.set(key, value);
+      });
+      
       return new NextResponse(data, {
-        headers: {
-          'Content-Type': contentType || 'application/octet-stream',
-        },
+        headers: responseHeaders,
       });
     }
   } catch (error) {

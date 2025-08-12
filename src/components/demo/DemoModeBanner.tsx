@@ -11,6 +11,16 @@ import React, { useEffect, useState } from 'react';
 import { AlertTriangle, X, Clock, Settings, FolderOpen, MessageSquare, Zap, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useDemoStore } from '@/store/demo';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
 import { DemoConfigModal } from './DemoConfigModal';
@@ -29,6 +39,7 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [usageStats, setUsageStats] = useState<any>(null);
+  const [showEndSessionConfirm, setShowEndSessionConfirm] = useState(false);
   const { isMobile } = useBreakpoint();
   
   // Fetch usage stats for free trial mode
@@ -94,7 +105,7 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
       <button
         onClick={() => setIsMinimized(false)}
         className={cn(
-          "fixed top-0 right-0 text-white p-2 rounded-bl-lg shadow-lg z-50 transition-colors",
+          "text-white p-2 rounded shadow-lg transition-colors inline-flex items-center gap-2",
           isFreeTrialMode 
             ? "bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
             : "bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700",
@@ -103,13 +114,16 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
         aria-label="Show demo mode banner"
       >
         {isFreeTrialMode ? <Zap className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+        <span className="text-xs font-medium">
+          {isFreeTrialMode ? "Free Trial" : "Demo Mode"}
+        </span>
       </button>
     );
   }
   
   return (
     <div className={cn(
-      "fixed top-0 left-0 right-0 border-b z-50",
+      "border-b",
       isFreeTrialMode 
         ? "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/90 dark:to-purple-950/90 border-blue-200 dark:border-blue-800"
         : "bg-amber-50 dark:bg-amber-950/90 border-amber-200 dark:border-amber-800",
@@ -188,17 +202,27 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
           )}>
             {isFreeTrialMode ? (
               <>
-                {/* Free trial mode doesn't have config button */}
-                {!isMobile && (
-                  <Button
+                {/* Free trial mode switch button */}
+                <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => window.location.reload()}
+                    onClick={() => {
+                      // Clear all demo-related data
+                      localStorage.removeItem('customgpt.deploymentMode');
+                      localStorage.removeItem('customgpt.freeTrialMode');
+                      sessionStorage.removeItem('customgpt.freeTrialSession');
+                      sessionStorage.removeItem('customgpt.captchaVerified');
+                      sessionStorage.removeItem('customgpt.autoDetected');
+                      sessionStorage.removeItem('customgpt.firstLoadHandled');
+                      // Clear any cookies
+                      document.cookie = 'demo_session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                      // Reload to start fresh
+                      window.location.reload();
+                    }}
                     className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-900/50"
                   >
                     Switch Mode
                   </Button>
-                )}
               </>
             ) : (
               <>
@@ -218,7 +242,7 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={clearApiKey}
+                    onClick={() => setShowEndSessionConfirm(true)}
                     className="text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-900/50"
                   >
                     End Session
@@ -248,6 +272,30 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
         isOpen={isConfigOpen} 
         onClose={() => setIsConfigOpen(false)} 
       />
+      
+      {/* End Session Confirmation Dialog */}
+      <AlertDialog open={showEndSessionConfirm} onOpenChange={setShowEndSessionConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>End Demo Session?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to end your demo session? This will clear your API key and return you to the mode selection screen.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                clearApiKey();
+                setShowEndSessionConfirm(false);
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              End Session
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

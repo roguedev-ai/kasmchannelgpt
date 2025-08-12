@@ -38,12 +38,16 @@ import { useDemoStore } from '@/store/demo';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
 import { FREE_TRIAL_LIMITS, DEMO_STORAGE_KEYS } from '@/lib/constants/demo-limits';
 import { SimpleCaptcha, isCaptchaVerified } from './SimpleCaptcha';
+import { usageTracker } from '@/lib/analytics/usage-tracker';
+import { proxyClient } from '@/lib/api/proxy-client';
 
 interface DemoModeModalProps {
   onClose?: () => void;
+  hideFreeTrial?: boolean;
+  canClose?: boolean;
 }
 
-export function DemoModeModal({ onClose }: DemoModeModalProps) {
+export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true }: DemoModeModalProps) {
   const { setApiKey, setOpenAIApiKey, error, setError } = useDemoStore();
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [openAIKeyInput, setOpenAIKeyInput] = useState('');
@@ -55,28 +59,82 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'try' | 'deploy'>('try');
   const [showCaptcha, setShowCaptcha] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const { isMobile } = useBreakpoint();
   
-  const handleDemoSubmit = (e: React.FormEvent) => {
+  const handleDemoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (apiKeyInput.trim()) {
-      console.log('[DemoModeModal] Starting demo session');
+      console.log('[DemoModeModal] Starting demo session', {
+        hideFreeTrial,
+        canClose,
+        currentDeploymentMode: localStorage.getItem(DEMO_STORAGE_KEYS.DEPLOYMENT_MODE),
+        currentFreeTrialMode: localStorage.getItem(DEMO_STORAGE_KEYS.FREE_TRIAL_MODE)
+      });
       
-      const button = e.currentTarget.querySelector('button[type="submit"]') as HTMLButtonElement;
-      if (button) {
-        button.disabled = true;
-        button.textContent = 'Starting Demo...';
+      setIsValidating(true);
+      setError(null);
+      
+      // First, validate the API key by making a test request
+      try {
+        // Test the API key by fetching projects
+        const response = await fetch('/api/proxy/projects', {
+          headers: {
+            'X-CustomGPT-API-Key': apiKeyInput.trim(),
+            'X-Deployment-Mode': 'demo'
+          }
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            setError('Invalid API key. Please check your key and try again.');
+          } else {
+            setError('Failed to validate API key. Please try again.');
+          }
+          
+          setIsValidating(false);
+          return;
+        }
+        
+        // API key is valid, proceed with setup
+        // Track user API key demo start
+        usageTracker.track({
+          eventType: 'session_start',
+          eventName: 'user_api_key_demo_started',
+          metadata: {
+            source: 'modal',
+            voice_enabled: enableVoice
+          }
+        });
+        
+        // Clear free trial mode flag when switching to API key mode
+        localStorage.removeItem(DEMO_STORAGE_KEYS.FREE_TRIAL_MODE);
+        sessionStorage.removeItem(DEMO_STORAGE_KEYS.FREE_TRIAL_SESSION);
+        sessionStorage.removeItem('customgpt.captchaVerified');
+        
+        // Set up demo mode with API key
+        localStorage.setItem(DEMO_STORAGE_KEYS.DEPLOYMENT_MODE, 'demo');
+        
+        // Create demo session for 120 minutes
+        const demoSessionData = {
+          startTime: Date.now(),
+          sessionId: `demo_${Date.now()}_${Math.random().toString(36).substring(7)}`
+        };
+        sessionStorage.setItem(DEMO_STORAGE_KEYS.DEMO_SESSION, JSON.stringify(demoSessionData));
+        
+        setApiKey(apiKeyInput);
+        if (enableVoice && openAIKeyInput.trim()) {
+          setOpenAIApiKey(openAIKeyInput);
+        }
+        
+        setTimeout(() => {
+          window.location.href = window.location.href;
+        }, 100);
+      } catch (error) {
+        console.error('[DemoModeModal] Error validating API key:', error);
+        setError('Failed to validate API key. Please check your connection and try again.');
+        setIsValidating(false);
       }
-      
-      localStorage.setItem(DEMO_STORAGE_KEYS.DEPLOYMENT_MODE, 'demo');
-      setApiKey(apiKeyInput);
-      if (enableVoice && openAIKeyInput.trim()) {
-        setOpenAIApiKey(openAIKeyInput);
-      }
-      
-      setTimeout(() => {
-        window.location.href = window.location.href;
-      }, 100);
     }
   };
 
@@ -92,6 +150,16 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
   
   const startFreeTrial = () => {
     console.log('[DemoModeModal] Starting free trial');
+    
+    // Track free trial start
+    usageTracker.track({
+      eventType: 'session_start',
+      eventName: 'free_trial_started',
+      metadata: {
+        source: 'modal',
+        captcha_verified: true
+      }
+    });
     
     // Set special marker for free trial mode
     localStorage.setItem(DEMO_STORAGE_KEYS.DEPLOYMENT_MODE, 'demo');
@@ -128,7 +196,10 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
   return (
     <div>
       {/* Background Overlay - prevents clicks on background UI */}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" 
+        onClick={canClose ? handleModalClose : undefined}
+      />
       
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
@@ -147,15 +218,17 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                   Experience the power of custom AI chatbots
                 </p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleModalClose}
-                className="text-gray-400 hover:text-gray-600"
-                title="Start free trial"
-              >
-                <X className="h-5 w-5" />
-              </Button>
+              {canClose && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleModalClose}
+                  className="text-gray-400 hover:text-gray-600"
+                  title="Start free trial"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              )}
             </div>
             
             {/* Tab Navigation */}
@@ -187,13 +260,31 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
           
           {/* Modal Content */}
           <div className="p-6">
+            {/* Session Expired Message */}
+            {hideFreeTrial && (
+              <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-amber-900 dark:text-amber-100">
+                      Free Trial Session Expired
+                    </h3>
+                    <p className="text-sm text-amber-800 dark:text-amber-200 mt-1">
+                      Your free trial session has ended. Please enter your API key to continue with a 2-hour demo session.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {activeTab === 'try' ? (
               <>
                 <div className={cn(
                   "grid gap-6",
-                  isMobile ? "grid-cols-1" : "grid-cols-2"
+                  isMobile ? "grid-cols-1" : hideFreeTrial ? "grid-cols-1" : "grid-cols-2"
                 )}>
                 {/* Free Trial Option */}
+                {!hideFreeTrial && (
                 <Card className="p-6 border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20">
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
@@ -228,6 +319,10 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                         <Clock className="h-4 w-4" />
                         <span>{FREE_TRIAL_LIMITS.SESSION_DURATION / 60000} minute session</span>
                       </div>
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <Info className="h-4 w-4" />
+                        <span className="text-xs">Shared demo - rate limits may apply</span>
+                      </div>
                     </div>
                     
                     {showCaptcha ? (
@@ -255,6 +350,7 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                     )}
                   </div>
                 </Card>
+                )}
                 
                 {/* API Key Demo Mode */}
                 <Card className="p-6">
@@ -379,10 +475,10 @@ export function DemoModeModal({ onClose }: DemoModeModalProps) {
                       type="submit" 
                       className="w-full"
                       size="lg"
-                      disabled={!apiKeyInput.trim() || (enableVoice && !openAIKeyInput.trim())}
+                      disabled={!apiKeyInput.trim() || (enableVoice && !openAIKeyInput.trim()) || isValidating}
                     >
                       <Key className="h-4 w-4 mr-2" />
-                      Start Demo Session
+                      {isValidating ? 'Validating...' : 'Start Demo Session'}
                     </Button>
                     
                     <p className="text-xs text-center text-gray-500 dark:text-gray-500">

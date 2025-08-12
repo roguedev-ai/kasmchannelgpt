@@ -12,6 +12,16 @@ import { AlertTriangle, Key, Settings, Eye, EyeOff, Check, X } from 'lucide-reac
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useDemoStore } from '@/store/demo';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -22,7 +32,7 @@ interface DemoConfigModalProps {
 }
 
 export function DemoConfigModal({ isOpen, onClose }: DemoConfigModalProps) {
-  const { apiKey, openAIApiKey, setApiKey, setOpenAIApiKey, error, setError } = useDemoStore();
+  const { apiKey, openAIApiKey, setApiKey, setOpenAIApiKey, error, setError, clearApiKey } = useDemoStore();
   
   // Form state
   const [customGPTKey, setCustomGPTKey] = useState(apiKey || '');
@@ -34,6 +44,7 @@ export function DemoConfigModal({ isOpen, onClose }: DemoConfigModalProps) {
   // Track which fields have been modified
   const [customGPTModified, setCustomGPTModified] = useState(false);
   const [openAIModified, setOpenAIModified] = useState(false);
+  const [showEndSessionConfirm, setShowEndSessionConfirm] = useState(false);
   
   const handleUpdateKeys = async () => {
     setIsUpdating(true);
@@ -89,6 +100,7 @@ export function DemoConfigModal({ isOpen, onClose }: DemoConfigModalProps) {
   };
   
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
@@ -210,14 +222,23 @@ export function DemoConfigModal({ isOpen, onClose }: DemoConfigModalProps) {
         </div>
         
         {/* Footer Actions */}
-        <div className="flex justify-end gap-2 mt-6">
+        <div className="flex justify-between mt-6">
           <Button
-            variant="outline"
-            onClick={onClose}
+            variant="ghost"
+            onClick={() => setShowEndSessionConfirm(true)}
             disabled={isUpdating}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
           >
-            Cancel
+            End Session
           </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              disabled={isUpdating}
+            >
+              Cancel
+            </Button>
           <Button
             onClick={handleUpdateKeys}
             disabled={isUpdating || (!customGPTModified && !openAIModified)}
@@ -235,8 +256,35 @@ export function DemoConfigModal({ isOpen, onClose }: DemoConfigModalProps) {
               </span>
             )}
           </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
+    
+    {/* End Session Confirmation Dialog */}
+    <AlertDialog open={showEndSessionConfirm} onOpenChange={setShowEndSessionConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>End Demo Session?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to end your demo session? This will clear your API key and return you to the mode selection screen.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              clearApiKey();
+              setShowEndSessionConfirm(false);
+              onClose();
+            }}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            End Session
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

@@ -36,7 +36,6 @@ import { useRouter } from 'next/navigation';
 import { useConfigStore } from '@/store';
 import { ApiKeySetupModal } from '@/components/setup/ApiKeySetupModal';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { DemoModeProvider } from '@/components/demo/DemoModeProvider';
 import { useDemoModeContext } from '@/contexts/DemoModeContext';
 import type { Agent } from '@/types';
 
@@ -213,12 +212,8 @@ function HomeContent() {
 }
 
 /**
- * Main Home component wrapped with DemoModeProvider
+ * Main Home component
  */
 export default function Home() {
-  return (
-    <DemoModeProvider>
-      <HomeContent />
-    </DemoModeProvider>
-  );
+  return <HomeContent />;
 }

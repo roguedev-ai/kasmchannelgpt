@@ -22,6 +22,7 @@ interface SessionResource {
 
 interface SessionTracking {
   sessionId: string;
+  sessionStartTime: number;
   resources: SessionResource[];
   messageCountByConversation: Record<string, number>;
   lastRequestTime: number;
@@ -45,8 +46,8 @@ function cleanupOldSessions() {
 }
 
 // Run cleanup every 5 minutes
-if (typeof global !== 'undefined' && !global.demoCleanupInterval) {
-  global.demoCleanupInterval = setInterval(cleanupOldSessions, 5 * 60 * 1000);
+if (typeof global !== 'undefined' && !(global as any).demoCleanupInterval) {
+  (global as any).demoCleanupInterval = setInterval(cleanupOldSessions, 5 * 60 * 1000);
 }
 
 /**
@@ -55,11 +56,13 @@ if (typeof global !== 'undefined' && !global.demoCleanupInterval) {
 function getSessionTracking(sessionId: string): SessionTracking {
   let tracking = sessionTracker.get(sessionId);
   if (!tracking) {
+    const now = Date.now();
     tracking = {
       sessionId,
+      sessionStartTime: now,
       resources: [],
       messageCountByConversation: {},
-      lastRequestTime: Date.now()
+      lastRequestTime: now
     };
     sessionTracker.set(sessionId, tracking);
   }
@@ -142,6 +145,15 @@ export async function enforceDemoLimits(
   
   const tracking = getSessionTracking(sessionId);
   const method = request.method;
+  
+  // Check if session has expired (30 minutes)
+  const elapsed = Date.now() - tracking.sessionStartTime;
+  if (elapsed >= FREE_TRIAL_LIMITS.SESSION_DURATION) {
+    return NextResponse.json(
+      { error: 'Your free trial session has expired. Please start a new session.' },
+      { status: 403 }
+    );
+  }
   
   // Block all DELETE operations in free trial
   if (method === 'DELETE') {

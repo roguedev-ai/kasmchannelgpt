@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
         session: {
           sessionId,
           startTime,
-          expiresAt: startTime + (30 * 60 * 1000), // 30 minutes
-          remainingTime: Math.max(0, (startTime + (30 * 60 * 1000)) - Date.now())
+          expiresAt: startTime + (1 * 60 * 1000), // 1 minute for testing
+          remainingTime: Math.max(0, (startTime + (1 * 60 * 1000)) - Date.now())
         }
       }
     });

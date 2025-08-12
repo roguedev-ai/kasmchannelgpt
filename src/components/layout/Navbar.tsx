@@ -40,14 +40,14 @@ import {
   Bot, 
   MessageSquare, 
   User, 
-  ArrowLeft,
   Home,
   Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useDemoStore } from '@/store/demo';
-import { DemoModeButton } from '@/components/demo/DemoModeButton';
+import { DemoModeBanner } from '@/components/demo/DemoModeBanner';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 
 /**
  * Props for Navbar component
@@ -68,11 +68,8 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
   const pathname = usePathname();
   const { isDemoMode, isAuthenticated } = useDemoStore();
   
-  // Check deployment mode
-  const [deploymentMode, setDeploymentMode] = React.useState<string | null>(null);
-  React.useEffect(() => {
-    setDeploymentMode(localStorage.getItem('customgpt.deploymentMode'));
-  }, []);
+  // Get deployment mode and free trial mode from context
+  const { deploymentMode, isFreeTrialMode } = useDemoModeContext();
 
   /**
    * Navigation items configuration
@@ -105,21 +102,8 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
     <nav className="bg-background border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Left side - Logo and Back Button */}
-          <div className="flex items-center gap-4">
-            {showBackButton && pathname !== '/' && (
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-              >
-                <Link href="/" className="flex items-center gap-2">
-                  <ArrowLeft className="w-4 h-4" />
-                  <span className="hidden sm:inline">Back to Chat</span>
-                </Link>
-              </Button>
-            )}
-            
+          {/* Left side - Logo */}
+          <div className="flex items-center">
             <Link href="/" className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                 <img 
@@ -160,9 +144,9 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
 
           {/* Right side - Mobile menu or additional actions */}
           <div className="flex items-center gap-2">
-            {/* Demo Mode Button - Show when in demo deployment mode and authenticated */}
-            {deploymentMode === 'demo' && isDemoMode && isAuthenticated && (
-              <DemoModeButton />
+            {/* Demo Mode Banner - Show when in demo deployment mode (free trial or authenticated user API key) */}
+            {deploymentMode === 'demo' && (isFreeTrialMode || (isDemoMode && isAuthenticated)) && (
+              <DemoModeBanner />
             )}
             
             {/* Mobile Navigation */}

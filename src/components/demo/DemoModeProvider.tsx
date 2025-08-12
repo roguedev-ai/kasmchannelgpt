@@ -12,6 +12,7 @@ import { useDemoStore } from '@/store/demo';
 import { DemoModeScreen } from './DemoModeScreen';
 import { DemoModeModal } from './DemoModeModal';
 import { DemoModeBanner } from './DemoModeBanner';
+import { SessionExpiredScreen } from './SessionExpiredScreen';
 import { apiClient } from '@/lib/api/client';
 import { DemoModeContextProvider } from '@/contexts/DemoModeContext';
 
@@ -32,25 +33,72 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
   const [isCheckingKeys, setIsCheckingKeys] = useState(true);
   const [serverHasKeys, setServerHasKeys] = useState(false);
   const [isFreeTrialMode, setIsFreeTrialMode] = useState(false);
+  // Check session expiration synchronously on mount
+  const [isSessionExpired, setIsSessionExpired] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const freeTrialFlag = localStorage.getItem('customgpt.freeTrialMode');
+      if (freeTrialFlag === 'true') {
+        const sessionData = sessionStorage.getItem('customgpt.freeTrialSession');
+        if (sessionData) {
+          try {
+            const session = JSON.parse(sessionData);
+            const elapsed = Date.now() - session.startTime;
+            const expired = elapsed >= (1 * 60 * 1000); // 1 minute for testing
+            console.log('[DemoModeProvider] Initial expiration check:', { elapsed, expired });
+            return expired;
+          } catch (e) {
+            console.error('[DemoModeProvider] Error in initial expiration check:', e);
+          }
+        }
+      }
+    }
+    return false;
+  });
   
-  // Use state for deploymentMode instead of direct localStorage read
-  const [deploymentMode, setDeploymentMode] = useState<string | null>(null);
+  // Initialize deploymentMode synchronously to avoid race conditions
+  const [deploymentMode, setDeploymentMode] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('customgpt.deploymentMode');
+    }
+    return null;
+  });
   
-  // Initialize deploymentMode from localStorage
+  // Initialize free trial mode and check for expired sessions
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedMode = localStorage.getItem('customgpt.deploymentMode');
-      setDeploymentMode(savedMode);
-      
-      // Check if this is a free trial mode
       const freeTrialFlag = localStorage.getItem('customgpt.freeTrialMode');
       setIsFreeTrialMode(freeTrialFlag === 'true');
+      
+      // If we detected an expired session on mount, clear the free trial mode
+      if (isSessionExpired && freeTrialFlag === 'true') {
+        console.log('[DemoModeProvider] Clearing expired free trial mode');
+        // Don't clear deployment mode, just free trial flag
+        // This will show the modal with API key option only
+      }
     }
-  }, []);
+  }, [isSessionExpired]);
 
   // Check for server-side API keys on startup
   useEffect(() => {
     if (typeof window !== 'undefined' && deploymentMode === null) {
+      // Check if this is the true first load (no deployment mode and no first load handled)
+      const firstLoadHandled = sessionStorage.getItem('customgpt.firstLoadHandled');
+      
+      if (!firstLoadHandled) {
+        console.log('[DemoModeProvider] First load detected, clearing stale data and refreshing...');
+        // Clear any stale session data
+        sessionStorage.removeItem('customgpt.autoDetected');
+        sessionStorage.removeItem('customgpt.freeTrialSession');
+        sessionStorage.removeItem('customgpt.captchaVerified');
+        // Mark first load as handled
+        sessionStorage.setItem('customgpt.firstLoadHandled', 'true');
+        // Force a single refresh for clean initialization
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+        return;
+      }
+      
       // Check if we've already done auto-detection in this session
       const hasAutoDetected = sessionStorage.getItem('customgpt.autoDetected');
       
@@ -62,9 +110,23 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
       
       console.log('[DemoModeProvider] No deployment mode set, checking for server API keys...');
       
+      // Add timeout to prevent infinite checking
+      const timeoutId = setTimeout(() => {
+        console.log('[DemoModeProvider] API check timeout, showing selection screen');
+        setServerHasKeys(false);
+        sessionStorage.setItem('customgpt.autoDetected', 'true');
+        setIsCheckingKeys(false);
+      }, 5000); // 5 second timeout
+      
       fetch('/api/proxy/validate-keys')
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then(data => {
+          clearTimeout(timeoutId);
           console.log('[DemoModeProvider] Server API key validation:', data);
           if (data.valid) {
             console.log('[DemoModeProvider] Server has valid API keys, auto-setting production mode');
@@ -83,12 +145,14 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
             setServerHasKeys(false);
             sessionStorage.setItem('customgpt.autoDetected', 'true');
           }
-          setIsCheckingKeys(false);
         })
         .catch(error => {
-          console.log('[DemoModeProvider] API key check failed:', error);
+          clearTimeout(timeoutId);
+          console.error('[DemoModeProvider] API key check failed:', error);
           setServerHasKeys(false);
           sessionStorage.setItem('customgpt.autoDetected', 'true');
+        })
+        .finally(() => {
           setIsCheckingKeys(false);
         });
     } else if (deploymentMode !== null) {
@@ -104,6 +168,46 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
       initializeFromStorage();
     }
   }, [initializeFromStorage]);
+  
+  // Check for session expiration in free trial mode
+  useEffect(() => {
+    if (!isFreeTrialMode) {
+      setIsSessionExpired(false);
+      return;
+    }
+    
+    const checkExpiration = () => {
+      const sessionData = sessionStorage.getItem('customgpt.freeTrialSession');
+      if (!sessionData) {
+        setIsSessionExpired(false);
+        return;
+      }
+      
+      try {
+        const session = JSON.parse(sessionData);
+        const elapsed = Date.now() - session.startTime;
+        const isExpired = elapsed >= (1 * 60 * 1000); // 1 minute for testing
+        console.log('[DemoModeProvider] Checking session expiration:', {
+          startTime: session.startTime,
+          currentTime: Date.now(),
+          elapsed: elapsed,
+          isExpired: isExpired
+        });
+        setIsSessionExpired(isExpired);
+      } catch (e) {
+        console.error('[DemoModeProvider] Error checking expiration:', e);
+        setIsSessionExpired(false);
+      }
+    };
+    
+    // Check immediately
+    checkExpiration();
+    
+    // Check every second
+    const interval = setInterval(checkExpiration, 1000);
+    
+    return () => clearInterval(interval);
+  }, [isFreeTrialMode]);
   
   useEffect(() => {
     // Update API client with demo API key
@@ -223,6 +327,21 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
         if (deploymentMode === 'demo') {
           // Check if this is free trial mode
           if (isFreeTrialMode) {
+            // Check if session has expired
+            if (isSessionExpired) {
+              console.log('[DemoModeProvider] Free trial session expired - showing modal without free trial option');
+              return (
+                <>
+                  {/* Background UI - render children but disable interaction */}
+                  <div className="pointer-events-none">
+                    {children}
+                  </div>
+                  {/* Modal Overlay - can't close, no free trial option */}
+                  <DemoModeModal hideFreeTrial={true} canClose={false} />
+                </>
+              );
+            }
+            
             console.log('[DemoModeProvider] Free trial mode - showing main app');
             // Free trial doesn't need authentication, it uses server-side demo key
             return children;

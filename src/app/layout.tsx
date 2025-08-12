@@ -28,6 +28,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from 'sonner';
 import { PWAManager } from '@/components/pwa/PWAManager';
+import { DemoModeProvider } from '@/components/demo/DemoModeProvider';
 import "./globals.css";
 
 /**
@@ -175,21 +176,23 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {/* Add global providers here */}
-        {children}
-        {/* PWA Manager for install prompts and updates */}
-        <PWAManager />
-        {/* Global toast notifications with close button */}
-        <Toaster 
-          position="top-center" 
-          closeButton
-          richColors
-          gap={8}
-          toastOptions={{
-            style: {
-              marginTop: '8px'
-            }
-          }}
-        />
+        <DemoModeProvider>
+          {children}
+          {/* PWA Manager for install prompts and updates */}
+          <PWAManager />
+          {/* Global toast notifications with close button */}
+          <Toaster 
+            position="top-center" 
+            closeButton
+            richColors
+            gap={8}
+            toastOptions={{
+              style: {
+                marginTop: '8px'
+              }
+            }}
+          />
+        </DemoModeProvider>
       </body>
     </html>
   );

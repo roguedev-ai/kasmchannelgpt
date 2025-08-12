@@ -29,8 +29,10 @@ export async function GET(request: NextRequest) {
     
     console.log('[VALIDATE-KEYS] OpenAI API key present:', hasOpenaiKey);
     
+    // Only return valid: true if there's a production CustomGPT API key
+    // Demo key alone doesn't count as "valid" for production mode detection
     const result = {
-      valid: hasCustomGptKey || hasDemoKey,
+      valid: hasCustomGptKey,
       customgpt_key_present: hasCustomGptKey,
       demo_key_present: hasDemoKey,
       openai_key_present: hasOpenaiKey,
