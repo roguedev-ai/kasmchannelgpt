@@ -103,7 +103,7 @@ export function CitationsSettings({ settings, onChange }: CitationsSettingsProps
             <div className="space-y-0.5">
               <Label htmlFor="hide_sources_from_responses">Hide Sources from Responses</Label>
               <p className="text-sm text-muted-foreground">
-                Don't show source references in chat responses
+                Don&apos;t show source references in chat responses
               </p>
             </div>
             <Switch
@@ -129,7 +129,7 @@ export function CitationsSettings({ settings, onChange }: CitationsSettingsProps
               id="no_answer_message"
               value={settings.no_answer_message || ""}
               onChange={(e) => onChange('no_answer_message', e.target.value)}
-              placeholder="Sorry, I don't have an answer for that."
+              placeholder="Sorry, I don&apos;t have an answer for that."
             />
             <p className="text-sm text-muted-foreground">
               Message shown when the agent cannot find an answer

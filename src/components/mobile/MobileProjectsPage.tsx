@@ -33,7 +33,9 @@ import {
   FileText,
   Users,
   Shield,
-  AlertCircle
+  AlertCircle,
+  Activity,
+  Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -52,9 +54,14 @@ import { SourcesSettings } from '@/components/projects/SourcesSettings';
 import { PagesSettings } from '@/components/projects/PagesSettings';
 import { ConversationsSettings } from '@/components/projects/ConversationsSettings';
 import { ReportsAnalytics } from '@/components/projects/ReportsAnalytics';
-import { SecuritySettings } from '@/components/projects/SecuritySettings';
+import { CustomerIntelligenceTab } from '@/components/projects/CustomerIntelligenceTab';
+import { MessagesAndCitations } from '@/components/projects/MessagesAndCitations';
+import { UserInterfaceSettings } from '@/components/projects/UserInterfaceSettings';
+import { AdvancedSettings } from '@/components/projects/AdvancedSettings';
+import { BusinessAndLicensing } from '@/components/projects/BusinessAndLicensing';
+import { SecurityAndPrivacy } from '@/components/projects/SecurityAndPrivacy';
 
-type SettingsTab = 'general' | 'appearance' | 'behavior' | 'sources' | 'pages' | 'conversations' | 'analytics' | 'security';
+type SettingsTab = 'general' | 'appearance' | 'behavior' | 'sources' | 'pages' | 'conversations' | 'analytics' | 'intelligence' | 'messages-citations' | 'interface' | 'advanced' | 'business-licensing' | 'security';
 
 // Screen types for navigation
 type ScreenType = 'projects' | 'tabs' | 'settings';
@@ -67,7 +74,12 @@ const settingsTabs = [
   { id: 'pages' as SettingsTab, label: 'Content Pages', icon: FileText, description: 'Manage indexed content and metadata' },
   { id: 'conversations' as SettingsTab, label: 'Conversations', icon: Users, description: 'Chat history, sharing, and management' },
   { id: 'analytics' as SettingsTab, label: 'Reports & Analytics', icon: BarChart3, description: 'Traffic, queries, and conversation reports' },
-  { id: 'security' as SettingsTab, label: 'Security', icon: Shield, description: 'Access control, anti-hallucination, visibility' },
+  { id: 'intelligence' as SettingsTab, label: 'Customer Intelligence', icon: Activity, description: 'Customer interactions, emotions, intents, and behavioral analytics' },
+  { id: 'messages-citations' as SettingsTab, label: 'Messages & Citations', icon: MessageCircle, description: 'Custom messages, templates, and citation display settings' },
+  { id: 'interface' as SettingsTab, label: 'User Interface', icon: Settings, description: 'Detailed UI customization options' },
+  { id: 'advanced' as SettingsTab, label: 'Advanced', icon: Settings, description: 'Advanced configuration settings' },
+  { id: 'business-licensing' as SettingsTab, label: 'Business & Licensing', icon: Zap, description: 'Commerce settings, monetization, and license management' },
+  { id: 'security' as SettingsTab, label: 'Security & Privacy', icon: Shield, description: 'Access control, data retention, and security settings' },
 ];
 
 interface MobileProjectsPageProps {
@@ -281,6 +293,7 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
     
     setSelectedProject(project);
     setCurrentScreen('tabs');
+    router.push(`/projects?id=${project.id}`);
   };
   
   const goToSettings = (tab: SettingsTab) => {
@@ -338,6 +351,7 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
       );
     }
 
+
     switch (activeTab) {
       case 'general':
         return <GeneralSettings project={selectedProject} />;
@@ -353,8 +367,18 @@ export const MobileProjectsPage: React.FC<MobileProjectsPageProps> = ({ classNam
         return <ConversationsSettings project={selectedProject} />;
       case 'analytics':
         return <ReportsAnalytics project={selectedProject} />;
+      case 'intelligence':
+        return <CustomerIntelligenceTab agentId={selectedProject.id} agentName={selectedProject.project_name} />;
+      case 'messages-citations':
+        return <MessagesAndCitations project={selectedProject} />;
+      case 'interface':
+        return <UserInterfaceSettings settings={{}} onChange={() => {}} />;
+      case 'advanced':
+        return <AdvancedSettings project={selectedProject} />;
+      case 'business-licensing':
+        return <BusinessAndLicensing project={selectedProject} />;
       case 'security':
-        return <SecuritySettings project={selectedProject} />;
+        return <SecurityAndPrivacy project={selectedProject} />;
       default:
         return (
           <div className="flex items-center justify-center h-64 text-center">

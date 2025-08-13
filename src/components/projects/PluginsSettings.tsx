@@ -73,7 +73,7 @@ export const PluginsSettings: React.FC<PluginsSettingsProps> = ({ project }) => 
             "text-gray-600 mt-1",
             isMobile && "text-sm"
           )}>
-            Extend your agent's capabilities with plugins and integrations
+            Extend your agent&apos;s capabilities with plugins and integrations
           </p>
         </div>
         
@@ -160,7 +160,7 @@ export const PluginsSettings: React.FC<PluginsSettingsProps> = ({ project }) => 
                   "text-blue-800 mb-3",
                   isMobile ? "text-xs" : "text-sm"
                 )}>
-                  Plugins extend your agent's capabilities by integrating with external services and adding new functionality. 
+                  Plugins extend your agent&apos;s capabilities by integrating with external services and adding new functionality. 
                   Enable only the plugins you need to keep your agent focused and performant.
                 </p>
                 <ul className={cn(
@@ -309,7 +309,7 @@ export const PluginsSettings: React.FC<PluginsSettingsProps> = ({ project }) => 
                 "text-gray-600 mb-4",
                 isMobile && "text-sm"
               )}>
-                We're constantly adding new plugins and integrations to extend your agent's capabilities. 
+                We&apos;re constantly adding new plugins and integrations to extend your agent&apos;s capabilities. 
                 Stay tuned for updates!
               </p>
               
@@ -357,7 +357,7 @@ export const PluginsSettings: React.FC<PluginsSettingsProps> = ({ project }) => 
               isMobile ? "text-xs" : "text-sm"
             )}>
               Need a custom plugin for your specific use case? Our plugin API allows you to create 
-              custom integrations and extend your agent's functionality.
+              custom integrations and extend your agent&apos;s functionality.
             </p>
             
             <div className={cn(

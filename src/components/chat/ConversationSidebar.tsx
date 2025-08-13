@@ -66,10 +66,12 @@ import type { Conversation } from '@/types';
 import { useConversationStore, useAgentStore, useMessageStore } from '@/hooks/useWidgetStore';
 import { cn, formatTimestamp, generateConversationName } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { SimpleSelect } from '@/components/ui/simple-select';
 import { logger } from '@/lib/logger';
 import { ConversationDetailsModal } from './ConversationDetailsModal';
 import { DeleteConversationDialog } from './DeleteConversationDialog';
 import { ConversationSkeleton, Spinner } from '@/components/ui/loading';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 
 /**
  * Props for individual conversation item
@@ -351,26 +353,6 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
         conversation={conversation}
         isOpen={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
-        onExport={(conv) => {
-          // Export functionality
-          const data = JSON.stringify(conv, null, 2);
-          const blob = new Blob([data], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `conversation-${conv.id}-${new Date().toISOString().split('T')[0]}.json`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          toast.success('Conversation exported successfully');
-        }}
-        onShare={(conv) => {
-          // Share functionality
-          const shareUrl = `${window.location.origin}/chat/${conv.session_id}`;
-          navigator.clipboard.writeText(shareUrl);
-          toast.success('Share link copied to clipboard');
-        }}
       />
 
       {/* Delete Conversation Dialog */}
@@ -400,12 +382,11 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
   isMobile = false,
   onConversationSelect
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [showSortFilter, setShowSortFilter] = useState(false);
-  const [searchMode, setSearchMode] = useState<'name' | 'id' | 'session'>('name');
-  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [isSearching, setIsSearching] = useState(false);
+  
+  const { isFreeTrialMode } = useDemoModeContext();
   
   const { 
     conversations, 
@@ -425,7 +406,15 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
     // Sorting and filtering state
     sortOrder,
     sortBy,
-    userFilter
+    userFilter,
+    // Client-side filtering state and methods
+    searchQuery: storeSearchQuery,
+    searchMode: storeSearchMode,
+    dateFilter: storeDateFilter,
+    setSearchQuery,
+    setSearchMode,
+    setDateFilter,
+    applyFilters
   } = useConversationStore();
   
   const { currentAgent } = useAgentStore();
@@ -450,88 +439,53 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
     }
   }, [currentAgent, fetchConversations]);
 
+  // Local search query for input handling
+  const [localSearchQuery, setLocalSearchQuery] = useState(storeSearchQuery);
+
+  // Update local state when store state changes
+  useEffect(() => {
+    setLocalSearchQuery(storeSearchQuery);
+  }, [storeSearchQuery]);
+
   // Debounced search function
   const debouncedSearch = useCallback(
-    async (query: string) => {
-      if (!currentAgent) return;
-      
+    (query: string) => {
       setIsSearching(true);
       try {
-        await fetchConversations(currentAgent.id, { 
-          page: 1,
-          searchQuery: query.trim() || undefined,
-          searchMode: searchMode,
-          dateFilter: dateFilter !== 'all' ? dateFilter : undefined,
-          order: sortOrder,
-          orderBy: sortBy,
-          userFilter: userFilter !== 'all' ? userFilter : undefined
-        });
+        setSearchQuery(query.trim());
       } catch (error) {
         logger.error('UI', 'Failed to search conversations', error);
       } finally {
         setIsSearching(false);
       }
     },
-    [currentAgent, searchMode, dateFilter, sortOrder, sortBy, userFilter, fetchConversations]
+    [setSearchQuery]
   );
 
   // Debounce search calls
   useEffect(() => {
-    // Skip initial empty state to prevent unnecessary API call on mount
-    if (searchQuery === '') return;
-    
     const timeoutId = setTimeout(() => {
-      debouncedSearch(searchQuery);
-    }, 500); // 500ms debounce
+      if (localSearchQuery !== storeSearchQuery) {
+        debouncedSearch(localSearchQuery);
+      }
+    }, 300); // 300ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, debouncedSearch]);
+  }, [localSearchQuery, storeSearchQuery, debouncedSearch]);
 
   // Handle search input change
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
+    setLocalSearchQuery(query);
   };
 
   // Handle date filter change
-  const handleDateFilterChange = async (filter: 'all' | 'today' | 'week' | 'month') => {
+  const handleDateFilterChange = (filter: 'all' | 'today' | 'week' | 'month') => {
     setDateFilter(filter);
-    
-    if (!currentAgent) return;
-    
-    try {
-      await fetchConversations(currentAgent.id, { 
-        page: 1,
-        searchQuery: searchQuery.trim() || undefined,
-        searchMode: searchMode,
-        dateFilter: filter !== 'all' ? filter : undefined,
-        order: sortOrder,
-        orderBy: sortBy,
-        userFilter: userFilter !== 'all' ? userFilter : undefined
-      });
-    } catch (error) {
-      logger.error('UI', 'Failed to filter conversations by date', error);
-    }
   };
 
   // Handle search mode change  
-  const handleSearchModeChange = async (mode: 'name' | 'id' | 'session') => {
+  const handleSearchModeChange = (mode: 'name' | 'id' | 'session') => {
     setSearchMode(mode);
-    
-    if (!currentAgent || !searchQuery.trim()) return;
-    
-    try {
-      await fetchConversations(currentAgent.id, { 
-        page: 1,
-        searchQuery: searchQuery.trim(),
-        searchMode: mode,
-        dateFilter: dateFilter !== 'all' ? dateFilter : undefined,
-        order: sortOrder,
-        orderBy: sortBy,
-        userFilter: userFilter !== 'all' ? userFilter : undefined
-      });
-    } catch (error) {
-      logger.error('UI', 'Failed to change search mode', error);
-    }
   };
   
   // Use conversations directly since filtering is now done server-side
@@ -539,6 +493,11 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
 
   const handleNewConversation = async () => {
     if (!currentAgent || isCreating) return;
+    
+    if (isFreeTrialMode) {
+      toast.error('Creating new conversations is not available in free trial mode');
+      return;
+    }
     
     logger.info('UI', 'Creating new conversation', {
       agentId: currentAgent.id,
@@ -610,6 +569,11 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
   };
 
   const handleDeleteConversation = async (conversationId: string) => {
+    if (isFreeTrialMode) {
+      toast.error('Deleting conversations is not available in free trial mode');
+      return;
+    }
+    
     try {
       await deleteConversation(conversationId);
       toast.success('Conversation deleted');
@@ -619,6 +583,11 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
   };
 
   const handleRenameConversation = async (conversationId: string, newName: string) => {
+    if (isFreeTrialMode) {
+      toast.error('Renaming conversations is not available in free trial mode');
+      return;
+    }
+    
     const conversation = conversations.find(c => c.id.toString() === conversationId);
     if (!conversation) return;
     
@@ -680,8 +649,8 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder={isMobile ? "Search conversations..." : `Search by ${searchMode}...`}
-              value={searchQuery}
+              placeholder={isMobile ? "Search conversations..." : `Search by ${storeSearchMode}...`}
+              value={localSearchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               className={cn(
                 "w-full pl-9 pr-12 py-2 text-sm border border-input bg-background text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground",
@@ -702,7 +671,7 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
                 onClick={() => handleSearchModeChange('name')}
                 className={cn(
                   "flex-1 px-2 py-1 text-xs rounded transition-colors",
-                  searchMode === 'name' 
+                  storeSearchMode === 'name' 
                     ? "bg-brand-500 text-white" 
                     : "bg-muted text-muted-foreground hover:bg-accent"
                 )}
@@ -713,7 +682,7 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
                 onClick={() => handleSearchModeChange('id')}
                 className={cn(
                   "flex-1 px-2 py-1 text-xs rounded transition-colors",
-                  searchMode === 'id' 
+                  storeSearchMode === 'id' 
                     ? "bg-brand-500 text-white" 
                     : "bg-muted text-muted-foreground hover:bg-accent"
                 )}
@@ -724,7 +693,7 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
                 onClick={() => handleSearchModeChange('session')}
                 className={cn(
                   "flex-1 px-2 py-1 text-xs rounded transition-colors",
-                  searchMode === 'session' 
+                  storeSearchMode === 'session' 
                     ? "bg-brand-500 text-white" 
                     : "bg-muted text-muted-foreground hover:bg-accent"
                 )}
@@ -763,74 +732,78 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
               <div>
                 <label className="text-xs font-medium text-foreground mb-1 block">Sort By</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <select
+                  <SimpleSelect
                     value={sortBy}
-                    onChange={(e) => {
+                    onValueChange={(value) => {
                       if (currentAgent) {
+                        // Update the sort state and apply filters client-side
                         fetchConversations(currentAgent.id, { 
-                          page: 1, 
-                          orderBy: e.target.value 
+                          orderBy: value 
                         });
                       }
                     }}
-                    className="px-2 py-1 text-xs border border-input bg-background text-foreground rounded focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="id">Date Created</option>
-                    <option value="updated_at">Last Updated</option>
-                    <option value="name">Name</option>
-                  </select>
+                    options={[
+                      { value: 'id', label: 'Date Created' },
+                      { value: 'updated_at', label: 'Last Updated' },
+                      { value: 'name', label: 'Name' }
+                    ]}
+                    className="text-xs"
+                  />
                   
-                  <select
+                  <SimpleSelect
                     value={sortOrder}
-                    onChange={(e) => {
+                    onValueChange={(value) => {
                       if (currentAgent) {
+                        // Update the sort state and apply filters client-side
                         fetchConversations(currentAgent.id, { 
-                          page: 1, 
-                          order: e.target.value as 'asc' | 'desc' 
+                          order: value as 'asc' | 'desc' 
                         });
                       }
                     }}
-                    className="px-2 py-1 text-xs border border-input bg-background text-foreground rounded focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="desc">Newest First</option>
-                    <option value="asc">Oldest First</option>
-                  </select>
+                    options={[
+                      { value: 'desc', label: 'Newest First' },
+                      { value: 'asc', label: 'Oldest First' }
+                    ]}
+                    className="text-xs"
+                  />
                 </div>
               </div>
               
               {/* Date Filter */}
               <div>
                 <label className="text-xs font-medium text-foreground mb-1 block">Filter By Date</label>
-                <select
-                  value={dateFilter}
-                  onChange={(e) => handleDateFilterChange(e.target.value as 'all' | 'today' | 'week' | 'month')}
-                  className="w-full px-2 py-1 text-xs border border-input bg-background text-foreground rounded focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="all">All Time</option>
-                  <option value="today">Today</option>
-                  <option value="week">Last 7 Days</option>
-                  <option value="month">Last 30 Days</option>
-                </select>
+                <SimpleSelect
+                  value={storeDateFilter}
+                  onValueChange={(value) => handleDateFilterChange(value as 'all' | 'today' | 'week' | 'month')}
+                  options={[
+                    { value: 'all', label: 'All Time' },
+                    { value: 'today', label: 'Today' },
+                    { value: 'week', label: 'Last 7 Days' },
+                    { value: 'month', label: 'Last 30 Days' }
+                  ]}
+                  className="w-full text-xs"
+                />
               </div>
               
               {/* User Filter */}
               <div>
                 <label className="text-xs font-medium text-foreground mb-1 block">Filter By User</label>
-                <select
+                <SimpleSelect
                   value={userFilter}
-                  onChange={(e) => {
+                  onValueChange={(value) => {
                     if (currentAgent) {
+                      // Update the user filter state and apply filters client-side
                       fetchConversations(currentAgent.id, { 
-                        page: 1, 
-                        userFilter: e.target.value 
+                        userFilter: value 
                       });
                     }
                   }}
-                  className="w-full px-2 py-1 text-xs border border-input bg-background text-foreground rounded focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="all">All Users</option>
-                  {/* Additional user options could be dynamically loaded */}
-                </select>
+                  options={[
+                    { value: 'all', label: 'All Users' }
+                    // Additional user options could be dynamically loaded
+                  ]}
+                  className="w-full text-xs"
+                />
               </div>
             </motion.div>
           </AnimatePresence>
@@ -843,6 +816,8 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
           <Button
             className="w-full justify-start gap-2"
             variant="default"
+            disabled={isFreeTrialMode}
+            title={isFreeTrialMode ? 'Creating new agents is not available in free trial mode' : ''}
           >
             <Bot className="w-4 h-4" />
             Create New Agent
@@ -851,9 +826,10 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
         
         <Button
           onClick={handleNewConversation}
-          disabled={!currentAgent || isCreating}
+          disabled={!currentAgent || isCreating || isFreeTrialMode}
           className="w-full justify-start gap-2"
           variant="outline"
+          title={isFreeTrialMode ? 'Creating new conversations is not available in free trial mode' : ''}
         >
           {isCreating ? (
             <>
@@ -888,9 +864,9 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
           <div className="p-4 text-center">
             <MessageSquare className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
-              {searchQuery ? 'No conversations found' : 'No conversations yet'}
+              {storeSearchQuery ? 'No conversations found' : 'No conversations yet'}
             </p>
-            {!searchQuery && (
+            {!storeSearchQuery && (
               <p className="text-xs text-muted-foreground mt-1">
                 Start a new conversation to get going
               </p>
@@ -924,7 +900,7 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
       {/* Footer with Pagination */}
       <div className="p-4 border-t border-border bg-background space-y-3">
         <div className="text-xs text-muted-foreground text-center">
-          {searchQuery ? (
+          {storeSearchQuery ? (
             <>
               {filteredConversations.length} result{filteredConversations.length !== 1 ? 's' : ''}
             </>
@@ -941,7 +917,7 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
         </div>
         
         {/* Pagination Controls */}
-        {totalPages > 1 && !searchQuery && (
+        {totalPages > 1 && !storeSearchQuery && (
           <div className="flex items-center justify-between gap-2">
             <Button
               size="sm"

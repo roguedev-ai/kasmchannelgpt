@@ -77,7 +77,10 @@ export const metadata: Metadata = {
   title: "CustomGPT Chat UI",
   description: "A modern chat interface for CustomGPT.ai's RAG platform",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
     apple: "/icons/icon-192x192.png",
   },
   manifest: "/manifest.json",

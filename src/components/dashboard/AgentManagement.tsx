@@ -27,13 +27,15 @@ import {
   Code,
   Link
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { SimpleSelect } from '@/components/ui/simple-select';
 import { useAgentStore } from '@/store/agents';
 import type { Agent, AgentStats } from '@/types';
 import { useRouter } from 'next/navigation';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 
 interface ExtendedAgent extends Agent {
   stats?: AgentStats;
@@ -49,6 +51,7 @@ interface AgentCardProps {
   onReplicate: (agent: ExtendedAgent) => void;
   onViewEmbed: (agent: ExtendedAgent) => void;
   onViewShareLink: (agent: ExtendedAgent) => void;
+  isFreeTrialMode?: boolean;
 }
 
 const AgentCard: React.FC<AgentCardProps> = ({
@@ -365,6 +368,7 @@ interface AgentManagementProps {
 export const AgentManagement: React.FC<AgentManagementProps> = ({ onEditAgent }) => {
   const router = useRouter();
   const { agents, loading, error, fetchAgents, deleteAgent, replicateAgent, updateAgent, getAgentStats, loadMoreAgents, paginationMeta } = useAgentStore();
+  const { isFreeTrialMode } = useDemoModeContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'processing'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'created' | 'id'>('created');
@@ -379,7 +383,7 @@ export const AgentManagement: React.FC<AgentManagementProps> = ({ onEditAgent })
     fetchAgents();
     // Reset search state when component mounts
     setHasLoadedAllForSearch(false);
-  }, []);
+  }, [fetchAgents]);
   
   // Reset search state when agents are refetched
   useEffect(() => {
@@ -406,7 +410,7 @@ export const AgentManagement: React.FC<AgentManagementProps> = ({ onEditAgent })
     if (agents.length > 0) {
       loadStats();
     }
-  }, [agents]);
+  }, [agents, getAgentStats]);
 
   // Auto-load all agents when searching to ensure comprehensive search results
   const loadAllAgentsForSearch = async () => {
@@ -482,10 +486,20 @@ export const AgentManagement: React.FC<AgentManagementProps> = ({ onEditAgent })
   });
 
   const handleCreateAgent = () => {
+    if (isFreeTrialMode) {
+      toast.error('Project creation is not available in free trial mode');
+      return;
+    }
+    
     router.push('/dashboard/projects/create');
   };
 
   const handleEditAgent = (agent: ExtendedAgent) => {
+    if (isFreeTrialMode) {
+      toast.error('Project editing is not available in free trial mode');
+      return;
+    }
+    
     if (onEditAgent) {
       onEditAgent(agent.id);
     } else {
@@ -495,6 +509,11 @@ export const AgentManagement: React.FC<AgentManagementProps> = ({ onEditAgent })
   };
 
   const handleDeleteAgent = async (agent: ExtendedAgent) => {
+    if (isFreeTrialMode) {
+      toast.error('Project deletion is not available in free trial mode');
+      return;
+    }
+    
     if (confirm(`Are you sure you want to delete "${agent.project_name}"?`)) {
       try {
         await deleteAgent(agent.id);
@@ -517,6 +536,11 @@ export const AgentManagement: React.FC<AgentManagementProps> = ({ onEditAgent })
   };
 
   const handleReplicate = async (agent: ExtendedAgent) => {
+    if (isFreeTrialMode) {
+      toast.error('Project replication is not available in free trial mode');
+      return;
+    }
+    
     try {
       const newAgent = await replicateAgent(agent.id);
       toast.success(`Agent "${agent.project_name}" replicated successfully as "${newAgent.project_name}"`);
@@ -586,27 +610,29 @@ export const AgentManagement: React.FC<AgentManagementProps> = ({ onEditAgent })
           )}
 
           {/* Status Filter */}
-          <select
+          <SimpleSelect
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="processing">Processing</option>
-          </select>
+            onValueChange={(value) => setStatusFilter(value as any)}
+            options={[
+              { value: 'all', label: 'All Status' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+              { value: 'processing', label: 'Processing' }
+            ]}
+            placeholder="Filter by status"
+          />
 
           {/* Sort */}
-          <select
+          <SimpleSelect
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
-          >
-            <option value="created">Created Date</option>
-            <option value="name">Name</option>
-            <option value="id">ID</option>
-          </select>
+            onValueChange={(value) => setSortBy(value as any)}
+            options={[
+              { value: 'created', label: 'Created Date' },
+              { value: 'name', label: 'Name' },
+              { value: 'id', label: 'ID' }
+            ]}
+            placeholder="Sort by"
+          />
         </div>
 
         {/* View Mode Toggle */}

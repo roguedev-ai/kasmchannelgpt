@@ -960,6 +960,9 @@ export interface AgentStore {
   /** Update agent settings (currently only license settings) */
   updateAgent: (id: number, data: { project_name?: string; are_licenses_allowed?: boolean; is_shared?: boolean; sitemap_path?: string }) => Promise<Agent>;
   
+  /** Update agent settings (appearance, behavior, model, etc.) */
+  updateSettings: (id: number, settings: Partial<AgentSettings>) => Promise<AgentSettings>;
+  
   /** Delete an agent */
   deleteAgent: (id: number) => Promise<void>;
   
@@ -981,8 +984,11 @@ export interface AgentStore {
  * Handles chat sessions and conversation history
  */
 export interface ConversationStore {
-  /** List of all conversations for the current agent */
+  /** List of all conversations for the current agent (filtered) */
   conversations: Conversation[];
+  
+  /** Raw conversations from API before filtering */
+  allConversations: Conversation[];
   
   /** Currently active conversation */
   currentConversation: Conversation | null;
@@ -1003,6 +1009,11 @@ export interface ConversationStore {
   sortOrder: 'asc' | 'desc';
   sortBy: string;
   userFilter: 'all' | string;
+  
+  /** Client-side filtering state */
+  searchQuery: string;
+  searchMode: 'name' | 'id' | 'session';
+  dateFilter: 'all' | 'today' | 'week' | 'month';
   
   /** Fetch conversations for a specific agent with pagination */
   fetchConversations: (projectId: number, params?: {
@@ -1030,6 +1041,18 @@ export interface ConversationStore {
   
   /** Ensure a conversation exists (create if needed) before sending a message */
   ensureConversation: (projectId: number, firstMessage?: string) => Promise<Conversation>;
+  
+  /** Apply client-side filters to conversations */
+  applyFilters: () => void;
+  
+  /** Update search query and apply filters */
+  setSearchQuery: (query: string) => void;
+  
+  /** Update search mode and apply filters */
+  setSearchMode: (mode: 'name' | 'id' | 'session') => void;
+  
+  /** Update date filter and apply filters */
+  setDateFilter: (filter: 'all' | 'today' | 'week' | 'month') => void;
 }
 
 /**
@@ -1081,6 +1104,9 @@ export interface MessageStore {
   
   /** Set messages for a specific conversation */
   setMessagesForConversation: (conversationId: string, messages: ChatMessage[]) => void;
+  
+  /** Regenerate the last assistant response by resending the last user message */
+  regenerateLastResponse: () => Promise<void>;
 }
 
 /**
@@ -1191,4 +1217,102 @@ export interface UserProfileStore {
   
   /** Reset the store to initial state (useful for logout) */
   reset: () => void;
+}
+
+// ========== Customer Intelligence Types ==========
+
+/**
+ * Customer Intelligence data item
+ * Contains comprehensive analytics about user interactions
+ */
+export interface CustomerIntelligenceItem {
+  /** Unique identifier for the prompt/interaction */
+  prompt_id: number;
+  
+  /** ID of the conversation this interaction belongs to */
+  conversation_id: number;
+  
+  /** ID of the project/agent */
+  project_id: number;
+  
+  /** The user's query text */
+  user_query: string;
+  
+  /** The AI's response text */
+  ai_response: string;
+  
+  /** Timestamp when the interaction occurred */
+  created_at: string;
+  
+  /** Source of the content used for the response */
+  content_source: string;
+  
+  /** Detected emotion of the user */
+  user_emotion: string;
+  
+  /** Detected intent of the user query */
+  user_intent: string;
+  
+  /** Language of the interaction */
+  language: string;
+  
+  /** User feedback (positive/negative/neutral) */
+  feedback: string;
+  
+  /** Geographic location of the user */
+  user_location: string;
+  
+  /** Deployment type of the chatbot */
+  chatbot_deployment: string;
+  
+  /** Browser used by the user */
+  browser: string;
+}
+
+/**
+ * Customer Intelligence API response
+ * Paginated response containing intelligence data
+ */
+export interface CustomerIntelligenceResponse {
+  /** Response status */
+  status: string;
+  
+  /** Paginated data wrapper */
+  data: {
+    /** Current page number */
+    current_page: number;
+    
+    /** Array of intelligence data items */
+    data: CustomerIntelligenceItem[];
+    
+    /** URL to the first page */
+    first_page_url: string;
+    
+    /** Starting index of items on this page */
+    from: number;
+    
+    /** Total number of pages */
+    last_page: number;
+    
+    /** URL to the last page */
+    last_page_url: string;
+    
+    /** URL to the next page (null if on last page) */
+    next_page_url: string | null;
+    
+    /** Base API path */
+    path: string;
+    
+    /** Number of items per page */
+    per_page: number;
+    
+    /** URL to the previous page (null if on first page) */
+    prev_page_url: string | null;
+    
+    /** Ending index of items on this page */
+    to: number;
+    
+    /** Total number of items */
+    total: number;
+  };
 }

@@ -194,7 +194,7 @@ const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ onPromptClick }) => {
           "text-muted-foreground mb-6 sm:mb-8",
           "text-sm sm:text-base"
         )}>
-          I'm here to help answer your questions and assist with your tasks. How can I help you today?
+          I&apos;m here to help answer your questions and assist with your tasks. How can I help you today?
         </p>
         
         {/* Example Prompts */}
@@ -277,6 +277,16 @@ const MessageArea: React.FC<MessageAreaProps> = ({ className }) => {
   const [previewCitationId, setPreviewCitationId] = React.useState<string | null>(null);
   const [previewModalOpen, setPreviewModalOpen] = React.useState(false);
   
+  // Check if we're in free trial mode by looking at localStorage
+  const [isFreeTrialMode, setIsFreeTrialMode] = React.useState(false);
+  
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const freeTrialFlag = localStorage.getItem('customgpt.freeTrialMode');
+      setIsFreeTrialMode(freeTrialFlag === 'true');
+    }
+  }, []);
+  
   const conversationMessages = currentConversation 
     ? messages.get(currentConversation.id.toString()) || []
     : [];
@@ -326,6 +336,15 @@ const MessageArea: React.FC<MessageAreaProps> = ({ className }) => {
   }, [conversationMessages, streamingMessage, isLoadingMessages]);
   
   const handleExamplePrompt = (prompt: string) => {
+    // Check if in free trial mode
+    if (isFreeTrialMode) {
+      toast.error('Free Trial Limitation', {
+        description: 'Sending messages is not available in free trial mode. Please use your own API key to send messages.',
+        duration: 5000,
+      });
+      return;
+    }
+    
     logger.info('UI', 'Example prompt clicked', { prompt });
     sendMessage(prompt);
   };
@@ -707,6 +726,16 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   // Get demo store state
   const { isDemoMode, openAIApiKey } = useDemoStore();
   
+  // Check if we're in free trial mode by looking at localStorage
+  const [isFreeTrialMode, setIsFreeTrialMode] = React.useState(false);
+  
+  React.useEffect(() => {
+    if (mode === 'standalone' && typeof window !== 'undefined') {
+      const freeTrialFlag = localStorage.getItem('customgpt.freeTrialMode');
+      setIsFreeTrialMode(freeTrialFlag === 'true');
+    }
+  }, [mode]);
+  
   // Check if OpenAI key is available
   const checkVoiceAvailability = () => {
     // In demo mode, check if user has provided OpenAI key
@@ -791,9 +820,18 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     };
 
     initializeAgents();
-  }, []); // Empty dependency array to run only once on mount
+  }, [agents.length, currentAgent, fetchAgents]); // Add dependencies for exhaustive deps
   
   const handleSendMessage = async (content: string, files?: File[]) => {
+    // Check if in free trial mode
+    if (isFreeTrialMode) {
+      toast.error('Free Trial Limitation', {
+        description: 'Sending messages is not available in free trial mode. Please use your own API key to send messages.',
+        duration: 5000,
+      });
+      return;
+    }
+    
     logger.info('UI', 'Sending message from ChatContainer', {
       contentLength: content.length,
       hasFiles: files && files.length > 0,
@@ -857,8 +895,14 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       )}>
         <ChatInput
           onSend={handleSendMessage}
-          disabled={isStreaming}
-          placeholder={isStreaming ? "AI is thinking..." : "Send a message..."}
+          disabled={isStreaming || isFreeTrialMode}
+          placeholder={
+            isFreeTrialMode 
+              ? "Free trial mode - Use your API key to send messages" 
+              : isStreaming 
+                ? "AI is thinking..." 
+                : "Send a message..."
+          }
           onVoiceClick={handleVoiceClick}
           isMobile={isMobile}
         />

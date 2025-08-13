@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Calendar, User, Hash, Clock, AlertCircle, Copy, Download, Share2 } from 'lucide-react';
+import { X, Calendar, User, Hash, Clock, AlertCircle, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import type { Conversation } from '@/types';
@@ -11,16 +11,12 @@ interface ConversationDetailsModalProps {
   conversation: Conversation | null;
   isOpen: boolean;
   onClose: () => void;
-  onExport?: (conversation: Conversation) => void;
-  onShare?: (conversation: Conversation) => void;
 }
 
 export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> = ({
   conversation,
   isOpen,
   onClose,
-  onExport,
-  onShare,
 }) => {
   const { isMobile } = useBreakpoint();
   
@@ -391,54 +387,6 @@ export const ConversationDetailsModal: React.FC<ConversationDetailsModalProps> =
                 </div>
               )}
 
-              {/* Actions */}
-              <div>
-                <h3 className={cn(
-                  "font-medium text-muted-foreground uppercase tracking-wider mb-4",
-                  isMobile ? "text-xs" : "text-sm"
-                )}>
-                  Actions
-                </h3>
-                <div className={cn(
-                  "flex gap-3",
-                  isMobile ? "flex-col space-y-3" : "flex-row"
-                )}>
-                  {onExport && (
-                    <Button
-                      variant="outline"
-                      onClick={() => onExport(conversation)}
-                      className={cn(
-                        "flex items-center gap-2",
-                        isMobile ? "w-full h-11 touch-target justify-center" : ""
-                      )}
-                    >
-                      <Download className={cn(
-                        isMobile ? "h-5 w-5" : "h-4 w-4"
-                      )} />
-                      <span className={cn(
-                        isMobile ? "text-sm" : ""
-                      )}>Export Conversation</span>
-                    </Button>
-                  )}
-                  {onShare && (
-                    <Button
-                      variant="outline"
-                      onClick={() => onShare(conversation)}
-                      className={cn(
-                        "flex items-center gap-2",
-                        isMobile ? "w-full h-11 touch-target justify-center" : ""
-                      )}
-                    >
-                      <Share2 className={cn(
-                        isMobile ? "h-5 w-5" : "h-4 w-4"
-                      )} />
-                      <span className={cn(
-                        isMobile ? "text-sm" : ""
-                      )}>Share Conversation</span>
-                    </Button>
-                  )}
-                </div>
-              </div>
             </div>
 
             {/* Footer */}

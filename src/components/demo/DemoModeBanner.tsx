@@ -24,6 +24,7 @@ import {
 import { useDemoStore } from '@/store/demo';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
 import { DemoConfigModal } from './DemoConfigModal';
+import { DemoModeModal } from './DemoModeModal';
 import { useDemoModeContext } from '@/contexts/DemoModeContext';
 import { proxyClient } from '@/lib/api/proxy-client';
 import { FREE_TRIAL_LIMITS } from '@/lib/constants/demo-limits';
@@ -40,7 +41,44 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [usageStats, setUsageStats] = useState<any>(null);
   const [showEndSessionConfirm, setShowEndSessionConfirm] = useState(false);
-  const { isMobile } = useBreakpoint();
+  const [showEndTrialConfirm, setShowEndTrialConfirm] = useState(false);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const { isMobile, isTablet, isMobileOrTablet } = useBreakpoint();
+  const [sessionData, setSessionData] = useState<{ startTime: number; expiresAt?: number } | null>(null);
+  
+  // Load session data from sessionStorage for immediate timer display
+  useEffect(() => {
+    if (!isFreeTrialMode) return;
+    
+    const loadSessionData = () => {
+      const storedSession = sessionStorage.getItem('customgpt.freeTrialSession');
+      if (storedSession) {
+        try {
+          const session = JSON.parse(storedSession);
+          // Calculate expiry time (1 minute from start for testing)
+          const expiresAt = session.startTime + (1 * 60 * 1000);
+          setSessionData({ startTime: session.startTime, expiresAt });
+          
+          // Also immediately update timer if we have session data
+          const remaining = Math.max(0, expiresAt - Date.now());
+          if (remaining > 0) {
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+          } else {
+            setTimeRemaining('Session expired');
+          }
+        } catch (e) {
+          console.error('[DemoModeBanner] Failed to parse session data:', e);
+        }
+      }
+    };
+    
+    // Load immediately
+    loadSessionData();
+    
+    return () => {};
+  }, [isFreeTrialMode]);
   
   // Fetch usage stats for free trial mode
   useEffect(() => {
@@ -66,18 +104,28 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
   
   useEffect(() => {
     const updateTimer = () => {
-      if (isFreeTrialMode && usageStats?.session) {
-        // For free trial, use the session data from API
-        const remaining = Math.max(0, usageStats.session.expiresAt - Date.now());
+      if (isFreeTrialMode) {
+        // For free trial, use API data if available, otherwise use sessionStorage data
+        let expiresAt: number | undefined;
         
-        if (remaining <= 0) {
-          setTimeRemaining('Session expired');
-          return;
+        if (usageStats?.session?.expiresAt) {
+          expiresAt = usageStats.session.expiresAt;
+        } else if (sessionData?.expiresAt) {
+          expiresAt = sessionData.expiresAt;
         }
         
-        const minutes = Math.floor(remaining / 60000);
-        const seconds = Math.floor((remaining % 60000) / 1000);
-        setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        if (expiresAt) {
+          const remaining = Math.max(0, expiresAt - Date.now());
+          
+          if (remaining <= 0) {
+            setTimeRemaining('Session expired');
+            return;
+          }
+          
+          const minutes = Math.floor(remaining / 60000);
+          const seconds = Math.floor((remaining % 60000) / 1000);
+          setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        }
       } else if (!isFreeTrialMode && sessionStartTime) {
         // For user API key mode, use the existing logic
         const elapsed = Date.now() - sessionStartTime;
@@ -98,8 +146,127 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
     const interval = setInterval(updateTimer, 1000);
     
     return () => clearInterval(interval);
-  }, [sessionStartTime, sessionTimeout, isFreeTrialMode, usageStats]);
+  }, [sessionStartTime, sessionTimeout, isFreeTrialMode, usageStats, sessionData]);
   
+  // For mobile/tablet, always show compact view (ignore minimized state)
+  if (isMobileOrTablet) {
+    return (
+      <div className={cn(
+        "border-b",
+        isFreeTrialMode 
+          ? "bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/90 dark:to-purple-950/90 border-blue-200 dark:border-blue-800"
+          : "bg-amber-50 dark:bg-amber-950/90 border-amber-200 dark:border-amber-800",
+        className
+      )}>
+        <div className="px-3 py-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <button
+              onClick={() => {
+                if (!isFreeTrialMode) {
+                  setIsConfigOpen(true);
+                }
+              }}
+              className={cn(
+                "flex items-center gap-2 px-3 py-1 rounded-md text-xs font-medium transition-all",
+                isFreeTrialMode 
+                  ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
+                  : "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50 active:scale-95 cursor-pointer",
+              )}
+            >
+              {isFreeTrialMode ? <Zap className="h-3 w-3" /> : <Key className="h-3 w-3" />}
+              <span className="flex flex-col items-start">
+                <span>{isFreeTrialMode ? "Free Trial" : "Demo Mode"}</span>
+                {isFreeTrialMode && usageStats && (
+                  <span className="flex items-center gap-2 text-[10px] opacity-90">
+                    <span className="flex items-center gap-0.5">
+                      <FolderOpen className="h-2.5 w-2.5" />
+                      {usageStats.usage.projects.used}/{usageStats.usage.projects.limit}
+                    </span>
+                    <span className="flex items-center gap-0.5">
+                      <MessageSquare className="h-2.5 w-2.5" />
+                      {usageStats.usage.conversations.used}/{usageStats.usage.conversations.limit}
+                    </span>
+                  </span>
+                )}
+              </span>
+              {timeRemaining && (
+                <span className="flex items-center gap-1 ml-auto">
+                  <Clock className="h-2.5 w-2.5" />
+                  {timeRemaining}
+                </span>
+              )}
+              {!isFreeTrialMode && (
+                <Settings className="h-3 w-3 ml-1" />
+              )}
+            </button>
+            {isFreeTrialMode && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowEndTrialConfirm(true)}
+                className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-2 text-xs"
+              >
+                End Trial
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        {/* Configuration Modal */}
+        <DemoConfigModal 
+          isOpen={isConfigOpen} 
+          onClose={() => setIsConfigOpen(false)} 
+        />
+        
+        {/* End Trial Confirmation Dialog */}
+        <AlertDialog open={showEndTrialConfirm} onOpenChange={setShowEndTrialConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>End Free Trial?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to end your free trial and add your own API key? 
+                <br /><br />
+                <strong>Note:</strong> You won&apos;t be able to return to free trial mode after this action.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  // Mark free trial as expired permanently
+                  localStorage.setItem('customgpt.freeTrialExpired', 'true');
+                  // Clear free trial mode flag
+                  localStorage.removeItem('customgpt.freeTrialMode');
+                  // Clear session data
+                  sessionStorage.removeItem('customgpt.freeTrialSession');
+                  sessionStorage.removeItem('customgpt.captchaVerified');
+                  
+                  setShowEndTrialConfirm(false);
+                  setShowApiKeyModal(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Yes, Add My API Key
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        
+        {/* API Key Modal - same as what shows when trial expires */}
+        {showApiKeyModal && (
+          <DemoModeModal 
+            hideFreeTrial={true} 
+            canClose={false}
+            onClose={() => {
+              // This modal can't be closed, user must add API key or refresh
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Desktop view - check minimized state
   if (isMinimized) {
     return (
       <button
@@ -120,7 +287,8 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
       </button>
     );
   }
-  
+
+  // Desktop view
   return (
     <div className={cn(
       "border-b",
@@ -129,31 +297,16 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
         : "bg-amber-50 dark:bg-amber-950/90 border-amber-200 dark:border-amber-800",
       className
     )}>
-      <div className={cn(
-        "mx-auto",
-        isMobile ? "px-3 py-1.5" : "max-w-7xl px-4 py-2"
-      )}>
-        <div className={cn(
-          "flex items-center justify-between",
-          isMobile ? "gap-2" : "gap-4"
-        )}>
-          <div className={cn(
-            "flex items-center flex-1",
-            isMobile ? "gap-1.5" : "gap-3"
-          )}>
+      <div className="max-w-7xl mx-auto px-4 py-2">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center flex-1 gap-3">
             {isFreeTrialMode ? (
               <>
-                <Zap className={cn(
-                  "text-blue-600 dark:text-blue-400 flex-shrink-0",
-                  isMobile ? "h-3 w-3" : "h-4 w-4"
-                )} />
-                <p className={cn(
-                  "text-blue-800 dark:text-blue-200",
-                  isMobile ? "text-xs" : "text-sm"
-                )}>
+                <Zap className="text-blue-600 dark:text-blue-400 flex-shrink-0 h-4 w-4" />
+                <p className="text-blue-800 dark:text-blue-200 text-xs">
                   <span className="font-semibold">Free Trial</span>
-                  {!isMobile && usageStats && (
-                    <span className="hidden sm:inline ml-2">
+                  {usageStats && (
+                    <span className="ml-2">
                       <span className="inline-flex items-center gap-2">
                         <span className="inline-flex items-center gap-1">
                           <FolderOpen className="h-3 w-3" />
@@ -170,16 +323,10 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
               </>
             ) : (
               <>
-                <Key className={cn(
-                  "text-amber-600 dark:text-amber-400 flex-shrink-0",
-                  isMobile ? "h-3 w-3" : "h-4 w-4"
-                )} />
-                <p className={cn(
-                  "text-amber-800 dark:text-amber-200",
-                  isMobile ? "text-xs" : "text-sm"
-                )}>
-                  <span className="font-semibold">Demo Mode{!isMobile && " Active"}</span>
-                  {!isMobile && <span className="hidden sm:inline"> - Using your API key</span>}
+                <Key className="text-amber-600 dark:text-amber-400 flex-shrink-0 h-4 w-4" />
+                <p className="text-amber-800 dark:text-amber-200 text-xs">
+                  <span className="font-semibold">Demo Mode Active</span>
+                  <span> - Using your API key</span>
                 </p>
               </>
             )}
@@ -189,79 +336,58 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
                 isFreeTrialMode 
                   ? "text-blue-700 dark:text-blue-300"
                   : "text-amber-700 dark:text-amber-300",
-                isMobile ? "text-xs" : "text-sm"
+                "text-xs"
               )}>
-                <Clock className={isMobile ? "h-2.5 w-2.5" : "h-3 w-3"} />
+                <Clock className="h-3 w-3" />
                 <span>{timeRemaining}</span>
               </div>
             )}
           </div>
-          <div className={cn(
-            "flex items-center",
-            isMobile ? "gap-1" : "gap-2"
-          )}>
+          <div className="flex items-center gap-2">
             {isFreeTrialMode ? (
               <>
                 {/* Free trial mode switch button */}
                 <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      // Clear all demo-related data
-                      localStorage.removeItem('customgpt.deploymentMode');
-                      localStorage.removeItem('customgpt.freeTrialMode');
-                      sessionStorage.removeItem('customgpt.freeTrialSession');
-                      sessionStorage.removeItem('customgpt.captchaVerified');
-                      sessionStorage.removeItem('customgpt.autoDetected');
-                      sessionStorage.removeItem('customgpt.firstLoadHandled');
-                      // Clear any cookies
-                      document.cookie = 'demo_session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                      // Reload to start fresh
-                      window.location.reload();
-                    }}
-                    className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-900/50"
-                  >
-                    Switch Mode
-                  </Button>
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowEndTrialConfirm(true)}
+                  className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+                >
+                  End Trial and Add API Key
+                </Button>
               </>
             ) : (
               <>
                 <Button
                   variant="ghost"
-                  size={isMobile ? "sm" : "sm"}
+                  size="sm"
                   onClick={() => setIsConfigOpen(true)}
-                  className={cn(
-                    "text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-900/50",
-                    isMobile && "px-2"
-                  )}
+                  className="text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-900/50"
                 >
-                  <Settings className={cn("mr-1", isMobile ? "h-3 w-3" : "h-4 w-4")} />
-                  {isMobile ? "Config" : "Configure"}
+                  <Settings className="h-4 w-4 mr-1" />
+                  Configure
                 </Button>
-                {!isMobile && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowEndSessionConfirm(true)}
-                    className="text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-900/50"
-                  >
-                    End Session
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowEndSessionConfirm(true)}
+                  className="text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-900/50"
+                >
+                  End Session
+                </Button>
               </>
             )}
             <button
               onClick={() => setIsMinimized(true)}
               className={cn(
-                "transition-colors",
+                "p-1 transition-colors",
                 isFreeTrialMode
                   ? "text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
-                  : "text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200",
-                isMobile ? "p-0.5" : "p-1"
+                  : "text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
               )}
               aria-label="Minimize banner"
             >
-              <X className={isMobile ? "h-3 w-3" : "h-4 w-4"} />
+              <X className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -296,6 +422,51 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* End Trial Confirmation Dialog */}
+      <AlertDialog open={showEndTrialConfirm} onOpenChange={setShowEndTrialConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>End Free Trial?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to end your free trial and add your own API key? 
+              <br /><br />
+              <strong>Note:</strong> You won&apos;t be able to return to free trial mode after this action.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                // Mark free trial as expired permanently
+                localStorage.setItem('customgpt.freeTrialExpired', 'true');
+                // Clear free trial mode flag
+                localStorage.removeItem('customgpt.freeTrialMode');
+                // Clear session data
+                sessionStorage.removeItem('customgpt.freeTrialSession');
+                sessionStorage.removeItem('customgpt.captchaVerified');
+                
+                setShowEndTrialConfirm(false);
+                setShowApiKeyModal(true);
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Yes, Add My API Key
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* API Key Modal - same as what shows when trial expires */}
+      {showApiKeyModal && (
+        <DemoModeModal 
+          hideFreeTrial={true} 
+          canClose={false}
+          onClose={() => {
+            // This modal can't be closed, user must add API key or refresh
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -44,6 +44,7 @@ import {
 import { toast } from 'sonner';
 
 import type { InputProps, FileUpload, AgentSettings } from '@/types';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 import { cn, formatFileSize, getFileIcon, isFileTypeAllowed, generateId, CONSTANTS } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/loading';
@@ -266,6 +267,9 @@ export const ChatInput: React.FC<InputProps> = ({
   const [showSettings, setShowSettings] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
+  // Get free trial mode status
+  const { isFreeTrialMode } = useDemoModeContext();
+  
   // Get stores
   const { currentAgent } = useAgentStore();
   const { getSettings, updateSettings: updateLocalSettings } = useChatSettingsStore();
@@ -278,14 +282,7 @@ export const ChatInput: React.FC<InputProps> = ({
     agent_capability: 'optimal-choice',
   };
   
-  // Load settings when agent changes
-  useEffect(() => {
-    if (currentAgent?.id) {
-      loadAgentSettings();
-    }
-  }, [currentAgent?.id]);
-
-  const loadAgentSettings = async () => {
+  const loadAgentSettings = useCallback(async () => {
     if (!currentAgent?.id) return;
 
     try {
@@ -304,7 +301,14 @@ export const ChatInput: React.FC<InputProps> = ({
     } catch (error) {
       console.error('Failed to load agent settings:', error);
     }
-  };
+  }, [currentAgent?.id, updateLocalSettings]);
+
+  // Load settings when agent changes
+  useEffect(() => {
+    if (currentAgent?.id) {
+      loadAgentSettings();
+    }
+  }, [currentAgent?.id, loadAgentSettings]);
 
   const updateSetting = async (key: keyof AgentSettings, value: string) => {
     if (!currentAgent?.id) return;
@@ -576,12 +580,14 @@ export const ChatInput: React.FC<InputProps> = ({
         {/* Text Input Area */}
         <form onSubmit={handleSubmit} className="relative">
           <div className="flex items-center p-3 pb-1">
-            {/* File Upload Button */}
-            <FileUploadButton
-              onUpload={handleFileUpload}
-              disabled={disabled}
-              isMobile={isMobile}
-            />
+            {/* File Upload Button - Hidden in free trial mode */}
+            {!isFreeTrialMode && (
+              <FileUploadButton
+                onUpload={handleFileUpload}
+                disabled={disabled}
+                isMobile={isMobile}
+              />
+            )}
             
             {/* Speech to Text Button */}
             <SpeechToTextButton
@@ -612,7 +618,7 @@ export const ChatInput: React.FC<InputProps> = ({
                   'disabled:opacity-50 disabled:cursor-not-allowed',
                   'placeholder:text-muted-foreground text-foreground',
                   isMobile 
-                    ? 'text-base min-h-[24px] max-h-[120px]' 
+                    ? 'text-base min-h-[24px] max-h-[120px] placeholder:text-sm' 
                     : 'text-sm min-h-[20px] max-h-[200px]'
                 )}
                 style={{

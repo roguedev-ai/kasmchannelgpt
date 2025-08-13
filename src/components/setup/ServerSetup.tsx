@@ -138,7 +138,7 @@ export const ServerSetup: React.FC<ServerSetupProps> = ({ onComplete }) => {
             onClick={handleContinue}
             className="w-full py-3"
           >
-            I've configured the server
+            I&apos;ve configured the server
           </Button>
 
           {process.env.NODE_ENV === 'development' && (

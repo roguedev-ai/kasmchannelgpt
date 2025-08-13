@@ -63,6 +63,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAgentStore } from '@/store/agents';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 
 /**
  * Props for AgentCreationForm
@@ -133,6 +134,7 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
   
   const { createAgent } = useAgentStore();
   const { isMobile } = useBreakpoint();
+  const { isFreeTrialMode } = useDemoModeContext();
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -198,6 +200,11 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (isFreeTrialMode) {
+      setError('Project creation is not available in free trial mode');
+      return;
+    }
+    
     if (!validateStep(currentStep)) {
       setError('Please fill in all required fields');
       return;
@@ -711,8 +718,9 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
             ) : (
               <Button 
                 onClick={handleSubmit} 
-                disabled={isCreating}
+                disabled={isCreating || isFreeTrialMode}
                 className={isMobile ? "h-12 px-4 touch-target" : ""}
+                title={isFreeTrialMode ? "Project creation is not available in free trial mode" : ""}
               >
                 {isCreating ? (
                   <>
@@ -720,7 +728,9 @@ export const AgentCreationForm: React.FC<AgentCreationFormProps> = ({
                     <span className={isMobile ? "text-sm" : ""}>Creating Agent...</span>
                   </>
                 ) : (
-                  <span className={isMobile ? "text-sm" : ""}>Create Agent</span>
+                  <span className={isMobile ? "text-sm" : ""}>
+                    {isFreeTrialMode ? "Not Available in Free Trial" : "Create Agent"}
+                  </span>
                 )}
               </Button>
             )}

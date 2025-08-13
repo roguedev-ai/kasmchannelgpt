@@ -25,17 +25,20 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { SimpleSelect } from '@/components/ui/simple-select';
 import { cn, formatTimestamp, formatFileSize } from '@/lib/utils';
 import { getClient, isClientInitialized } from '@/lib/api/client';
 import type { Agent } from '@/types';
 import type { Page, PagesQueryParams } from '@/types/pages.types';
 import { PageMetadataModal } from '@/components/pages/PageMetadataModal';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 
 interface PagesSettingsProps {
   project: Agent;
 }
 
 export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
+  const { isFreeTrialMode } = useDemoModeContext();
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,6 +110,11 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
   };
 
   const handleDeletePage = async (pageId: number) => {
+    if (isFreeTrialMode) {
+      toast.error('Deleting pages is not available in free trial mode');
+      return;
+    }
+    
     if (!isClientInitialized() || deletingPageId) return;
 
     // Confirm deletion
@@ -142,6 +150,11 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
   };
 
   const handleReindexPage = async (pageId: number) => {
+    if (isFreeTrialMode) {
+      toast.error('Re-indexing pages is not available in free trial mode');
+      return;
+    }
+    
     if (!isClientInitialized() || reindexingPageId) return;
 
     try {
@@ -263,38 +276,41 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
             />
           </div>
           
-          <select
-            value={queryParams.crawl_status}
-            onChange={(e) => handleFilterChange('crawl_status', e.target.value)}
-            className="px-2 py-1.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="all">All Crawl</option>
-            <option value="queued">Queued</option>
-            <option value="crawling">Crawling</option>
-            <option value="crawled">Crawled</option>
-            <option value="failed">Failed</option>
-          </select>
+          <SimpleSelect
+            value={queryParams.crawl_status || 'all'}
+            onValueChange={(value) => handleFilterChange('crawl_status', value)}
+            options={[
+              { value: 'all', label: 'All Crawl' },
+              { value: 'queued', label: 'Queued' },
+              { value: 'crawling', label: 'Crawling' },
+              { value: 'crawled', label: 'Crawled' },
+              { value: 'failed', label: 'Failed' }
+            ]}
+            className="w-32 h-8 text-sm"
+          />
           
-          <select
-            value={queryParams.index_status}
-            onChange={(e) => handleFilterChange('index_status', e.target.value)}
-            className="px-2 py-1.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="all">All Index</option>
-            <option value="queued">Queued</option>
-            <option value="indexing">Indexing</option>
-            <option value="indexed">Indexed</option>
-            <option value="failed">Failed</option>
-          </select>
+          <SimpleSelect
+            value={queryParams.index_status || 'all'}
+            onValueChange={(value) => handleFilterChange('index_status', value)}
+            options={[
+              { value: 'all', label: 'All Index' },
+              { value: 'queued', label: 'Queued' },
+              { value: 'indexing', label: 'Indexing' },
+              { value: 'indexed', label: 'Indexed' },
+              { value: 'failed', label: 'Failed' }
+            ]}
+            className="w-32 h-8 text-sm"
+          />
 
-          <select
-            value={queryParams.order}
-            onChange={(e) => handleFilterChange('order', e.target.value)}
-            className="px-2 py-1.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="desc">Newest</option>
-            <option value="asc">Oldest</option>
-          </select>
+          <SimpleSelect
+            value={queryParams.order || 'desc'}
+            onValueChange={(value) => handleFilterChange('order', value)}
+            options={[
+              { value: 'desc', label: 'Newest' },
+              { value: 'asc', label: 'Oldest' }
+            ]}
+            className="w-24 h-8 text-sm"
+          />
         </div>
       </div>
 
@@ -462,7 +478,11 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
                         size="sm" 
                         variant="ghost"
                         onClick={() => handleReindexPage(page.id)}
-                        disabled={reindexingPageId === page.id}
+                        disabled={reindexingPageId === page.id || isFreeTrialMode}
+                        className={cn(
+                          isFreeTrialMode && "opacity-50 cursor-not-allowed"
+                        )}
+                        title={isFreeTrialMode ? 'Re-indexing pages is not available in free trial mode' : ''}
                       >
                         {reindexingPageId === page.id ? (
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -477,8 +497,12 @@ export const PagesSettings: React.FC<PagesSettingsProps> = ({ project }) => {
                       size="sm" 
                       variant="ghost"
                       onClick={() => handleDeletePage(page.id)}
-                      disabled={deletingPageId === page.id}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      disabled={deletingPageId === page.id || isFreeTrialMode}
+                      className={cn(
+                        "text-red-600 hover:text-red-700 hover:bg-red-50",
+                        isFreeTrialMode && "opacity-50 cursor-not-allowed"
+                      )}
+                      title={isFreeTrialMode ? 'Deleting pages is not available in free trial mode' : ''}
                     >
                       {deletingPageId === page.id ? (
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -169,6 +169,7 @@ interface MobileBottomSheetProps {
   onClose: () => void;
   children: React.ReactNode;
   title?: string;
+  header?: React.ReactNode;
   height?: 'sm' | 'md' | 'lg' | 'full';
   showHandle?: boolean;
   className?: string;
@@ -186,6 +187,7 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
   onClose,
   children,
   title,
+  header,
   height = 'md',
   showHandle = true,
   className
@@ -269,13 +271,17 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
               )}
               
               {/* Header */}
-              {title && (
+              {header ? (
+                <div className="px-4 pb-3">
+                  {header}
+                </div>
+              ) : title ? (
                 <div className="px-4 pb-3">
                   <h2 className="text-lg font-semibold text-foreground text-center">
                     {title}
                   </h2>
                 </div>
-              )}
+              ) : null}
               
               {/* Content */}
               <div className="flex-1 overflow-hidden">

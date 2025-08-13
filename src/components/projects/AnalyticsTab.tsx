@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { useAnalyticsStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { SimpleSelect } from '@/components/ui/simple-select';
 import { cn } from '@/lib/utils';
 
 // Analytics visualization components
@@ -150,15 +151,16 @@ export const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ agentId, agentName }
           </Button>
           
           <div className="flex items-center gap-2">
-            <select
+            <SimpleSelect
               value={exportFormat}
-              onChange={(e) => setExportFormat(e.target.value as any)}
-              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-            >
-              <option value="json">JSON</option>
-              <option value="csv">CSV</option>
-              <option value="pdf">PDF</option>
-            </select>
+              onValueChange={(value) => setExportFormat(value as 'csv' | 'json' | 'pdf')}
+              options={[
+                { value: 'json', label: 'JSON' },
+                { value: 'csv', label: 'CSV' },
+                { value: 'pdf', label: 'PDF' }
+              ]}
+              className="w-24 h-8 text-sm"
+            />
             
             <Button
               size="sm"

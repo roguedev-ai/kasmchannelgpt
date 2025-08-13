@@ -18,16 +18,18 @@ import {
 } from 'lucide-react';
 import { useLicenseStore } from '@/store/licenses';
 import { useAgentStore } from '@/store';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 
 interface LicenseItemProps {
   license: any;
   onEdit: (license: any) => void;
   onDelete: (licenseKey: string) => void;
+  disabled?: boolean;
 }
 
-const LicenseItem: React.FC<LicenseItemProps> = ({ license, onEdit, onDelete }) => {
+const LicenseItem: React.FC<LicenseItemProps> = ({ license, onEdit, onDelete, disabled = false }) => {
   const [copied, setCopied] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -90,16 +92,22 @@ const LicenseItem: React.FC<LicenseItemProps> = ({ license, onEdit, onDelete }) 
         <div className="flex items-center gap-2 ml-4">
           <button
             onClick={() => onEdit(license)}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Edit license"
+            disabled={disabled}
+            className={`p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors ${
+              disabled ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            title={disabled ? 'Editing licenses is not available in free trial mode' : 'Edit license'}
           >
             <Edit2 className="w-4 h-4" />
           </button>
           
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete license"
+            disabled={disabled}
+            className={`p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors ${
+              disabled ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            title={disabled ? 'Deleting licenses is not available in free trial mode' : 'Delete license'}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -228,6 +236,7 @@ interface LicenseManagerProps {
 }
 
 export const LicenseManager: React.FC<LicenseManagerProps> = ({ embedded = false }) => {
+  const { isFreeTrialMode } = useDemoModeContext();
   const { currentAgent } = useAgentStore();
   const { licenses, loading, error, fetchLicenses, createLicense, updateLicense, deleteLicense, clearError } = useLicenseStore();
   const [showForm, setShowForm] = useState(false);
@@ -241,6 +250,11 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ embedded = false
   }, [currentAgent?.id, fetchLicenses]);
 
   const handleCreateLicense = async (name: string) => {
+    if (isFreeTrialMode) {
+      toast.error('Creating licenses is not available in free trial mode');
+      return;
+    }
+    
     if (!currentAgent) return;
     
     setFormLoading(true);
@@ -251,27 +265,13 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ embedded = false
       
       // Show the license key in a special toast
       if (newLicense?.key) {
-        toast((t) => (
-          <div className="flex items-center gap-3">
-            <Key className="w-5 h-5 text-brand-600" />
-            <div className="flex-1">
-              <p className="font-medium">New License Key</p>
-              <code className="text-xs bg-gray-100 px-2 py-1 rounded mt-1 block">
-                {newLicense.key}
-              </code>
-            </div>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(newLicense.key);
-                toast.dismiss(t.id);
-                toast.success('License key copied!');
-              }}
-              className="px-3 py-1 bg-brand-600 text-white text-sm rounded hover:bg-brand-700"
-            >
-              Copy
-            </button>
-          </div>
-        ), { duration: 10000 });
+        // Copy license key to clipboard and show success
+        try {
+          await navigator.clipboard.writeText(newLicense.key);
+          toast.success(`License key copied to clipboard: ${newLicense.key.substring(0, 20)}...`);
+        } catch (error) {
+          toast.success(`License created: ${newLicense.key.substring(0, 20)}...`);
+        }
       }
     } catch (error) {
       // Error is already handled in the store
@@ -281,6 +281,11 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ embedded = false
   };
 
   const handleUpdateLicense = async (name: string) => {
+    if (isFreeTrialMode) {
+      toast.error('Updating licenses is not available in free trial mode');
+      return;
+    }
+    
     if (!currentAgent || !editingLicense) return;
     
     setFormLoading(true);
@@ -296,6 +301,11 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ embedded = false
   };
 
   const handleDeleteLicense = async (licenseKey: string) => {
+    if (isFreeTrialMode) {
+      toast.error('Deleting licenses is not available in free trial mode');
+      return;
+    }
+    
     if (!currentAgent) return;
     
     try {
@@ -348,10 +358,18 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ embedded = false
           </h1>
           <button
             onClick={() => {
+              if (isFreeTrialMode) {
+                toast.error('Creating licenses is not available in free trial mode');
+                return;
+              }
               setShowForm(true);
               setEditingLicense(null);
             }}
-            className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-2"
+            disabled={isFreeTrialMode}
+            className={`px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors flex items-center gap-2 ${
+              isFreeTrialMode ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            title={isFreeTrialMode ? 'Creating licenses is not available in free trial mode' : ''}
           >
             <Plus className="w-4 h-4" />
             Create License
@@ -429,6 +447,7 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ embedded = false
                 license={license}
                 onEdit={setEditingLicense}
                 onDelete={handleDeleteLicense}
+                disabled={isFreeTrialMode}
               />
             ))}
           </AnimatePresence>

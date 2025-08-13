@@ -42,6 +42,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 
 interface ConversationsSettingsProps {
   project: Agent;
@@ -49,6 +50,7 @@ interface ConversationsSettingsProps {
 
 export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ project }) => {
   const { isMobile } = useBreakpoint();
+  const { isFreeTrialMode } = useDemoModeContext();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +101,11 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
   };
 
   const handleDeleteConversation = async (sessionId: string) => {
+    if (isFreeTrialMode) {
+      toast.error('Deleting conversations is not available in free trial mode');
+      return;
+    }
+    
     if (!isClientInitialized()) {
       return;
     }
@@ -357,10 +364,13 @@ export const ConversationsSettings: React.FC<ConversationsSettingsProps> = ({ pr
                         size="sm" 
                         variant="ghost"
                         onClick={() => handleDeleteConversation(conversation.session_id)}
+                        disabled={isFreeTrialMode}
                         className={cn(
                           "text-red-600 hover:text-red-700 hover:bg-red-50",
-                          isMobile ? "h-8 px-3 text-xs" : ""
+                          isMobile ? "h-8 px-3 text-xs" : "",
+                          isFreeTrialMode && "opacity-50 cursor-not-allowed"
                         )}
+                        title={isFreeTrialMode ? 'Deleting conversations is not available in free trial mode' : ''}
                       >
                         <Trash2 className="w-4 h-4 mr-1.5" />
                         Delete

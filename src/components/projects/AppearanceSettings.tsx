@@ -10,6 +10,8 @@ import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
 import type { Agent } from '@/types';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
+import { SimpleSelect } from '@/components/ui/simple-select';
 
 interface AppearanceSettingsProps {
   project: Agent;
@@ -25,6 +27,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
   } = useProjectSettingsStore();
 
   const { isMobile } = useBreakpoint();
+  const { isFreeTrialMode } = useDemoModeContext();
   const [formData, setFormData] = useState({
     chatbot_avatar: '',
     chatbot_background_type: 'image' as 'image' | 'color',
@@ -32,10 +35,17 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
     chatbot_background_color: '#F5F5F5',
     chatbot_color: '#000000',
     chatbot_toolbar_color: '#000000',
+    // User Interface settings
+    chatbot_title: '',
+    chatbot_title_color: '#000000',
+    user_avatar: '',
+    user_avatar_orientation: 'agent-left-user-right',
+    input_field_addendum: '',
   });
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
+  const [userAvatarFile, setUserAvatarFile] = useState<File | null>(null);
   const [isModified, setIsModified] = useState(false);
 
   useEffect(() => {
@@ -51,17 +61,32 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
         chatbot_background_color: settings.chatbot_background_color || '#F5F5F5',
         chatbot_color: settings.chatbot_color || '#000000',
         chatbot_toolbar_color: settings.chatbot_toolbar_color || '#000000',
+        // User Interface settings
+        chatbot_title: settings.chatbot_title || '',
+        chatbot_title_color: settings.chatbot_title_color || '#000000',
+        user_avatar: settings.user_avatar || '',
+        user_avatar_orientation: settings.user_avatar_orientation || 'agent-left-user-right',
+        input_field_addendum: settings.input_field_addendum || '',
       });
       setIsModified(false);
     }
   }, [settings]);
 
   const handleInputChange = (field: string, value: any) => {
+    if (isFreeTrialMode) {
+      toast.error('Editing appearance settings is not available in free trial mode');
+      return;
+    }
     setFormData(prev => ({ ...prev, [field]: value }));
     setIsModified(true);
   };
 
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isFreeTrialMode) {
+      toast.error('Uploading images is not available in free trial mode');
+      return;
+    }
+    
     const file = event.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
@@ -80,6 +105,11 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
   };
 
   const handleBackgroundUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isFreeTrialMode) {
+      toast.error('Uploading images is not available in free trial mode');
+      return;
+    }
+    
     const file = event.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
@@ -97,16 +127,48 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
     }
   };
 
+  const handleUserAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isFreeTrialMode) {
+      toast.error('Uploading images is not available in free trial mode');
+      return;
+    }
+    
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image must be smaller than 5MB');
+        return;
+      }
+      
+      setUserAvatarFile(file);
+      setIsModified(true);
+    }
+  };
+
   const handleSave = async () => {
+    if (isFreeTrialMode) {
+      toast.error('Saving appearance settings is not available in free trial mode');
+      return;
+    }
+    
     try {
       const updateData: any = { ...formData };
       
       if (avatarFile) {
-        updateData.chat_bot_avatar = avatarFile;
+        updateData.chatbot_avatar = avatarFile;
       }
       
       if (backgroundFile) {
-        updateData.chat_bot_bg = backgroundFile;
+        updateData.chatbot_background = backgroundFile;
+      }
+      
+      if (userAvatarFile) {
+        updateData.user_avatar = userAvatarFile;
       }
       
       await updateSettings(project.id, updateData);
@@ -114,6 +176,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
       setIsModified(false);
       setAvatarFile(null);
       setBackgroundFile(null);
+      setUserAvatarFile(null);
     } catch (error) {
       console.error('Failed to save settings:', error);
     }
@@ -124,6 +187,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
     setIsModified(false);
     setAvatarFile(null);
     setBackgroundFile(null);
+    setUserAvatarFile(null);
   };
 
   return (
@@ -147,7 +211,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
             "text-muted-foreground mt-1",
             isMobile ? "text-sm mobile-text-sm" : ""
           )}>
-            Customize the visual appearance of your chatbot
+            Customize the visual appearance and user interface of your chatbot
           </p>
         </div>
         
@@ -168,9 +232,10 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
           
           <Button
             onClick={handleSave}
-            disabled={!isModified || settingsLoading}
+            disabled={!isModified || settingsLoading || isFreeTrialMode}
             size="sm"
             className={isMobile ? "h-9 px-3 text-sm" : ""}
+            title={isFreeTrialMode ? 'Editing settings is not available in free trial mode' : ''}
           >
             <Save className="w-4 h-4 mr-1.5" />
             {settingsLoading ? 'Saving...' : 'Save Changes'}
@@ -261,11 +326,13 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                     onChange={handleAvatarUpload}
                     className="hidden"
                     id="avatar-upload"
+                    disabled={isFreeTrialMode}
                   />
-                  <label htmlFor="avatar-upload" className="cursor-pointer">
+                  <label htmlFor="avatar-upload" className={cn("cursor-pointer", isFreeTrialMode && "cursor-not-allowed opacity-50")}>
                     <div className={cn(
                       "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2",
-                      isMobile ? "h-12 w-full mobile-btn touch-target" : "h-10"
+                      isMobile ? "h-12 w-full mobile-btn touch-target" : "h-10",
+                      isFreeTrialMode && "pointer-events-none opacity-50"
                     )}>
                       <Upload className="w-4 h-4 mr-2" />
                       Upload New Avatar
@@ -286,8 +353,9 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                 </p>
                 <ul className="text-xs text-muted-foreground mt-2 space-y-1">
                   <li>• Recommended size: 200x200 pixels</li>
-                  <li>• Supported formats: JPG, PNG, GIF</li>
+                  <li>• Accepted formats: JPEG, PNG, JPG, GIF</li>
                   <li>• Maximum file size: 5MB</li>
+                  <li>• Note: The avatar must be a valid image file</li>
                 </ul>
               </div>
             </div>
@@ -412,8 +480,9 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                     </p>
                     <ul className="text-xs text-muted-foreground mt-2 space-y-1">
                       <li>• Recommended size: 1200x800 pixels</li>
-                      <li>• Supported formats: JPG, PNG</li>
+                      <li>• Accepted formats: JPEG, PNG, JPG, GIF</li>
                       <li>• Maximum file size: 5MB</li>
+                      <li>• Note: The background must be a valid image file</li>
                     </ul>
                   </div>
                 </div>
@@ -549,6 +618,206 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                 
                 <p className="text-xs text-muted-foreground mt-1">
                   Color for the chat widget toolbar and header
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Chat Interface Settings */}
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <div className={cn(
+              "flex items-start justify-between mb-4",
+              isMobile && "flex-col gap-2"
+            )}>
+              <h3 className={cn(
+                "font-semibold text-foreground",
+                isMobile ? "text-base mobile-text-lg" : "text-lg"
+              )}>Chat Interface</h3>
+              {!isMobile && (
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                  POST /projects/{project.id}/settings
+                </span>
+              )}
+            </div>
+            
+            <div className="space-y-4">
+              {/* Chatbot Title */}
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Chatbot Title
+                </label>
+                <input
+                  type="text"
+                  value={formData.chatbot_title}
+                  onChange={(e) => handleInputChange('chatbot_title', e.target.value)}
+                  placeholder="My Custom Agent"
+                  disabled={isFreeTrialMode}
+                  className={cn(
+                    "w-full border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground",
+                    isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2",
+                    isFreeTrialMode && "opacity-50 cursor-not-allowed"
+                  )}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Title displayed at the top of the chat interface
+                </p>
+              </div>
+
+              {/* Title Color */}
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Title Color
+                </label>
+                <div className={cn(
+                  "flex items-center gap-4",
+                  isMobile && "flex-col gap-3"
+                )}>
+                  <input
+                    type="color"
+                    value={formData.chatbot_title_color}
+                    onChange={(e) => handleInputChange('chatbot_title_color', e.target.value)}
+                    className={cn(
+                      "border border-border rounded cursor-pointer",
+                      isMobile ? "w-16 h-12 touch-target" : "w-12 h-10"
+                    )}
+                  />
+                  <input
+                    type="text"
+                    value={formData.chatbot_title_color}
+                    onChange={(e) => handleInputChange('chatbot_title_color', e.target.value)}
+                    placeholder="#000000"
+                    className={cn(
+                      "flex-1 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground",
+                      isMobile ? "w-full px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Input Field Helper Text */}
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Input Field Helper Text
+                </label>
+                <textarea
+                  value={formData.input_field_addendum}
+                  onChange={(e) => handleInputChange('input_field_addendum', e.target.value)}
+                  placeholder="Type your question here..."
+                  rows={2}
+                  className={cn(
+                    "w-full border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none bg-background text-foreground",
+                    isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                  )}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Additional text shown in or near the input field
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* User Avatar Settings */}
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <div className={cn(
+              "flex items-start justify-between mb-4",
+              isMobile && "flex-col gap-2"
+            )}>
+              <h3 className={cn(
+                "font-semibold text-foreground",
+                isMobile ? "text-base mobile-text-lg" : "text-lg"
+              )}>User Avatar Configuration</h3>
+              {!isMobile && (
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                  POST /projects/{project.id}/settings
+                </span>
+              )}
+            </div>
+            
+            <div className="space-y-4">
+              {/* User Avatar Upload or URL */}
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  User Avatar
+                </label>
+                
+                <div className="space-y-3">
+                  {/* Upload Option */}
+                  <div>
+                    <input
+                      type="file"
+                      id="user-avatar-upload"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleUserAvatarUpload}
+                      disabled={isFreeTrialMode}
+                    />
+                    <label htmlFor="user-avatar-upload" className={cn("cursor-pointer", isFreeTrialMode && "cursor-not-allowed opacity-50")}>
+                      <div className={cn(
+                        "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2",
+                        isMobile ? "h-12 w-full mobile-btn touch-target" : "h-10",
+                        isFreeTrialMode && "pointer-events-none opacity-50"
+                      )}>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload User Avatar
+                      </div>
+                    </label>
+                    {userAvatarFile && (
+                      <p className="text-sm text-green-600 mt-2">
+                        New user avatar selected: {userAvatarFile.name}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* URL Option */}
+                  <div>
+                    <input
+                      type="text"
+                      value={formData.user_avatar}
+                      onChange={(e) => handleInputChange('user_avatar', e.target.value)}
+                      placeholder="Or enter avatar URL: https://example.com/avatar.png"
+                      className={cn(
+                        "w-full border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground",
+                        isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                      )}
+                    />
+                  </div>
+                </div>
+                
+                <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                  <li>• Default avatar for users in conversations</li>
+                  <li>• Accepted formats: JPEG, PNG, JPG, GIF</li>
+                  <li>• Maximum file size: 5MB</li>
+                  <li>• Note: The user avatar must be a valid image</li>
+                </ul>
+              </div>
+
+              {/* Avatar Orientation */}
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Avatar Orientation
+                </label>
+                <SimpleSelect
+                  value={formData.user_avatar_orientation}
+                  onValueChange={(value) => handleInputChange('user_avatar_orientation', value)}
+                  options={[
+                    { value: 'agent-left-user-right', label: 'Agent Left, User Right' },
+                    { value: 'agent-right-user-left', label: 'Agent Right, User Left' },
+                    { value: 'both-left', label: 'Both Left' },
+                    { value: 'both-right', label: 'Both Right' }
+                  ]}
+                  placeholder="Select avatar orientation"
+                  className={cn(
+                    isMobile ? "h-12" : "h-10"
+                  )}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Position of avatars in the chat conversation
                 </p>
               </div>
             </div>

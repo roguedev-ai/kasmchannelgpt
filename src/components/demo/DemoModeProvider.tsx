@@ -20,6 +20,114 @@ interface DemoModeProviderProps {
   children: React.ReactNode;
 }
 
+// Loading component with auto-refresh
+function LoadingScreen() {
+  const [secondsElapsed, setSecondsElapsed] = React.useState(0);
+  const [hasRefreshed, setHasRefreshed] = React.useState(false);
+  const [isClient, setIsClient] = React.useState(false);
+  
+  // Handle client-side hydration properly
+  React.useEffect(() => {
+    setIsClient(true);
+    
+    // Start timer immediately on client
+    console.log('[LoadingScreen] Component mounted on client, starting timer');
+    let elapsed = 0;
+    const counterTimer = setInterval(() => {
+      elapsed++;
+      console.log('[LoadingScreen] Timer tick:', elapsed);
+      setSecondsElapsed(elapsed);
+    }, 1000);
+    
+    // Check for auto-refresh
+    const loadingRefreshAttempted = sessionStorage.getItem('customgpt.loadingRefreshAttempted');
+    console.log('[LoadingScreen] Checking auto-refresh:', { loadingRefreshAttempted });
+    
+    if (!loadingRefreshAttempted) {
+      // Auto-refresh after 2 seconds (only once)
+      console.log('[LoadingScreen] Setting up auto-refresh timer');
+      const refreshTimer = setTimeout(() => {
+        console.log('[DemoModeProvider] Auto-refreshing due to loading timeout');
+        sessionStorage.setItem('customgpt.loadingRefreshAttempted', 'true');
+        // Clear flags to ensure fresh API check
+        sessionStorage.removeItem('customgpt.autoDetected');
+        sessionStorage.removeItem('customgpt.firstLoadHandled');
+        // Set a flag to force API check on reload
+        sessionStorage.setItem('customgpt.isRefreshing', 'true');
+        setHasRefreshed(true);
+        window.location.reload();
+      }, 2000);
+      
+      // Clear flag after some time
+      const clearFlagTimer = setTimeout(() => {
+        sessionStorage.removeItem('customgpt.loadingRefreshAttempted');
+      }, 10000);
+      
+      return () => {
+        console.log('[LoadingScreen] Cleaning up timers');
+        clearInterval(counterTimer);
+        clearTimeout(refreshTimer);
+        clearTimeout(clearFlagTimer);
+      };
+    } else {
+      // Already attempted refresh, just clear the flag after some time
+      const clearFlagTimer = setTimeout(() => {
+        sessionStorage.removeItem('customgpt.loadingRefreshAttempted');
+      }, 10000);
+      
+      return () => {
+        console.log('[LoadingScreen] Cleaning up timers');
+        clearInterval(counterTimer);
+        clearTimeout(clearFlagTimer);
+      };
+    }
+  }, []); // Empty dependency array - run only once on mount
+  
+  const handleManualRefresh = () => {
+    console.log('[DemoModeProvider] Manual refresh triggered');
+    // Clear all relevant flags to ensure a fresh check
+    sessionStorage.removeItem('customgpt.loadingRefreshAttempted');
+    sessionStorage.removeItem('customgpt.autoDetected');
+    sessionStorage.removeItem('customgpt.firstLoadHandled');
+    // Set a flag to force API check on reload
+    sessionStorage.setItem('customgpt.isRefreshing', 'true');
+    window.location.reload();
+  };
+  
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="text-center max-w-sm mx-auto p-8">
+        {/* Loading spinner */}
+        <div className="mb-6 flex justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+        
+        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
+          Loading...
+        </div>
+        <div className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+          Checking API configuration...
+        </div>
+        
+        {/* Show auto-refresh countdown if not already refreshed */}
+        {!hasRefreshed && secondsElapsed >= 1 && secondsElapsed < 2 && (
+          <div className="text-xs text-gray-500 dark:text-gray-500 mb-4">
+            Auto-refreshing in {2 - secondsElapsed} second{2 - secondsElapsed !== 1 ? 's' : ''}...
+          </div>
+        )}
+        
+        <button
+          onClick={handleManualRefresh}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Refresh Now
+        </button>
+        
+      </div>
+    </div>
+  );
+}
+
 export function DemoModeProvider({ children }: DemoModeProviderProps) {
   const { 
     isDemoMode, 
@@ -33,9 +141,28 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
   const [isCheckingKeys, setIsCheckingKeys] = useState(true);
   const [serverHasKeys, setServerHasKeys] = useState(false);
   const [isFreeTrialMode, setIsFreeTrialMode] = useState(false);
+  
+  // Failsafe to prevent infinite loading
+  useEffect(() => {
+    const failsafeTimer = setTimeout(() => {
+      if (isCheckingKeys) {
+        console.warn('[DemoModeProvider] Failsafe triggered - forcing loading to stop');
+        setIsCheckingKeys(false);
+      }
+    }, 10000); // 10 second absolute maximum
+    
+    return () => clearTimeout(failsafeTimer);
+  }, [isCheckingKeys]);
   // Check session expiration synchronously on mount
   const [isSessionExpired, setIsSessionExpired] = useState(() => {
     if (typeof window !== 'undefined') {
+      // CRITICAL: First check if already marked as expired
+      const alreadyExpired = localStorage.getItem('customgpt.freeTrialExpired');
+      if (alreadyExpired === 'true') {
+        console.log('[DemoModeProvider] Initial check: Free trial already expired');
+        return true;
+      }
+      
       const freeTrialFlag = localStorage.getItem('customgpt.freeTrialMode');
       if (freeTrialFlag === 'true') {
         const sessionData = sessionStorage.getItem('customgpt.freeTrialSession');
@@ -45,6 +172,10 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
             const elapsed = Date.now() - session.startTime;
             const expired = elapsed >= (1 * 60 * 1000); // 1 minute for testing
             console.log('[DemoModeProvider] Initial expiration check:', { elapsed, expired });
+            // If expired on initial check, mark it in localStorage
+            if (expired) {
+              localStorage.setItem('customgpt.freeTrialExpired', 'true');
+            }
             return expired;
           } catch (e) {
             console.error('[DemoModeProvider] Error in initial expiration check:', e);
@@ -58,6 +189,13 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
   // Initialize deploymentMode synchronously to avoid race conditions
   const [deploymentMode, setDeploymentMode] = useState<string | null>(() => {
     if (typeof window !== 'undefined') {
+      // Check if we're in a refresh scenario
+      const isRefreshing = sessionStorage.getItem('customgpt.isRefreshing');
+      if (isRefreshing === 'true') {
+        // Clear the flag and return null to force API check
+        sessionStorage.removeItem('customgpt.isRefreshing');
+        return null;
+      }
       return localStorage.getItem('customgpt.deploymentMode');
     }
     return null;
@@ -67,36 +205,58 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const freeTrialFlag = localStorage.getItem('customgpt.freeTrialMode');
+      const freeTrialExpired = localStorage.getItem('customgpt.freeTrialExpired');
+      
       setIsFreeTrialMode(freeTrialFlag === 'true');
       
-      // If we detected an expired session on mount, clear the free trial mode
-      if (isSessionExpired && freeTrialFlag === 'true') {
-        console.log('[DemoModeProvider] Clearing expired free trial mode');
-        // Don't clear deployment mode, just free trial flag
-        // This will show the modal with API key option only
+      // CRITICAL: Check if free trial has been marked as expired
+      if (freeTrialExpired === 'true') {
+        console.log('[DemoModeProvider] Free trial already expired (from localStorage)');
+        setIsSessionExpired(true);
+        return; // Don't need to check session data
+      }
+      
+      // Immediately check if session is expired when loading free trial mode
+      if (freeTrialFlag === 'true') {
+        const sessionData = sessionStorage.getItem('customgpt.freeTrialSession');
+        if (sessionData) {
+          try {
+            const session = JSON.parse(sessionData);
+            const elapsed = Date.now() - session.startTime;
+            const expired = elapsed >= (1 * 60 * 1000); // 1 minute for testing
+            if (expired) {
+              console.log('[DemoModeProvider] Free trial session expired on load');
+              setIsSessionExpired(true);
+              // Mark as expired in localStorage
+              localStorage.setItem('customgpt.freeTrialExpired', 'true');
+            }
+          } catch (e) {
+            console.error('[DemoModeProvider] Error checking initial expiration:', e);
+          }
+        }
       }
     }
-  }, [isSessionExpired]);
+  }, []);
 
   // Check for server-side API keys on startup
   useEffect(() => {
+    console.log('[DemoModeProvider] useEffect running, deploymentMode:', deploymentMode, 'isCheckingKeys:', isCheckingKeys);
+    
     if (typeof window !== 'undefined' && deploymentMode === null) {
       // Check if this is the true first load (no deployment mode and no first load handled)
       const firstLoadHandled = sessionStorage.getItem('customgpt.firstLoadHandled');
       
       if (!firstLoadHandled) {
-        console.log('[DemoModeProvider] First load detected, clearing stale data and refreshing...');
+        console.log('[DemoModeProvider] First load detected, clearing stale data...');
         // Clear any stale session data
         sessionStorage.removeItem('customgpt.autoDetected');
         sessionStorage.removeItem('customgpt.freeTrialSession');
         sessionStorage.removeItem('customgpt.captchaVerified');
+        sessionStorage.removeItem('customgpt.loadingRefreshAttempted');
         // Mark first load as handled
         sessionStorage.setItem('customgpt.firstLoadHandled', 'true');
-        // Force a single refresh for clean initialization
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
-        return;
+        // Remove automatic refresh here - let the LoadingScreen handle it
+        // This prevents double refresh issues
       }
       
       // Check if we've already done auto-detection in this session
@@ -110,16 +270,26 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
       
       console.log('[DemoModeProvider] No deployment mode set, checking for server API keys...');
       
-      // Add timeout to prevent infinite checking
+      // Add immediate timeout to prevent infinite checking
       const timeoutId = setTimeout(() => {
         console.log('[DemoModeProvider] API check timeout, showing selection screen');
         setServerHasKeys(false);
         sessionStorage.setItem('customgpt.autoDetected', 'true');
         setIsCheckingKeys(false);
-      }, 5000); // 5 second timeout
+      }, 3000); // 3 second timeout
       
-      fetch('/api/proxy/validate-keys')
+      // Use AbortController for better fetch control
+      const abortController = new AbortController();
+      
+      fetch('/api/proxy/validate-keys', { 
+        signal: abortController.signal,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
         .then(response => {
+          console.log('[DemoModeProvider] Got response:', response.status, response.ok);
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
@@ -134,6 +304,7 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
             sessionStorage.setItem('customgpt.autoDetected', 'true');
             setDeploymentMode('production');
             setServerHasKeys(true);
+            setIsCheckingKeys(false);
             
             // Single manual refresh for clean initialization
             console.log('[DemoModeProvider] Triggering ONE refresh for clean state');
@@ -144,6 +315,7 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
             console.log('[DemoModeProvider] No valid server API keys, showing selection screen');
             setServerHasKeys(false);
             sessionStorage.setItem('customgpt.autoDetected', 'true');
+            setIsCheckingKeys(false);
           }
         })
         .catch(error => {
@@ -151,10 +323,21 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
           console.error('[DemoModeProvider] API key check failed:', error);
           setServerHasKeys(false);
           sessionStorage.setItem('customgpt.autoDetected', 'true');
+          setIsCheckingKeys(false);
         })
         .finally(() => {
-          setIsCheckingKeys(false);
+          // Ensure loading state is always cleared
+          console.log('[DemoModeProvider] API check completed, clearing loading state');
+          if (isCheckingKeys) {
+            setIsCheckingKeys(false);
+          }
         });
+        
+      // Cleanup on unmount
+      return () => {
+        clearTimeout(timeoutId);
+        abortController.abort();
+      };
     } else if (deploymentMode !== null) {
       // Already have a deployment mode, no need to check
       setIsCheckingKeys(false);
@@ -177,6 +360,14 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
     }
     
     const checkExpiration = () => {
+      // CRITICAL: First check if already marked as expired in localStorage
+      const alreadyExpired = localStorage.getItem('customgpt.freeTrialExpired');
+      if (alreadyExpired === 'true') {
+        console.log('[DemoModeProvider] Free trial already marked as expired');
+        setIsSessionExpired(true);
+        return;
+      }
+      
       const sessionData = sessionStorage.getItem('customgpt.freeTrialSession');
       if (!sessionData) {
         setIsSessionExpired(false);
@@ -194,6 +385,12 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
           isExpired: isExpired
         });
         setIsSessionExpired(isExpired);
+        
+        // CRITICAL: Mark as expired in localStorage so ALL tabs know
+        if (isExpired && !localStorage.getItem('customgpt.freeTrialExpired')) {
+          console.log('[DemoModeProvider] Marking free trial as expired in localStorage');
+          localStorage.setItem('customgpt.freeTrialExpired', 'true');
+        }
       } catch (e) {
         console.error('[DemoModeProvider] Error checking expiration:', e);
         setIsSessionExpired(false);
@@ -208,6 +405,19 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
     
     return () => clearInterval(interval);
   }, [isFreeTrialMode]);
+  
+  // Listen for storage changes to detect expiry in other tabs
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'customgpt.freeTrialExpired' && e.newValue === 'true') {
+        console.log('[DemoModeProvider] Free trial expired detected from another tab');
+        setIsSessionExpired(true);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
   
   useEffect(() => {
     // Update API client with demo API key
@@ -269,14 +479,7 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
         // Show loading while checking for server API keys
         if (isCheckingKeys) {
           console.log('[DemoModeProvider] Checking server API keys - showing loading');
-          return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-lg font-semibold text-gray-800 mb-2">Loading...</div>
-                <div className="text-sm text-gray-600">Checking API configuration...</div>
-              </div>
-            </div>
-          );
+          return <LoadingScreen />;
         }
         
         // No deployment mode selected - show modal over background UI
@@ -344,7 +547,12 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
             
             console.log('[DemoModeProvider] Free trial mode - showing main app');
             // Free trial doesn't need authentication, it uses server-side demo key
-            return children;
+            return (
+              <>
+                <DemoModeBanner />
+                {children}
+              </>
+            );
           }
           
           // Check if authenticated in demo mode (user API key mode)
@@ -364,7 +572,12 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
           }
           // Authenticated - show app
           console.log('[DemoModeProvider] Demo mode and authenticated - showing main app');
-          return children;
+          return (
+            <>
+              <DemoModeBanner />
+              {children}
+            </>
+          );
         }
         
         // Fallback (should not reach here)

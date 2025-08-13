@@ -59,3 +59,7 @@ app-debug.log
 AIUI-main
 
 CLAUDE.md
+
+# Webpack chunk files (build artifacts that change frequently)
+dist/**/*.chunk.js
+dist/**/*.chunk.js.map

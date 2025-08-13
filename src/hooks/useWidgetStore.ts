@@ -41,14 +41,13 @@ function useWidgetStores() {
 export function useMessageStore() {
   const isInWidget = useIsInWidgetContext();
   const widgetStores = useWidgetStores();
+  const globalStore = useGlobalMessageStore();
+  const widgetStore = useStore(
+    widgetStores?.messageStore || useGlobalMessageStore,
+    (state) => state
+  );
   
-  if (isInWidget && widgetStores) {
-    // Use widget-specific store
-    return useStore(widgetStores.messageStore);
-  }
-  
-  // Use global store
-  return useGlobalMessageStore();
+  return isInWidget && widgetStores ? widgetStore : globalStore;
 }
 
 /**
@@ -57,14 +56,13 @@ export function useMessageStore() {
 export function useConversationStore() {
   const isInWidget = useIsInWidgetContext();
   const widgetStores = useWidgetStores();
+  const globalStore = useGlobalConversationStore();
+  const widgetStore = useStore(
+    widgetStores?.conversationStore || useGlobalConversationStore,
+    (state) => state
+  );
   
-  if (isInWidget && widgetStores) {
-    // Use widget-specific store
-    return useStore(widgetStores.conversationStore);
-  }
-  
-  // Use global store
-  return useGlobalConversationStore();
+  return isInWidget && widgetStores ? widgetStore : globalStore;
 }
 
 /**
@@ -73,14 +71,13 @@ export function useConversationStore() {
 export function useAgentStore() {
   const isInWidget = useIsInWidgetContext();
   const widgetStores = useWidgetStores();
+  const globalStore = useGlobalAgentStore();
+  const widgetStore = useStore(
+    widgetStores?.agentStore || useGlobalAgentStore,
+    (state) => state
+  );
   
-  if (isInWidget && widgetStores) {
-    // Use widget-specific store
-    return useStore(widgetStores.agentStore);
-  }
-  
-  // Use global store
-  return useGlobalAgentStore();
+  return isInWidget && widgetStores ? widgetStore : globalStore;
 }
 
 /**

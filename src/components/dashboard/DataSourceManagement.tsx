@@ -36,6 +36,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { SimpleSelect } from '@/components/ui/simple-select';
 
 interface DataSource {
   id: number;
@@ -565,45 +566,48 @@ export const DataSourceManagement: React.FC = () => {
           </div>
 
           {/* Status Filter */}
-          <select
+          <SimpleSelect
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="error">Error</option>
-            <option value="syncing">Syncing</option>
-          </select>
+            onValueChange={(value) => setStatusFilter(value as any)}
+            options={[
+              { value: 'all', label: 'All Status' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+              { value: 'error', label: 'Error' },
+              { value: 'syncing', label: 'Syncing' }
+            ]}
+            placeholder="Filter by status"
+          />
 
           {/* Type Filter */}
-          <select
+          <SimpleSelect
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as any)}
-            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="all">All Types</option>
-            <option value="website">Website</option>
-            <option value="sitemap">Sitemap</option>
-            <option value="document">Document</option>
-            <option value="database">Database</option>
-            <option value="api">API</option>
-            <option value="rss">RSS Feed</option>
-            <option value="file_upload">File Upload</option>
-          </select>
+            onValueChange={(value) => setTypeFilter(value as any)}
+            options={[
+              { value: 'all', label: 'All Types' },
+              { value: 'website', label: 'Website' },
+              { value: 'sitemap', label: 'Sitemap' },
+              { value: 'document', label: 'Document' },
+              { value: 'database', label: 'Database' },
+              { value: 'api', label: 'API' },
+              { value: 'rss', label: 'RSS Feed' },
+              { value: 'file_upload', label: 'File Upload' }
+            ]}
+            placeholder="Filter by type"
+          />
 
           {/* Sort */}
-          <select
+          <SimpleSelect
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="updated">Last Updated</option>
-            <option value="name">Name</option>
-            <option value="documents">Document Count</option>
-            <option value="status">Status</option>
-          </select>
+            onValueChange={(value) => setSortBy(value as any)}
+            options={[
+              { value: 'updated', label: 'Last Updated' },
+              { value: 'name', label: 'Name' },
+              { value: 'documents', label: 'Document Count' },
+              { value: 'status', label: 'Status' }
+            ]}
+            placeholder="Sort by"
+          />
         </div>
 
         {/* View Mode Toggle */}

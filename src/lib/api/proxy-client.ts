@@ -21,6 +21,7 @@ import type {
   StreamChunk,
   LimitsResponse,
   UserProfile,
+  CustomerIntelligenceResponse,
 } from '@/types';
 import type { APIMessageResponse } from '@/types/message.types';
 import type { 
@@ -167,7 +168,32 @@ export class ProxyCustomGPTClient {
       clearTimeout(timeoutId);
       this.abortControllers.delete(requestId);
 
-      const responseData = await response.json();
+      // Check if response has content before trying to parse JSON
+      let responseData;
+      const contentLength = response.headers.get('content-length');
+      const contentType = response.headers.get('content-type');
+      
+      if (contentLength === '0' || (!contentType?.includes('application/json') && response.status === 200)) {
+        // Empty response or non-JSON success response
+        responseData = { status: 'success', data: { updated: true } };
+      } else {
+        try {
+          const text = await response.text();
+          if (text.trim() === '') {
+            // Empty response body
+            responseData = { status: 'success', data: { updated: true } };
+          } else {
+            responseData = JSON.parse(text);
+          }
+        } catch (jsonError) {
+          // Failed to parse JSON, but response was successful
+          if (response.ok) {
+            responseData = { status: 'success', data: { updated: true } };
+          } else {
+            throw new Error(`Failed to parse response: ${jsonError}`);
+          }
+        }
+      }
 
       // Track API call
       usageTracker.trackApiCall(endpoint, options.method || 'GET', response.status);
@@ -336,18 +362,24 @@ export class ProxyCustomGPTClient {
   }
 
   async updateAgent(id: number, data: { project_name?: string; are_licenses_allowed?: boolean; is_shared?: boolean; sitemap_path?: string }): Promise<APIResponse<Agent>> {
+    console.log('[ProxyClient] updateAgent called with:', { id, data });
+    
     // Use FormData for multipart/form-data as specified in OpenAPI
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined) {
         formData.append(key, String(value));
+        console.log('[ProxyClient] FormData append:', key, value);
       }
     });
 
-    return this.request(`/projects/${id}`, {
+    const response = await this.request<APIResponse<Agent>>(`/projects/${id}`, {
       method: 'POST', // Changed from PUT to POST as per OpenAPI spec
       body: formData,
     });
+    
+    console.log('[ProxyClient] updateAgent response:', response);
+    return response;
   }
 
   async deleteAgent(id: number): Promise<APIResponse<{ deleted: boolean }>> {
@@ -655,18 +687,18 @@ export class ProxyCustomGPTClient {
 
   // Licenses
   async getLicenses(projectId: number): Promise<APIResponse<any[]>> {
-    return this.request(`/projects/${projectId}/licenses`);
+    return this.request(`/projects/${projectId}/license_keys`);
   }
 
   async createLicense(projectId: number, data: { name: string }): Promise<APIResponse<any>> {
-    return this.request(`/projects/${projectId}/licenses`, {
+    return this.request(`/projects/${projectId}/license_keys`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async getLicense(projectId: number, licenseId: string): Promise<APIResponse<any>> {
-    return this.request(`/projects/${projectId}/licenses/${licenseId}`);
+    return this.request(`/projects/${projectId}/license_keys/${licenseId}`);
   }
 
   async updateLicense(
@@ -674,14 +706,14 @@ export class ProxyCustomGPTClient {
     licenseId: string,
     data: { name?: string; is_active?: boolean }
   ): Promise<APIResponse<any>> {
-    return this.request(`/projects/${projectId}/licenses/${licenseId}`, {
+    return this.request(`/projects/${projectId}/license_keys/${licenseId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
   async deleteLicense(projectId: number, licenseId: string): Promise<APIResponse<any>> {
-    return this.request(`/projects/${projectId}/licenses/${licenseId}`, {
+    return this.request(`/projects/${projectId}/license_keys/${licenseId}`, {
       method: 'DELETE',
     });
   }
@@ -755,6 +787,15 @@ export class ProxyCustomGPTClient {
     return this.request(`/projects/${projectId}/sources/${sourceId}/instant-sync`, {
       method: 'PUT',
     });
+  }
+
+  // Customer Intelligence
+  async getCustomerIntelligence(
+    projectId: number,
+    page: number = 1,
+    limit: number = 100
+  ): Promise<CustomerIntelligenceResponse> {
+    return this.request(`/projects/${projectId}/reports/intelligence?page=${page}&limit=${limit}`);
   }
 
   // User

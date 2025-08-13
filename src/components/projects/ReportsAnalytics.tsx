@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { SimpleSelect } from '@/components/ui/simple-select';
 import { cn } from '@/lib/utils';
 import { getClient, isClientInitialized } from '@/lib/api/client';
 import type { Agent } from '@/types';
@@ -386,15 +387,16 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ project }) =
               {/* Interval Selector */}
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-foreground">Time-based Analysis</h3>
-                <select
+                <SimpleSelect
                   value={interval}
-                  onChange={(e) => setInterval(e.target.value as AnalysisInterval)}
-                  className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
+                  onValueChange={(value) => setInterval(value as AnalysisInterval)}
+                  options={[
+                    { value: 'daily', label: 'Daily' },
+                    { value: 'weekly', label: 'Weekly' },
+                    { value: 'monthly', label: 'Monthly' }
+                  ]}
+                  className="w-32"
+                />
               </div>
 
               {/* Queries Over Time */}

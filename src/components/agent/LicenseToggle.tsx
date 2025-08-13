@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Key, Loader2 } from 'lucide-react';
 import { useAgentStore } from '@/store/agents';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface LicenseToggleProps {
   agentId: number;

@@ -7,15 +7,18 @@ import { toast } from 'sonner';
 import { useProjectSettingsStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { SimpleSelect } from '@/components/ui/simple-select';
 import { cn } from '@/lib/utils';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
 import type { Agent } from '@/types';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 
 interface BehaviorSettingsProps {
   project: Agent;
 }
 
 export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) => {
+  const { isFreeTrialMode } = useDemoModeContext();
   const { 
     settings, 
     settingsLoading, 
@@ -49,11 +52,21 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
   }, [settings]);
 
   const handleInputChange = (field: string, value: any) => {
+    if (isFreeTrialMode) {
+      toast.error('Editing behavior settings is not available in free trial mode');
+      return;
+    }
+    
     setFormData(prev => ({ ...prev, [field]: value }));
     setIsModified(true);
   };
 
   const handleSave = async () => {
+    if (isFreeTrialMode) {
+      toast.error('Updating behavior settings is not available in free trial mode');
+      return;
+    }
+    
     try {
       await updateSettings(project.id, formData);
       setIsModified(false);
@@ -160,9 +173,13 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
           
           <Button
             onClick={handleSave}
-            disabled={!isModified || settingsLoading}
+            disabled={!isModified || settingsLoading || isFreeTrialMode}
             size="sm"
-            className={isMobile ? "h-9 px-3 text-sm" : ""}
+            className={cn(
+              isMobile ? "h-9 px-3 text-sm" : "",
+              isFreeTrialMode && "opacity-50 cursor-not-allowed"
+            )}
+            title={isFreeTrialMode ? 'Saving behavior settings is not available in free trial mode' : ''}
           >
             <Save className="w-4 h-4 mr-1.5" />
             {settingsLoading ? 'Saving...' : 'Save Changes'}
@@ -223,7 +240,7 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                     "text-muted-foreground mt-1",
                     isMobile ? "text-xs mobile-text-sm" : "text-sm"
                   )}>
-                    Define your AI agent's personality, role, and behavior patterns
+                    Define your AI agent&apos;s personality, role, and behavior patterns
                   </p>
                 </div>
               </div>
@@ -244,13 +261,16 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                   onChange={(e) => handleInputChange('persona_instructions', e.target.value)}
                   placeholder="You are a helpful assistant that..."
                   rows={isMobile ? 5 : 6}
+                  disabled={isFreeTrialMode}
                   className={cn(
                     "w-full border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none bg-background text-foreground",
-                    isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                    isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2",
+                    isFreeTrialMode && "opacity-50 cursor-not-allowed bg-muted"
                   )}
+                  title={isFreeTrialMode ? 'Editing behavior settings is not available in free trial mode' : ''}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  These instructions control your AI's personality and behavior. Be specific about tone, expertise, and how it should interact with users.
+                  These instructions control your AI&apos;s personality and behavior. Be specific about tone, expertise, and how it should interact with users.
                 </p>
               </div>
 
@@ -274,10 +294,13 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                         variant="outline"
                         size="sm"
                         onClick={() => handleInputChange('persona_instructions', example.content)}
+                        disabled={isFreeTrialMode}
                         className={cn(
                           "text-xs",
-                          isMobile ? "w-full h-8 px-3" : ""
+                          isMobile ? "w-full h-8 px-3" : "",
+                          isFreeTrialMode && "opacity-50 cursor-not-allowed"
                         )}
+                        title={isFreeTrialMode ? 'Using persona examples is not available in free trial mode' : ''}
                       >
                         Use This Example
                       </Button>
@@ -319,10 +342,11 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                 <label 
                   key={option.value} 
                   className={cn(
-                    "flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors",
+                    "flex items-start gap-3 p-4 border rounded-lg transition-colors",
                     formData.response_source === option.value
                       ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20"
-                      : "border-border hover:bg-accent"
+                      : "border-border hover:bg-accent",
+                    isFreeTrialMode ? "cursor-not-allowed opacity-50" : "cursor-pointer"
                   )}
                 >
                   <input
@@ -331,10 +355,13 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                     value={option.value}
                     checked={formData.response_source === option.value}
                     onChange={(e) => handleInputChange('response_source', e.target.value)}
+                    disabled={isFreeTrialMode}
                     className={cn(
                       "mt-1",
-                      isMobile && "touch-target"
+                      isMobile && "touch-target",
+                      isFreeTrialMode && "cursor-not-allowed"
                     )}
+                    title={isFreeTrialMode ? 'Changing response source is not available in free trial mode' : ''}
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -390,24 +417,21 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Interface Language
               </label>
-              <select
+              <SimpleSelect
                 value={formData.chatbot_msg_lang}
-                onChange={(e) => handleInputChange('chatbot_msg_lang', e.target.value)}
+                onValueChange={(value) => handleInputChange('chatbot_msg_lang', value)}
+                options={languageOptions}
+                disabled={isFreeTrialMode}
+                placeholder="Select language"
                 className={cn(
-                  "w-full border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground",
-                  isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                  isMobile && "mobile-input",
+                  isFreeTrialMode && "opacity-50"
                 )}
-              >
-                {languageOptions.map((lang) => (
-                  <option key={lang.value} value={lang.value}>
-                    {lang.label}
-                  </option>
-                ))}
-              </select>
+              />
               
               <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <p className="text-sm text-blue-800 dark:text-blue-300">
-                  <strong>Important:</strong> This setting only affects system messages like "Ask me anything" 
+                  <strong>Important:</strong> This setting only affects system messages like &ldquo;Ask me anything&rdquo; 
                   or error messages. The AI will respond in whatever language the user uses in their questions.
                 </p>
               </div>
@@ -430,7 +454,7 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li>• The AI will always try to be helpful and accurate</li>
                   <li>• Responses are generated based on your configured knowledge source</li>
-                  <li>• The AI will indicate when it doesn't have enough information</li>
+                  <li>• The AI will indicate when it doesn&apos;t have enough information</li>
                   <li>• Persona instructions override default behavior patterns</li>
                 </ul>
               </div>

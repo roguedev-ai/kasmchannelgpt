@@ -46,8 +46,6 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useDemoStore } from '@/store/demo';
-import { DemoModeBanner } from '@/components/demo/DemoModeBanner';
-import { useDemoModeContext } from '@/contexts/DemoModeContext';
 
 /**
  * Props for Navbar component
@@ -67,9 +65,6 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
   const pathname = usePathname();
   const { isDemoMode, isAuthenticated } = useDemoStore();
-  
-  // Get deployment mode and free trial mode from context
-  const { deploymentMode, isFreeTrialMode } = useDemoModeContext();
 
   /**
    * Navigation items configuration
@@ -144,11 +139,6 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
 
           {/* Right side - Mobile menu or additional actions */}
           <div className="flex items-center gap-2">
-            {/* Demo Mode Banner - Show when in demo deployment mode (free trial or authenticated user API key) */}
-            {deploymentMode === 'demo' && (isFreeTrialMode || (isDemoMode && isAuthenticated)) && (
-              <DemoModeBanner />
-            )}
-            
             {/* Mobile Navigation */}
             <div className="md:hidden flex items-center gap-1">
               {navigationItems.filter(item => item.href !== '/').map((item) => {

@@ -67,7 +67,11 @@ import {
   AlertCircle,
   Calendar,
   Mail,
-  Users
+  Users,
+  Package,
+  HardDrive,
+  MessageCircle,
+  HelpCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -77,6 +81,8 @@ import { Card } from '@/components/ui/card';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { cn, formatTimestamp } from '@/lib/utils';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
+import { useLimits } from '@/hooks/useLimits';
 
 /**
  * Profile Page Component
@@ -102,6 +108,12 @@ export default function ProfilePage() {
 
   // Mobile responsiveness hook
   const { isMobile } = useBreakpoint();
+  
+  // Get free trial mode status
+  const { isFreeTrialMode } = useDemoModeContext();
+  
+  // Get usage limits
+  const { limits, isLoading: limitsLoading } = useLimits();
 
   /**
    * Load profile data on component mount
@@ -111,7 +123,7 @@ export default function ProfilePage() {
    */
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
   /**
    * Sync profile name with local edit state
@@ -132,6 +144,11 @@ export default function ProfilePage() {
    * current profile data for modification.
    */
   const handleEdit = () => {
+    if (isFreeTrialMode) {
+      toast.error('Profile editing is not available in free trial mode');
+      return;
+    }
+    
     if (profile) {
       setEditName(profile.name);
       setIsEditing(true);
@@ -228,13 +245,19 @@ export default function ProfilePage() {
    * 
    * Returns the appropriate avatar image URL based on
    * current state (preview, saved photo, or null).
+   * Adds cache-busting parameter to ensure fresh images.
    * 
    * @returns Avatar URL or null
    */
   const getDisplayAvatar = () => {
     // Priority: preview > saved photo > default
     if (previewUrl) return previewUrl;
-    if (profile?.profile_photo_url) return profile.profile_photo_url;
+    if (profile?.profile_photo_url) {
+      // Add cache-busting parameter to force reload after updates
+      const url = new URL(profile.profile_photo_url);
+      url.searchParams.set('t', Date.now().toString());
+      return url.toString();
+    }
     return null;
   };
 
@@ -415,7 +438,9 @@ export default function ProfilePage() {
                         variant="outline"
                         size="sm"
                         onClick={handleEdit}
+                        disabled={isFreeTrialMode}
                         className="h-8 px-3 text-sm"
+                        title={isFreeTrialMode ? 'Profile editing is not available in free trial mode' : 'Edit your profile'}
                       >
                         <Edit className="w-3 h-3 mr-1" />
                         Edit Profile
@@ -448,6 +473,126 @@ export default function ProfilePage() {
                     <div className="text-xs mt-1">{formatTimestamp(profile.updated_at)}</div>
                   </div>
                 </div>
+              </div>
+            </Card>
+
+            {/* Usage Limits Card */}
+            <Card className="p-4">
+              {!isMobile && (
+                <div className="flex justify-end mb-4">
+                  <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                    GET /limits/usage
+                  </span>
+                </div>
+              )}
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className={cn(
+                    "font-semibold text-foreground",
+                    isMobile ? "text-base" : "text-lg"
+                  )}>
+                    Usage Limits
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    title="Usage limits info"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {limits ? (
+                  <div className="space-y-4">
+                    {/* Projects/Agents Limit */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">Projects</span>
+                        </div>
+                        <span className="text-sm font-mono">
+                          {limits.current_projects_num} / {limits.max_projects_num}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-brand-500 transition-all duration-300"
+                          style={{ 
+                            width: `${Math.min((limits.current_projects_num / limits.max_projects_num) * 100, 100)}%` 
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Storage Credits (Words) Limit */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <HardDrive className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">Storage (Words)</span>
+                        </div>
+                        <span className="text-sm font-mono">
+                          {limits.current_total_storage_credits.toLocaleString()} / {limits.max_total_storage_credits.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-brand-500 transition-all duration-300"
+                          style={{ 
+                            width: `${Math.min((limits.current_total_storage_credits / limits.max_total_storage_credits) * 100, 100)}%` 
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Queries Limit */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">Queries</span>
+                        </div>
+                        <span className="text-sm font-mono">
+                          {limits.current_queries.toLocaleString()} / {limits.max_queries.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-brand-500 transition-all duration-300"
+                          style={{ 
+                            width: `${Math.min((limits.current_queries / limits.max_queries) * 100, 100)}%` 
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : limitsLoading ? (
+                  // Loading skeleton for limits
+                  <div className="space-y-4 animate-pulse">
+                    <div className="space-y-2">
+                      <div className="h-4 bg-muted rounded w-20"></div>
+                      <div className="h-2 bg-muted rounded"></div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-muted rounded w-24"></div>
+                      <div className="h-2 bg-muted rounded"></div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-muted rounded w-20"></div>
+                      <div className="h-2 bg-muted rounded"></div>
+                    </div>
+                  </div>
+                ) : (
+                  // Error or no data state
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">
+                      Unable to load usage limits
+                    </p>
+                  </div>
+                )}
               </div>
             </Card>
 

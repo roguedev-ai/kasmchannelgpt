@@ -104,11 +104,29 @@ export const useProfileStore = create<UserProfileStore>()(
               errorMessage = 'Authentication required. Please check your API key configuration.';
               toast.error('Authentication failed. Please check your API key configuration.');
             }
+          } else if (error.status === 422 || error.status === 400) {
+            // Handle validation errors
+            if (error.data?.data?.errors) {
+              const errors = error.data.data.errors;
+              if (errors.profile_photo && Array.isArray(errors.profile_photo)) {
+                errorMessage = errors.profile_photo[0];
+                toast.error(errorMessage);
+              } else {
+                // Handle other validation errors
+                const firstError = Object.values(errors).flat()[0] as string;
+                errorMessage = firstError || 'Validation error occurred';
+                toast.error(errorMessage);
+              }
+            } else {
+              errorMessage = error.message || 'Validation error occurred';
+              toast.error(errorMessage);
+            }
           } else if (error.status === 500) {
             errorMessage = 'Server error occurred. Please try again later.';
             toast.error('Server error. Please try again later.');
           } else {
-            toast.error('Failed to update profile');
+            errorMessage = error.message || 'Failed to update profile';
+            toast.error(errorMessage);
           }
           
           set({ 

@@ -46,7 +46,7 @@
 'use client';
 
 import React, { useEffect, useState, Suspense, useRef, useCallback } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   Bot, 
   Settings, 
@@ -89,13 +89,18 @@ import { SourcesSettings } from '@/components/projects/SourcesSettings';
 import { PagesSettings } from '@/components/projects/PagesSettings';
 import { ConversationsSettings } from '@/components/projects/ConversationsSettings';
 import { ReportsAnalytics } from '@/components/projects/ReportsAnalytics';
-import { SecuritySettings } from '@/components/projects/SecuritySettings';
+import { CustomerIntelligenceTab } from '@/components/projects/CustomerIntelligenceTab';
+import { AdvancedSettings } from '@/components/projects/AdvancedSettings';
+// Consolidated components
+import { MessagesAndCitations } from '@/components/projects/MessagesAndCitations';
+import { BusinessAndLicensing } from '@/components/projects/BusinessAndLicensing';
+import { SecurityAndPrivacy } from '@/components/projects/SecurityAndPrivacy';
 
 /**
  * Settings tab type definition
  * Represents available configuration sections
  */
-type SettingsTab = 'general' | 'appearance' | 'behavior' | 'sources' | 'pages' | 'conversations' | 'analytics' | 'security';
+type SettingsTab = 'general' | 'appearance' | 'behavior' | 'sources' | 'pages' | 'conversations' | 'analytics' | 'intelligence' | 'messages-citations' | 'advanced' | 'business-licensing' | 'security';
 
 /**
  * Settings tabs configuration
@@ -109,7 +114,11 @@ const settingsTabs = [
   { id: 'pages' as SettingsTab, label: 'Content Pages', icon: FileText, description: 'Manage indexed content and metadata' },
   { id: 'conversations' as SettingsTab, label: 'Conversations', icon: Users, description: 'Chat history, sharing, and management' },
   { id: 'analytics' as SettingsTab, label: 'Reports & Analytics', icon: BarChart3, description: 'Traffic, queries, and conversation reports' },
-  { id: 'security' as SettingsTab, label: 'Security', icon: Shield, description: 'Access control, anti-hallucination, visibility' },
+  { id: 'intelligence' as SettingsTab, label: 'Customer Intelligence', icon: Activity, description: 'Customer interactions, emotions, intents, and behavioral analytics' },
+  { id: 'messages-citations' as SettingsTab, label: 'Messages & Citations', icon: MessageCircle, description: 'Custom messages, templates, and citation display settings' },
+  { id: 'advanced' as SettingsTab, label: 'Advanced', icon: Settings, description: 'Advanced configuration settings' },
+  { id: 'business-licensing' as SettingsTab, label: 'Business & Licensing', icon: Zap, description: 'Commerce settings, monetization, and license management' },
+  { id: 'security' as SettingsTab, label: 'Security & Privacy', icon: Shield, description: 'Access control, data retention, and security settings' },
 ];
 
 /**
@@ -244,12 +253,14 @@ const SettingsTabButton: React.FC<SettingsTabProps> = ({ tab, isActive, onClick 
 function ProjectsPageContent() {
   // Hooks
   const { isMobile } = useBreakpoint();
+  const router = useRouter();
   
   // Store hooks and local state
   const { agents, loading, fetchAgents, loadMoreAgents, paginationMeta } = useAgentStore();
   const [selectedProject, setSelectedProject] = useState<Agent | null>(null);
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoadingAllForSearch, setIsLoadingAllForSearch] = useState(false);
   
   // Resizable sidebar state
   const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -281,7 +292,7 @@ function ProjectsPageContent() {
    */
   useEffect(() => {
     fetchAgents();
-  }, []);
+  }, [fetchAgents]);
 
   /**
    * Auto-select project based on URL parameter or first project
@@ -304,7 +315,7 @@ function ProjectsPageContent() {
         setSelectedProject(agents[0]);
       }
     }
-  }, [agents, projectIdFromUrl]); // Remove selectedProject from dependencies to avoid infinite loop
+  }, [agents, projectIdFromUrl, selectedProject]); // Remove selectedProject from dependencies to avoid infinite loop
 
   /**
    * Set active tab based on URL parameter
@@ -315,6 +326,58 @@ function ProjectsPageContent() {
       setActiveTab(tabFromUrl);
     }
   }, [tabFromUrl]);
+
+  /**
+   * Automatically load all pages when searching
+   * This ensures search works across all projects, not just loaded ones
+   */
+  useEffect(() => {
+    const loadAllAgentsForSearch = async () => {
+      // Only trigger if we have a search query and there are more pages to load
+      if (!searchQuery || !paginationMeta?.hasMore || loading || isLoadingAllForSearch) {
+        return;
+      }
+
+      console.log('🔍 [Projects] Starting to load all agents for search...');
+      setIsLoadingAllForSearch(true);
+      
+      try {
+        // Keep loading pages until we have all agents
+        let attempts = 0;
+        const maxAttempts = 20; // Safety limit to prevent infinite loops
+        
+        while (attempts < maxAttempts) {
+          // Get fresh pagination state
+          const currentState = useAgentStore.getState();
+          if (!currentState.paginationMeta?.hasMore) {
+            break;
+          }
+          
+          attempts++;
+          console.log(`📥 [Projects] Loading more agents... (attempt ${attempts})`);
+          
+          await loadMoreAgents();
+          
+          // Small delay to avoid overwhelming the API
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        const finalState = useAgentStore.getState();
+        console.log('✅ [Projects] Finished loading all agents for search');
+        toast.success(`Loaded all ${finalState.agents.length} projects for search`);
+      } catch (error) {
+        console.error('Failed to load all agents for search:', error);
+        toast.error('Failed to load all projects for search');
+      } finally {
+        setIsLoadingAllForSearch(false);
+      }
+    };
+
+    // Only run if we have a search query
+    if (searchQuery) {
+      loadAllAgentsForSearch();
+    }
+  }, [searchQuery, paginationMeta?.hasMore, loading, loadMoreAgents]); // Include all dependencies
 
   /**
    * Filter projects based on search
@@ -415,8 +478,16 @@ function ProjectsPageContent() {
         return <ConversationsSettings project={selectedProject} />;
       case 'analytics':
         return <ReportsAnalytics project={selectedProject} />;
+      case 'intelligence':
+        return <CustomerIntelligenceTab agentId={selectedProject.id} agentName={selectedProject.project_name} />;
+      case 'messages-citations':
+        return <MessagesAndCitations project={selectedProject} />;
+      case 'advanced':
+        return <AdvancedSettings project={selectedProject} />;
+      case 'business-licensing':
+        return <BusinessAndLicensing project={selectedProject} />;
       case 'security':
-        return <SecuritySettings project={selectedProject} />;
+        return <SecurityAndPrivacy project={selectedProject} />;
       default:
         return null;
     }
@@ -426,7 +497,7 @@ function ProjectsPageContent() {
   if (isMobile) {
     console.log('🔍 [Projects Page] Rendering mobile version');
     return (
-      <PageLayout showNavbar={false} showMobileNavigation={false}>
+      <PageLayout showNavbar={false}>
         <MobileProjectsPage />
       </PageLayout>
     );
@@ -470,7 +541,20 @@ function ProjectsPageContent() {
                 className="w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground"
                 aria-label="Search projects"
               />
+              {/* Loading indicator when fetching all projects for search */}
+              {isLoadingAllForSearch && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <RefreshCw className="w-4 h-4 animate-spin text-brand-500" />
+                </div>
+              )}
             </div>
+            
+            {/* Search loading message */}
+            {isLoadingAllForSearch && paginationMeta && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Loading all projects for search... ({agents.length} of {paginationMeta.totalCount})
+              </p>
+            )}
           </div>
 
           {/* Projects List */}
@@ -506,7 +590,10 @@ function ProjectsPageContent() {
                     key={project.id}
                     project={project}
                     isSelected={selectedProject?.id === project.id}
-                    onClick={() => setSelectedProject(project)}
+                    onClick={() => {
+                      setSelectedProject(project);
+                      router.push(`/projects?id=${project.id}`);
+                    }}
                   />
                 ))}
                 

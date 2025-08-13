@@ -109,7 +109,7 @@ export const DeleteConversationDialog: React.FC<DeleteConversationDialogProps> =
                     "mt-2 text-muted-foreground",
                     isMobile ? "text-sm" : "text-sm"
                   )}>
-                    Are you sure you want to delete <strong>"{conversationName}"</strong>?
+                    Are you sure you want to delete <strong>&ldquo;{conversationName}&rdquo;</strong>?
                   </p>
                   
                   {messageCount !== undefined && messageCount > 0 && (

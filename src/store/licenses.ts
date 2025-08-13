@@ -33,8 +33,7 @@ export const useLicenseStore = create<LicenseStore>((set, get) => ({
         responseType: typeof response,
         hasData: !!response?.data,
         dataType: Array.isArray(response?.data) ? 'array' : typeof response?.data,
-        dataLength: Array.isArray(response?.data) ? response.data.length : 0,
-        fullResponse: response
+        dataLength: Array.isArray(response?.data) ? response.data.length : 0
       });
       
       // Handle response format based on API documentation
@@ -60,15 +59,33 @@ export const useLicenseStore = create<LicenseStore>((set, get) => ({
         errorMessage: error?.message,
         errorStatus: error?.status,
         errorCode: error?.code,
-        fullError: error
+        responseText: error?.responseText || 'No response text'
       });
       
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch licenses';
-      set({ 
-        error: errorMessage,
-        loading: false,
-        licenses: []
-      });
+      // Handle JSON parsing errors specifically
+      let errorMessage = 'Failed to fetch licenses';
+      if (error?.status === 403 || error?.data?.message?.includes('not allowed')) {
+        // This is expected for some projects - don't show an error
+        errorMessage = '';
+        set({ 
+          error: null,
+          loading: false,
+          licenses: []
+        });
+        throw error; // Still throw to handle in component
+      } else if (error?.message?.includes('Unexpected token')) {
+        errorMessage = 'API returned invalid response format. This may be a server configuration issue.';
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      if (errorMessage) {
+        set({ 
+          error: errorMessage,
+          loading: false,
+          licenses: []
+        });
+      }
     }
   },
 
@@ -91,8 +108,7 @@ export const useLicenseStore = create<LicenseStore>((set, get) => ({
         responseType: typeof response,
         hasData: !!response?.data,
         dataStructure: response?.data ? Object.keys(response.data) : [],
-        licenseKey: response.data?.licenseKey?.substring(0, 8) + '...',
-        fullResponse: response
+        licenseKey: response.data?.licenseKey?.substring(0, 8) + '...'
       });
       
       // Handle response format based on API documentation
@@ -121,10 +137,17 @@ export const useLicenseStore = create<LicenseStore>((set, get) => ({
         errorMessage: error?.message,
         errorStatus: error?.status,
         errorCode: error?.code,
-        fullError: error
+        responseText: error?.responseText || 'No response text'
       });
       
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create license';
+      // Handle JSON parsing errors specifically
+      let errorMessage = 'Failed to create license';
+      if (error?.message?.includes('Unexpected token')) {
+        errorMessage = 'API returned invalid response format. This may be a server configuration issue.';
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       set({ 
         error: errorMessage,
         loading: false 

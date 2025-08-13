@@ -1208,4 +1208,89 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
       return { messages: newMessages };
     });
   },
+
+  /**
+   * Regenerate the last assistant response
+   * 
+   * Flow:
+   * 1. Find the last user message in the conversation
+   * 2. Remove the last assistant message
+   * 3. Resend the user message to get a new response
+   */
+  regenerateLastResponse: async () => {
+    const agentStore = useAgentStore.getState();
+    const conversationStore = useConversationStore.getState();
+    
+    const { currentAgent } = agentStore;
+    const { currentConversation } = conversationStore;
+    
+    if (!currentAgent || !currentConversation) {
+      logger.error('MESSAGES', 'Cannot regenerate - missing agent or conversation');
+      toast.error('Cannot regenerate response. Please select a conversation.');
+      return;
+    }
+
+    const conversationId = currentConversation.id.toString();
+    const messages = get().getMessagesForConversation(conversationId);
+    
+    if (messages.length < 2) {
+      logger.warn('MESSAGES', 'Not enough messages to regenerate');
+      toast.error('No response to regenerate.');
+      return;
+    }
+
+    // Find the last user message and last assistant message
+    let lastUserMessage: ChatMessage | null = null;
+    let lastAssistantMessage: ChatMessage | null = null;
+    let lastAssistantIndex = -1;
+
+    // Iterate backwards to find the last assistant and user messages
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (!lastAssistantMessage && msg.role === 'assistant' && msg.status !== 'error') {
+        lastAssistantMessage = msg;
+        lastAssistantIndex = i;
+      }
+      if (!lastUserMessage && msg.role === 'user' && lastAssistantMessage) {
+        lastUserMessage = msg;
+        break;
+      }
+    }
+
+    if (!lastUserMessage || !lastAssistantMessage) {
+      logger.warn('MESSAGES', 'Could not find valid user/assistant message pair to regenerate');
+      toast.error('No valid response to regenerate.');
+      return;
+    }
+
+    logger.info('MESSAGES', 'Regenerating response', {
+      conversationId,
+      userMessageId: lastUserMessage.id,
+      assistantMessageId: lastAssistantMessage.id,
+      userContent: lastUserMessage.content.substring(0, 50)
+    });
+
+    // Remove the last assistant message
+    const updatedMessages = [...messages];
+    updatedMessages.splice(lastAssistantIndex, 1);
+    get().setMessagesForConversation(conversationId, updatedMessages);
+
+    // Save to local storage
+    saveMessagesToStorage(conversationId, updatedMessages);
+
+    try {
+      // Resend the last user message
+      await get().sendMessage(lastUserMessage.content);
+      
+      logger.info('MESSAGES', 'Response regenerated successfully');
+    } catch (error) {
+      logger.error('MESSAGES', 'Failed to regenerate response', error);
+      
+      // Restore the original assistant message on error
+      get().setMessagesForConversation(conversationId, messages);
+      saveMessagesToStorage(conversationId, messages);
+      
+      toast.error('Failed to regenerate response. Please try again.');
+    }
+  },
 }));

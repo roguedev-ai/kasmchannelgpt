@@ -27,6 +27,7 @@ class SpeechManager {
   private sessionId: string | null = null;
   private voiceSettings: { voice: VoiceOption; persona: PersonaOption } | null = null;
   private streamingTTS: StreamingTTSManager | null = null;
+  private chatbotModel: string = 'gpt-3.5-turbo'; // Default to fast model for voice if not specified by agent
   // Streaming is always enabled for optimal performance
 
   setCallbacks(callbacks: VoiceCallbacks) {
@@ -47,6 +48,11 @@ class SpeechManager {
   setVoiceSettings(voice: VoiceOption, persona: PersonaOption) {
     this.voiceSettings = { voice, persona };
     this.debug("Voice settings set", { voice, persona });
+  }
+
+  setChatbotModel(model: string) {
+    this.chatbotModel = model;
+    this.debug("Chatbot model set", { model });
   }
 
   private debug(message: string, data?: any) {
@@ -188,6 +194,9 @@ class SpeechManager {
       formData.append("voice", this.voiceSettings.voice);
       formData.append("persona", this.voiceSettings.persona);
     }
+    
+    // Note: chatbot_model is not sent to voice API
+    // The agent's configured model will be used automatically
 
     this.debug("🔄 Starting streaming voice request", {
       projectId: this.projectId,

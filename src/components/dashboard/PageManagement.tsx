@@ -34,6 +34,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { SimpleSelect } from '@/components/ui/simple-select';
 
 interface Document {
   id: number;
@@ -513,43 +514,46 @@ export const PageManagement: React.FC = () => {
           </div>
 
           {/* Status Filter */}
-          <select
+          <SimpleSelect
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="all">All Status</option>
-            <option value="indexed">Indexed</option>
-            <option value="processing">Processing</option>
-            <option value="failed">Failed</option>
-            <option value="pending">Pending</option>
-          </select>
+            onValueChange={(value) => setStatusFilter(value as any)}
+            options={[
+              { value: 'all', label: 'All Status' },
+              { value: 'indexed', label: 'Indexed' },
+              { value: 'processing', label: 'Processing' },
+              { value: 'failed', label: 'Failed' },
+              { value: 'pending', label: 'Pending' }
+            ]}
+            placeholder="Filter by status"
+          />
 
           {/* Type Filter */}
-          <select
+          <SimpleSelect
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as any)}
-            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="all">All Types</option>
-            <option value="webpage">Web Pages</option>
-            <option value="pdf">PDF</option>
-            <option value="docx">Word Documents</option>
-            <option value="txt">Text Files</option>
-            <option value="image">Images</option>
-          </select>
+            onValueChange={(value) => setTypeFilter(value as any)}
+            options={[
+              { value: 'all', label: 'All Types' },
+              { value: 'webpage', label: 'Web Pages' },
+              { value: 'pdf', label: 'PDF' },
+              { value: 'docx', label: 'Word Documents' },
+              { value: 'txt', label: 'Text Files' },
+              { value: 'image', label: 'Images' }
+            ]}
+            placeholder="Filter by type"
+          />
 
           {/* Sort */}
-          <select
+          <SimpleSelect
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="updated">Last Updated</option>
-            <option value="title">Title</option>
-            <option value="size">Size</option>
-            <option value="status">Status</option>
-          </select>
+            onValueChange={(value) => setSortBy(value as any)}
+            options={[
+              { value: 'updated', label: 'Last Updated' },
+              { value: 'title', label: 'Title' },
+              { value: 'size', label: 'Size' },
+              { value: 'status', label: 'Status' }
+            ]}
+            placeholder="Sort by"
+          />
         </div>
 
         {/* View Mode Toggle */}

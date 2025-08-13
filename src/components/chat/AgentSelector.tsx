@@ -382,7 +382,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
         fetchAgentSettings(agents);
       }
     }
-  }, [isOpen, agents.length]);
+  }, [isOpen, agents.length, agents, fetchAgentSettings]);
 
   /**
    * Toggle dropdown and conditionally fetch agents

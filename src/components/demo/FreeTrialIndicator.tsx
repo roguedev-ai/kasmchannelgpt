@@ -1,27 +1,29 @@
 /**
  * Free Trial Indicator Component
  * 
- * Shows usage limits and remaining time for free trial sessions.
- * Updates in real-time and displays warnings when approaching limits.
+ * Displays free trial usage statistics and remaining time for demo mode users.
+ * Shows a floating indicator with expandable details including:
+ * - Time remaining in the current session
+ * - Projects created/remaining
+ * - Conversations created/remaining
+ * - Messages sent/remaining
+ * 
+ * Features:
+ * - Real-time countdown timer
+ * - Usage stats refresh every 30 seconds
+ * - Expandable details view
+ * - Visual warnings when approaching limits
+ * - Auto-updates on resource creation
+ * 
+ * @component
  */
 
-'use client';
-
-import React, { useEffect, useState } from 'react';
-import { 
-  Clock, 
-  FolderOpen, 
-  MessageSquare, 
-  AlertTriangle,
-  X,
-  Info
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { proxyClient } from '@/lib/api/proxy-client';
-import { useDemoModeContext } from '@/contexts/DemoModeContext';
-import { FREE_TRIAL_LIMITS } from '@/lib/constants/demo-limits';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Clock, ChevronUp, ChevronDown, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
+import { proxyClient } from '@/lib/api/proxy-client';
 
 interface UsageStats {
   projects: { used: number; limit: number; remaining: number };
@@ -45,13 +47,10 @@ export function FreeTrialIndicator() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Don't render if not in free trial mode
-  if (!isFreeTrialMode) {
-    return null;
-  }
-
   // Fetch usage stats
-  const fetchUsageStats = async () => {
+  const fetchUsageStats = useCallback(async () => {
+    if (!isFreeTrialMode) return;
+    
     try {
       const response = await proxyClient.getDemoUsageStats();
       if (response.status === 'success') {
@@ -65,10 +64,10 @@ export function FreeTrialIndicator() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isFreeTrialMode]);
 
   // Update time remaining
-  const updateTimeRemaining = () => {
+  const updateTimeRemaining = useCallback(() => {
     if (!session) return;
     
     const remaining = session.remainingTime;
@@ -85,10 +84,12 @@ export function FreeTrialIndicator() {
     } else {
       setTimeRemaining(`${seconds}s`);
     }
-  };
+  }, [session]);
 
   // Initial fetch and setup intervals
   useEffect(() => {
+    if (!isFreeTrialMode) return;
+    
     fetchUsageStats();
     
     // Refresh usage stats every 30 seconds
@@ -106,15 +107,18 @@ export function FreeTrialIndicator() {
       clearInterval(statsInterval);
       clearInterval(timeInterval);
     };
-  }, []);
+  }, [isFreeTrialMode, fetchUsageStats, session]);
 
   // Update time display
   useEffect(() => {
+    if (!isFreeTrialMode) return;
     updateTimeRemaining();
-  }, [session]);
+  }, [session, isFreeTrialMode, updateTimeRemaining]);
 
   // Listen for usage update events
   useEffect(() => {
+    if (!isFreeTrialMode) return;
+    
     const handleUsageUpdate = () => {
       fetchUsageStats();
     };
@@ -125,7 +129,7 @@ export function FreeTrialIndicator() {
     return () => {
       window.removeEventListener('demoUsageUpdate', handleUsageUpdate);
     };
-  }, []);
+  }, [isFreeTrialMode, fetchUsageStats]);
 
   // Determine if any limits are close to being reached
   const isNearLimit = () => {
@@ -137,194 +141,133 @@ export function FreeTrialIndicator() {
     );
   };
 
-  if (isLoading) {
-    return null; // Don't show anything while loading
+  // Don't render if not in free trial mode
+  if (!isFreeTrialMode) {
+    return null;
+  }
+
+  if (isLoading && !usage) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <Card className="bg-background/95 backdrop-blur-sm border shadow-lg p-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Clock className="w-4 h-4 text-muted-foreground animate-pulse" />
+            <span className="text-muted-foreground">Loading...</span>
+          </div>
+        </Card>
+      </div>
+    );
   }
 
   if (error || !usage || !session) {
-    return null; // Don't show if there's an error
+    return null;
   }
 
   return (
-    <>
-      {/* Compact indicator bar */}
-      <div className={cn(
-        "fixed top-0 left-0 right-0 z-50 bg-gradient-to-r py-2 px-4 text-white text-sm",
-        isNearLimit() 
-          ? "from-orange-500 to-red-500" 
-          : "from-blue-500 to-purple-500"
+    <div className="fixed bottom-4 right-4 z-50">
+      <Card className={cn(
+        "bg-background/95 backdrop-blur-sm border shadow-lg transition-all duration-200",
+        isNearLimit() && "border-orange-500/50"
       )}>
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="font-medium">Free Trial Mode</span>
-            
-            {/* Quick stats */}
-            <div className="flex items-center gap-3 text-xs">
-              <div className="flex items-center gap-1">
-                <FolderOpen className="h-3 w-3" />
-                <span>{usage.projects.used}/{usage.projects.limit}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <MessageSquare className="h-3 w-3" />
-                <span>{usage.conversations.used}/{usage.conversations.limit}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                <span>{timeRemaining}</span>
-              </div>
+        {/* Main indicator */}
+        <button
+          onClick={() => setShowDetails(!showDetails)}
+          className="flex items-center gap-3 p-3 w-full text-left hover:bg-accent/50 transition-colors rounded-lg"
+        >
+          <div className="flex items-center gap-2 flex-1">
+            <Clock className={cn(
+              "w-4 h-4",
+              isNearLimit() ? "text-orange-500" : "text-muted-foreground"
+            )} />
+            <span className={cn(
+              "text-sm font-medium",
+              isNearLimit() ? "text-orange-500" : "text-foreground"
+            )}>
+              Free Trial: {timeRemaining}
+            </span>
+          </div>
+          {showDetails ? (
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          ) : (
+            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+          )}
+        </button>
+
+        {/* Expanded details */}
+        {showDetails && (
+          <div className="px-3 pb-3 space-y-2 border-t pt-2">
+            <div className="space-y-1">
+              <UsageItem
+                label="Projects"
+                used={usage.projects.used}
+                limit={usage.projects.limit}
+                remaining={usage.projects.remaining}
+              />
+              <UsageItem
+                label="Conversations"
+                used={usage.conversations.used}
+                limit={usage.conversations.limit}
+                remaining={usage.conversations.remaining}
+              />
+              <UsageItem
+                label="Messages"
+                used={usage.messages.total}
+                limit={usage.messages.limitPerConversation * 10} // Estimate total limit
+                remaining={Math.max(0, (usage.messages.limitPerConversation * 10) - usage.messages.total)}
+              />
             </div>
+            
+            {isNearLimit() && (
+              <div className="flex items-start gap-2 pt-2 border-t">
+                <AlertCircle className="w-4 h-4 text-orange-500 mt-0.5" />
+                <p className="text-xs text-orange-500">
+                  You&apos;re approaching your free trial limits. 
+                  Sign up for a full account to continue.
+                </p>
+              </div>
+            )}
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDetails(!showDetails)}
-              className="text-white hover:bg-white/20 h-7 text-xs"
-            >
-              <Info className="h-3 w-3 mr-1" />
-              Details
-            </Button>
-          </div>
-        </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function UsageItem({ 
+  label, 
+  used, 
+  limit, 
+  remaining 
+}: { 
+  label: string; 
+  used: number; 
+  limit: number; 
+  remaining: number;
+}) {
+  const percentUsed = (used / limit) * 100;
+  const isLow = remaining <= 1;
+  const isEmpty = remaining === 0;
+  
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={cn(
+          "font-medium",
+          isEmpty ? "text-red-500" : isLow ? "text-orange-500" : "text-foreground"
+        )}>
+          {used}/{limit}
+        </span>
       </div>
-      
-      {/* Detailed view modal/dropdown */}
-      {showDetails && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4">
-          <div 
-            className="absolute inset-0 bg-black/50" 
-            onClick={() => setShowDetails(false)}
-          />
-          
-          <Card className="relative z-10 w-full max-w-md p-6 mt-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Free Trial Usage</h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowDetails(false)}
-                className="h-8 w-8"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="space-y-4">
-              {/* Projects */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <FolderOpen className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium">Projects</span>
-                  </div>
-                  <span className="text-sm text-gray-600">
-                    {usage.projects.used} / {usage.projects.limit}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className={cn(
-                      "h-2 rounded-full transition-all",
-                      usage.projects.remaining === 0 
-                        ? "bg-red-500" 
-                        : "bg-blue-500"
-                    )}
-                    style={{ 
-                      width: `${(usage.projects.used / usage.projects.limit) * 100}%` 
-                    }}
-                  />
-                </div>
-                {usage.projects.remaining === 0 && (
-                  <p className="text-xs text-red-600 mt-1">
-                    Project limit reached
-                  </p>
-                )}
-              </div>
-              
-              {/* Conversations */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium">Conversations</span>
-                  </div>
-                  <span className="text-sm text-gray-600">
-                    {usage.conversations.used} / {usage.conversations.limit}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className={cn(
-                      "h-2 rounded-full transition-all",
-                      usage.conversations.remaining === 0 
-                        ? "bg-red-500" 
-                        : usage.conversations.remaining === 1
-                        ? "bg-orange-500"
-                        : "bg-blue-500"
-                    )}
-                    style={{ 
-                      width: `${(usage.conversations.used / usage.conversations.limit) * 100}%` 
-                    }}
-                  />
-                </div>
-                {usage.conversations.remaining === 0 && (
-                  <p className="text-xs text-red-600 mt-1">
-                    Conversation limit reached
-                  </p>
-                )}
-              </div>
-              
-              {/* Messages */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium">Messages per chat</span>
-                  </div>
-                  <span className="text-sm text-gray-600">
-                    {usage.messages.limitPerConversation} max
-                  </span>
-                </div>
-                <p className="text-xs text-gray-600">
-                  Total messages sent: {usage.messages.total}
-                </p>
-              </div>
-              
-              {/* Time remaining */}
-              <div className="pt-4 border-t">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium">Time remaining</span>
-                  </div>
-                  <span className={cn(
-                    "text-sm font-medium",
-                    session.remainingTime < 5 * 60 * 1000 
-                      ? "text-red-600" 
-                      : "text-gray-600"
-                  )}>
-                    {timeRemaining}
-                  </span>
-                </div>
-                {session.remainingTime < 5 * 60 * 1000 && (
-                  <p className="text-xs text-orange-600 mt-1">
-                    Session will expire soon
-                  </p>
-                )}
-              </div>
-              
-              {/* Info */}
-              <div className="pt-4 border-t">
-                <p className="text-xs text-gray-500">
-                  Free trial sessions are limited to help prevent abuse. 
-                  To unlock unlimited usage, use your own API key.
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
-    </>
+      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+        <div 
+          className={cn(
+            "h-full transition-all duration-300",
+            isEmpty ? "bg-red-500" : isLow ? "bg-orange-500" : "bg-brand-500"
+          )}
+          style={{ width: `${Math.min(percentUsed, 100)}%` }}
+        />
+      </div>
+    </div>
   );
 }

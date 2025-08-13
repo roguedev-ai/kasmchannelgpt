@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -37,13 +37,7 @@ export const CitationFilePreview: React.FC<CitationFilePreviewProps> = ({
   const [contentType, setContentType] = useState<string>('text/plain');
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && citationId) {
-      fetchFilePreview();
-    }
-  }, [isOpen, citationId]);
-
-  const fetchFilePreview = async () => {
+  const fetchFilePreview = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -89,7 +83,13 @@ export const CitationFilePreview: React.FC<CitationFilePreviewProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [citationId]);
+
+  useEffect(() => {
+    if (isOpen && citationId) {
+      fetchFilePreview();
+    }
+  }, [isOpen, citationId, fetchFilePreview]);
 
   const handleCopy = async () => {
     if (!fileContent) return;

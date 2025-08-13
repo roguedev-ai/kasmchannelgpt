@@ -9,6 +9,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUsageStats } from '@/lib/api/demo-limits-middleware';
 import { DEMO_API_HEADERS } from '@/lib/constants/demo-limits';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Check if this is a free trial request

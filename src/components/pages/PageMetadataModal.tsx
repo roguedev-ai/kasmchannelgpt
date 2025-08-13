@@ -149,18 +149,21 @@ export const PageMetadataModal: React.FC<PageMetadataModalProps> = ({
         />
 
         {/* Modal */}
-        <motion.div
-          initial={{ opacity: 0, scale: isMobile ? 1 : 0.95, y: isMobile ? '100%' : 0 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: isMobile ? 1 : 0.95, y: isMobile ? '100%' : 0 }}
+        <div
           className={cn(
-            "fixed bg-background shadow-xl z-50 flex flex-col",
+            "fixed bg-background shadow-xl z-50 flex flex-col overflow-hidden",
             isMobile 
               ? "inset-x-0 bottom-0 top-20 rounded-t-xl" 
               : "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[90vh] rounded-lg"
           )}
           onClick={(e) => e.stopPropagation()}
         >
+          <motion.div
+            initial={{ opacity: 0, scale: isMobile ? 1 : 0.95, y: isMobile ? '100%' : 0 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: isMobile ? 1 : 0.95, y: isMobile ? '100%' : 0 }}
+            className="w-full h-full flex flex-col"
+          >
           {/* Header */}
           <div className={cn(
             "border-b border-border flex items-center justify-between flex-shrink-0",
@@ -412,7 +415,8 @@ export const PageMetadataModal: React.FC<PageMetadataModalProps> = ({
               </Button>
             </div>
           )}
-        </motion.div>
+          </motion.div>
+        </div>
       </>
     </AnimatePresence>
   );

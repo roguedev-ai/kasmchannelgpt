@@ -26,7 +26,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AgentStore, Agent } from '@/types';
+import type { AgentStore, Agent, AgentSettings } from '@/types';
 import { getClient } from '@/lib/api/client';
 import { useConversationStore } from './conversations';
 import { useMessageStore } from './messages';
@@ -112,27 +112,62 @@ export const useAgentStore = create<AgentStore>()(
             currentAgent: get().currentAgent || (agents.length > 0 ? agents[0] : null)
           });
           
-          // Fetch settings for the current agent to get avatar
-          const currentAgent = get().currentAgent;
-          if (currentAgent && !currentAgent.settings) {
-            try {
-              const client = getClient();
-              const settingsResponse = await client.getAgentSettings(currentAgent.id);
-              if (settingsResponse && settingsResponse.data) {
-                const agentWithSettings = { ...currentAgent, settings: settingsResponse.data };
-                set({ currentAgent: agentWithSettings });
-                
-                // Also update in the agents list
+          // Fetch settings for all agents to get avatars
+          const fetchSettingsForAgents = async () => {
+            const client = getClient();
+            const agentsWithoutSettings = agents.filter(agent => !agent.settings);
+            
+            if (agentsWithoutSettings.length === 0) return;
+            
+            // Process in batches of 5 to avoid overwhelming the API
+            const batchSize = 5;
+            for (let i = 0; i < agentsWithoutSettings.length; i += batchSize) {
+              const batch = agentsWithoutSettings.slice(i, i + batchSize);
+              
+              // Fetch settings in parallel for this batch
+              const settingsPromises = batch.map(async (agent) => {
+                try {
+                  const settingsResponse = await client.getAgentSettings(agent.id);
+                  if (settingsResponse && settingsResponse.data) {
+                    return { agent, settings: settingsResponse.data };
+                  }
+                } catch (error) {
+                  console.error(`Failed to fetch settings for agent ${agent.id}:`, error);
+                }
+                return null;
+              });
+              
+              const settingsResults = await Promise.all(settingsPromises);
+              const validResults = settingsResults.filter(result => result !== null);
+              
+              if (validResults.length > 0) {
+                // Update agents with their settings
                 set(state => ({
-                  agents: state.agents.map(a => 
-                    a.id === currentAgent.id ? agentWithSettings : a
-                  )
+                  agents: state.agents.map(a => {
+                    const result = validResults.find(r => r!.agent.id === a.id);
+                    return result ? { ...a, settings: result.settings } : a;
+                  }),
+                  // Also update current agent if it matches
+                  currentAgent: state.currentAgent 
+                    ? (() => {
+                        const result = validResults.find(r => r!.agent.id === state.currentAgent!.id);
+                        return result ? { ...state.currentAgent, settings: result.settings } : state.currentAgent;
+                      })()
+                    : state.currentAgent
                 }));
               }
-            } catch (error) {
-              console.error('Failed to fetch current agent settings:', error);
+              
+              // Small delay between batches to be kind to the API
+              if (i + batchSize < agentsWithoutSettings.length) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+              }
             }
-          }
+          };
+          
+          // Fetch settings in the background without blocking the UI
+          fetchSettingsForAgents().catch(error => {
+            console.error('Failed to fetch agent settings:', error);
+          });
         } catch (error) {
           console.error('Failed to fetch agents:', error);
           set({ 
@@ -372,7 +407,9 @@ export const useAgentStore = create<AgentStore>()(
         try {
           const client = getClient();
           const response = await client.updateAgent(id, data);
+          console.log('[AgentStore] updateAgent response:', response);
           const updatedAgent = response.data;
+          console.log('[AgentStore] updatedAgent data:', updatedAgent);
           
           set(state => ({
             agents: state.agents.map(a => a.id === id ? updatedAgent : a),
@@ -385,6 +422,61 @@ export const useAgentStore = create<AgentStore>()(
           console.error('Failed to update agent:', error);
           set({ 
             error: error instanceof Error ? error.message : 'Failed to update agent',
+            loading: false 
+          });
+          throw error;
+        }
+      },
+
+      /**
+       * Update agent settings
+       * Updates configuration like chatbot model, appearance, behavior, etc.
+       */
+      updateSettings: async (id: number, settings: Partial<AgentSettings>) => {
+        set({ loading: true, error: null });
+        
+        try {
+          const client = getClient();
+          
+          // Create FormData for the update
+          const formData = new FormData();
+          
+          // Only append the fields we want to update
+          Object.entries(settings).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              formData.append(key, String(value));
+            }
+          });
+          
+          const response = await client.updateAgentSettings(id, formData);
+          console.log('[AgentStore] updateSettings response:', response);
+          const updatedSettings = response.data;
+          
+          // Update the agent with new settings
+          set(state => {
+            const updatedAgents = state.agents.map(agent => {
+              if (agent.id === id) {
+                return { ...agent, settings: { ...agent.settings, ...updatedSettings } };
+              }
+              return agent;
+            });
+            
+            const updatedCurrentAgent = state.currentAgent?.id === id 
+              ? { ...state.currentAgent, settings: { ...state.currentAgent.settings, ...updatedSettings } }
+              : state.currentAgent;
+            
+            return {
+              agents: updatedAgents,
+              currentAgent: updatedCurrentAgent,
+              loading: false,
+            };
+          });
+          
+          return updatedSettings;
+        } catch (error) {
+          console.error('Failed to update agent settings:', error);
+          set({ 
+            error: error instanceof Error ? error.message : 'Failed to update agent settings',
             loading: false 
           });
           throw error;

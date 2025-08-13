@@ -63,6 +63,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SourcePageDetails } from '@/components/projects/SourcePageDetails';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 
 interface SourcesSettingsProps {
   project: Agent;
@@ -70,6 +71,7 @@ interface SourcesSettingsProps {
 
 export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => {
   const { isMobile } = useBreakpoint();
+  const { isFreeTrialMode } = useDemoModeContext();
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -198,6 +200,11 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
 
   // Drag and drop for file upload
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (isFreeTrialMode) {
+      toast.error('File upload is not available in free trial mode');
+      return;
+    }
+    
     if (!isClientInitialized()) {
       toast.error('API client not initialized');
       return;
@@ -259,7 +266,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     multiple: true,
-    disabled: loading,
+    disabled: loading || isFreeTrialMode,
   });
 
   useEffect(() => {
@@ -273,6 +280,11 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
 
   // Create sitemap source
   const handleCreateSitemap = async () => {
+    if (isFreeTrialMode) {
+      toast.error('Creating data sources is not available in free trial mode');
+      return;
+    }
+    
     if (!isClientInitialized()) {
       toast.error('API client not initialized');
       return;
@@ -323,6 +335,11 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
 
   // Update source settings
   const handleUpdateSettings = async () => {
+    if (isFreeTrialMode) {
+      toast.error('Updating data sources is not available in free trial mode');
+      return;
+    }
+    
     if (!isClientInitialized() || !selectedSource) {
       return;
     }
@@ -365,6 +382,11 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
 
   // Delete source
   const handleDeleteSource = async () => {
+    if (isFreeTrialMode) {
+      toast.error('Deleting data sources is not available in free trial mode');
+      return;
+    }
+    
     if (!isClientInitialized() || !sourceToDelete) {
       return;
     }
@@ -398,6 +420,11 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
 
   // Instant sync source
   const handleInstantSync = async (sourceId: number) => {
+    if (isFreeTrialMode) {
+      toast.error('Syncing data sources is not available in free trial mode');
+      return;
+    }
+    
     if (!isClientInitialized()) {
       return;
     }
@@ -520,8 +547,10 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
           <Button
             variant="default"
             onClick={() => setShowAddModal(true)}
+            disabled={isFreeTrialMode}
             size="sm"
             className={isMobile ? "h-9 px-3 text-sm" : ""}
+            title={isFreeTrialMode ? 'Adding data sources is not available in free trial mode' : ''}
           >
             <Plus className="w-4 h-4 mr-1.5" />
             Add Source
@@ -680,7 +709,11 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
             }
           </p>
           {!searchQuery && (
-            <Button onClick={() => setShowAddModal(true)}>
+            <Button 
+              onClick={() => setShowAddModal(true)}
+              disabled={isFreeTrialMode}
+              title={isFreeTrialMode ? 'Adding data sources is not available in free trial mode' : ''}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Source
             </Button>
@@ -736,6 +769,10 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
+                            if (isFreeTrialMode) {
+                              toast.error('Editing data sources is not available in free trial mode');
+                              return;
+                            }
                             setSelectedSource(source);
                             setExecutiveJs(source.settings.executive_js);
                             setDataRefreshFrequency(source.settings.data_refresh_frequency);
@@ -744,6 +781,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
                             setRefreshExistingPages(source.settings.refresh_existing_pages);
                             setShowEditModal(true);
                           }}
+                          disabled={isFreeTrialMode}
                         >
                           <Settings className="w-4 h-4 mr-2" />
                           Settings
@@ -751,7 +789,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
                         {source.type === 'sitemap' && (
                           <DropdownMenuItem
                             onClick={() => handleInstantSync(source.id)}
-                            disabled={isLoading}
+                            disabled={isLoading || isFreeTrialMode}
                           >
                             <Zap className="w-4 h-4 mr-2" />
                             Instant Sync
@@ -760,10 +798,15 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => {
+                            if (isFreeTrialMode) {
+                              toast.error('Deleting data sources is not available in free trial mode');
+                              return;
+                            }
                             setSourceToDelete(source.id);
                             setShowDeleteDialog(true);
                           }}
                           className="text-red-600 hover:text-red-700 focus:text-red-700"
+                          disabled={isFreeTrialMode}
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Delete

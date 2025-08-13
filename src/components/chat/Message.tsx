@@ -44,6 +44,8 @@ import { Button } from '@/components/ui/button';
 import { AgentAvatar, UserAvatar } from '@/components/ui/avatar';
 import { CitationList } from './CitationList';
 import { MessageDetails } from './MessageDetails';
+import { useMessageStore } from '@/store/messages';
+import { useConversationStore } from '@/store/conversations';
 
 interface CodeBlockProps {
   /** Programming language for syntax highlighting */
@@ -175,6 +177,8 @@ interface MessageActionsProps {
   message: ChatMessage;
   /** Handler for user feedback */
   onFeedback?: (feedback: 'like' | 'dislike') => void;
+  /** Whether this is the last assistant message */
+  isLastAssistant?: boolean;
 }
 
 /**
@@ -187,7 +191,7 @@ interface MessageActionsProps {
  * 
  * Only visible on hover for cleaner UI
  */
-const MessageActions: React.FC<MessageActionsProps> = ({ message, onFeedback }) => {
+const MessageActions: React.FC<MessageActionsProps> = ({ message, onFeedback, isLastAssistant = false }) => {
   const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(
     message.feedback || null
   );
@@ -205,9 +209,15 @@ const MessageActions: React.FC<MessageActionsProps> = ({ message, onFeedback }) 
     toast.success('Thanks for your feedback!');
   };
 
-  const handleRegenerate = () => {
-    // This would trigger message regeneration
-    toast.info('Regenerating response...');
+  const regenerateLastResponse = useMessageStore(state => state.regenerateLastResponse);
+  
+  const handleRegenerate = async () => {
+    try {
+      await regenerateLastResponse();
+    } catch (error) {
+      // Error handling is done in the store, so we don't need to do anything here
+      console.error('Failed to regenerate response:', error);
+    }
   };
 
   return (
@@ -248,15 +258,17 @@ const MessageActions: React.FC<MessageActionsProps> = ({ message, onFeedback }) 
         <ThumbsDown className="h-4 w-4" />
       </Button>
       
-      <Button
-        size="icon"
-        variant="ghost"
-        onClick={handleRegenerate}
-        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-        title="Regenerate response"
-      >
-        <RotateCw className="h-4 w-4" />
-      </Button>
+      {isLastAssistant && (
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={handleRegenerate}
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          title="Regenerate response"
+        >
+          <RotateCw className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 };
@@ -295,6 +307,19 @@ export const Message: React.FC<MessageProps> = ({
   className 
 }) => {
   const isUser = message.role === 'user';
+  
+  // Get messages from the conversation to check if this is the last assistant message
+  const messages = useMessageStore(state => {
+    const conversationStore = useConversationStore.getState();
+    const currentConversation = conversationStore.currentConversation;
+    if (!currentConversation) return [];
+    return state.getMessagesForConversation(currentConversation.id.toString());
+  });
+  
+  // Check if this is the last assistant message
+  const isLastAssistant = !isUser && messages.length > 0 && 
+    messages[messages.length - 1].role === 'assistant' &&
+    messages[messages.length - 1].id === message.id;
   
   return (
     <motion.div
@@ -369,6 +394,7 @@ export const Message: React.FC<MessageProps> = ({
             <MessageActions 
               message={message}
               onFeedback={onFeedback}
+              isLastAssistant={isLastAssistant}
             />
           )}
         </div>

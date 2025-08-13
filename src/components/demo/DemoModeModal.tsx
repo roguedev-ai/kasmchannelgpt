@@ -61,6 +61,9 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
   const [showCaptcha, setShowCaptcha] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const { isMobile } = useBreakpoint();
+  const [isFreeTrialPermanentlyExpired] = useState(() => {
+    return localStorage.getItem('customgpt.freeTrialExpired') === 'true';
+  });
   
   const handleDemoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,6 +142,14 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
   };
 
   const handleFreeTrial = () => {
+    // Check if free trial has been permanently expired
+    if (localStorage.getItem('customgpt.freeTrialExpired') === 'true') {
+      console.log('[DemoModeModal] Free trial permanently expired - cannot start new trial');
+      // Show error message
+      setError('Free trial is no longer available. Please use your own API key.');
+      return;
+    }
+    
     // Check if already verified
     if (!isCaptchaVerified()) {
       setShowCaptcha(true);
@@ -182,6 +193,12 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
   };
   
   const handleModalClose = () => {
+    // Don't start free trial if it's permanently expired
+    if (localStorage.getItem('customgpt.freeTrialExpired') === 'true') {
+      console.log('[DemoModeModal] Cannot close modal - free trial permanently expired');
+      return;
+    }
+    
     console.log('[DemoModeModal] Closing modal - starting free trial by default');
     handleFreeTrial();
   };
@@ -338,13 +355,16 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
                           onClick={handleFreeTrial}
                           className="w-full"
                           size="lg"
+                          disabled={isFreeTrialPermanentlyExpired}
                         >
                           <Zap className="h-4 w-4 mr-2" />
-                          Try CustomGPT Now
+                          {isFreeTrialPermanentlyExpired ? 'Free Trial Unavailable' : 'Try CustomGPT Now'}
                         </Button>
                         
                         <p className="text-xs text-center text-gray-500 dark:text-gray-500">
-                          Instant access • No login required
+                          {isFreeTrialPermanentlyExpired 
+                            ? 'Free trial has ended. Please use your API key.'
+                            : 'Instant access • No login required'}
                         </p>
                       </>
                     )}

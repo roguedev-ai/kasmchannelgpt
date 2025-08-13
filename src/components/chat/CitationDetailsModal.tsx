@@ -36,7 +36,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -108,17 +108,6 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
   const effectiveProjectId = projectId || currentAgent?.id;
 
   /**
-   * Fetch citation details when modal opens
-   * 
-   * Triggers API call when modal becomes visible and required data is available
-   */
-  useEffect(() => {
-    if (isOpen && effectiveProjectId && citationId) {
-      fetchCitationDetails();
-    }
-  }, [isOpen, effectiveProjectId, citationId]);
-
-  /**
    * Fetch citation Open Graph data from API
    * 
    * Handles:
@@ -128,7 +117,7 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
    * - Loading state management
    * - Logging for debugging
    */
-  const fetchCitationDetails = async () => {
+  const fetchCitationDetails = useCallback(async () => {
     if (!effectiveProjectId || !citationId) {
       setError('Missing project or citation information');
       return;
@@ -164,7 +153,18 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [effectiveProjectId, citationId]);
+
+  /**
+   * Fetch citation details when modal opens
+   * 
+   * Triggers API call when modal becomes visible and required data is available
+   */
+  useEffect(() => {
+    if (isOpen && effectiveProjectId && citationId) {
+      fetchCitationDetails();
+    }
+  }, [isOpen, effectiveProjectId, citationId, fetchCitationDetails]);
 
   if (!isOpen) return null;
 

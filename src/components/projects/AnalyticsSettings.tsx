@@ -26,6 +26,7 @@ import {
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { SimpleSelect } from '@/components/ui/simple-select';
 import { Card } from '@/components/ui/card';
 import { cn, formatTimestamp } from '@/lib/utils';
 import type { Agent } from '@/types';
@@ -191,16 +192,17 @@ export const AnalyticsSettings: React.FC<AnalyticsSettingsProps> = ({ project })
         </div>
         
         <div className="flex items-center gap-3">
-          <select
+          <SimpleSelect
             value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-          >
-            <option value="1d">Last 24 hours</option>
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
-          </select>
+            onValueChange={(value) => setDateRange(value)}
+            options={[
+              { value: '1d', label: 'Last 24 hours' },
+              { value: '7d', label: 'Last 7 days' },
+              { value: '30d', label: 'Last 30 days' },
+              { value: '90d', label: 'Last 90 days' }
+            ]}
+            className="w-[180px]"
+          />
           
           <Button
             variant="outline"
@@ -568,12 +570,17 @@ export const AnalyticsSettings: React.FC<AnalyticsSettingsProps> = ({ project })
                 <label className="block text-sm font-medium text-gray-900 mb-1">
                   Automated Report Frequency
                 </label>
-                <select className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
-                  <option value="none">No automated reports</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
+                <SimpleSelect
+                  value="none"
+                  onValueChange={(value) => {/* Handle report frequency change */}}
+                  options={[
+                    { value: 'none', label: 'No automated reports' },
+                    { value: 'daily', label: 'Daily' },
+                    { value: 'weekly', label: 'Weekly' },
+                    { value: 'monthly', label: 'Monthly' }
+                  ]}
+                  className="w-full"
+                />
               </div>
               
               <div>

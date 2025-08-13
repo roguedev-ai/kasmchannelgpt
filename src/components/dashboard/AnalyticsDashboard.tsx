@@ -26,6 +26,7 @@ import {
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { SimpleSelect } from '@/components/ui/simple-select';
 import { useAgentStore } from '@/store';
 
 interface MetricCardProps {
@@ -160,7 +161,7 @@ export const AnalyticsDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchAgents();
-  }, []);
+  }, [fetchAgents]);
 
   // Mock data - in real app, this would come from API endpoints:
   // GET /api/v1/projects/{projectId}/reports/traffic
@@ -251,30 +252,31 @@ export const AnalyticsDashboard: React.FC = () => {
         
         <div className="flex items-center gap-3">
           {/* Date Range Selector */}
-          <select
+          <SimpleSelect
             value={dateRange}
-            onChange={(e) => setDateRange(e.target.value as any)}
-            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-          >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
-            <option value="1y">Last year</option>
-          </select>
+            onValueChange={(value) => setDateRange(value as any)}
+            options={[
+              { value: '7d', label: 'Last 7 days' },
+              { value: '30d', label: 'Last 30 days' },
+              { value: '90d', label: 'Last 90 days' },
+              { value: '1y', label: 'Last year' }
+            ]}
+            placeholder="Select date range"
+          />
 
           {/* Agent Filter */}
-          <select
-            value={selectedAgent}
-            onChange={(e) => setSelectedAgent(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-            className="px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-          >
-            <option value="all">All Agents</option>
-            {agents.map((agent) => (
-              <option key={agent.id} value={agent.id}>
-                {agent.project_name}
-              </option>
-            ))}
-          </select>
+          <SimpleSelect
+            value={selectedAgent.toString()}
+            onValueChange={(value) => setSelectedAgent(value === 'all' ? 'all' : Number(value))}
+            options={[
+              { value: 'all', label: 'All Agents' },
+              ...agents.map((agent) => ({
+                value: agent.id.toString(),
+                label: agent.project_name
+              }))
+            ]}
+            placeholder="Select agent"
+          />
 
           <Button variant="outline" onClick={handleRefresh} disabled={loading}>
             <RefreshCw className={cn('h-4 w-4 mr-2', loading && 'animate-spin')} />

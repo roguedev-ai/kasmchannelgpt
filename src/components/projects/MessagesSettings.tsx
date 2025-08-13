@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { Agent } from '@/types';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 
 interface MessagesSettingsProps {
   project: Agent;
 }
 
 export const MessagesSettings: React.FC<MessagesSettingsProps> = ({ project }) => {
+  const { isFreeTrialMode } = useDemoModeContext();
   const { 
     settings, 
     settingsLoading, 
@@ -56,6 +58,11 @@ export const MessagesSettings: React.FC<MessagesSettingsProps> = ({ project }) =
   }, [settings]);
 
   const handleInputChange = (field: string, value: string) => {
+    if (isFreeTrialMode) {
+      toast.error('Editing message settings is not available in free trial mode');
+      return;
+    }
+    
     setFormData(prev => ({ ...prev, [field]: value }));
     setIsModified(true);
   };
@@ -71,6 +78,11 @@ export const MessagesSettings: React.FC<MessagesSettingsProps> = ({ project }) =
   };
 
   const handleSave = async () => {
+    if (isFreeTrialMode) {
+      toast.error('Updating message settings is not available in free trial mode');
+      return;
+    }
+    
     try {
       // Only send non-empty values
       const updateData = Object.entries(formData).reduce((acc, [key, value]) => {
@@ -147,7 +159,12 @@ export const MessagesSettings: React.FC<MessagesSettingsProps> = ({ project }) =
           <Button
             variant="outline"
             onClick={handleResetAllToDefaults}
+            disabled={isFreeTrialMode}
             size="sm"
+            className={cn(
+              isFreeTrialMode && "opacity-50 cursor-not-allowed"
+            )}
+            title={isFreeTrialMode ? 'Resetting message settings is not available in free trial mode' : ''}
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             Reset All
@@ -165,8 +182,12 @@ export const MessagesSettings: React.FC<MessagesSettingsProps> = ({ project }) =
           
           <Button
             onClick={handleSave}
-            disabled={!isModified || settingsLoading}
+            disabled={!isModified || settingsLoading || isFreeTrialMode}
             size="sm"
+            className={cn(
+              isFreeTrialMode && "opacity-50 cursor-not-allowed"
+            )}
+            title={isFreeTrialMode ? 'Saving message settings is not available in free trial mode' : ''}
           >
             <Save className="w-4 h-4 mr-2" />
             {settingsLoading ? 'Saving...' : 'Save Changes'}
@@ -243,7 +264,12 @@ export const MessagesSettings: React.FC<MessagesSettingsProps> = ({ project }) =
                         variant="ghost"
                         size="sm"
                         onClick={() => handleResetToDefault(field.key)}
-                        className="text-xs text-gray-500 hover:text-gray-700"
+                        disabled={isFreeTrialMode}
+                        className={cn(
+                          "text-xs text-gray-500 hover:text-gray-700",
+                          isFreeTrialMode && "opacity-50 cursor-not-allowed"
+                        )}
+                        title={isFreeTrialMode ? 'Resetting message settings is not available in free trial mode' : ''}
                       >
                         Reset to Default
                       </Button>
@@ -254,7 +280,12 @@ export const MessagesSettings: React.FC<MessagesSettingsProps> = ({ project }) =
                       value={formData[field.key as keyof typeof formData]}
                       onChange={(e) => handleInputChange(field.key, e.target.value)}
                       placeholder={field.placeholder}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                      disabled={isFreeTrialMode}
+                      className={cn(
+                        "w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent",
+                        isFreeTrialMode && "opacity-50 cursor-not-allowed bg-gray-100"
+                      )}
+                      title={isFreeTrialMode ? 'Editing message settings is not available in free trial mode' : ''}
                     />
                     
                     <p className="text-xs text-gray-500 mt-1">
@@ -263,7 +294,7 @@ export const MessagesSettings: React.FC<MessagesSettingsProps> = ({ project }) =
                     
                     {formData[field.key as keyof typeof formData] === '' && (
                       <p className="text-xs text-blue-600 mt-1">
-                        Using default: "{field.placeholder}"
+                        Using default: &ldquo;{field.placeholder}&rdquo;
                       </p>
                     )}
                   </div>
@@ -283,7 +314,7 @@ export const MessagesSettings: React.FC<MessagesSettingsProps> = ({ project }) =
                 
                 <div className="bg-white rounded p-3 border">
                   <div className="text-sm text-gray-800 mb-3">
-                    Here's some information about your topic...
+                    Here&apos;s some information about your topic...
                   </div>
                   
                   <div className="border-t pt-2">
@@ -354,8 +385,12 @@ export const MessagesSettings: React.FC<MessagesSettingsProps> = ({ project }) =
           <div className="flex justify-end mt-6">
             <Button
               onClick={handleSave}
-              disabled={!isModified || settingsLoading}
+              disabled={!isModified || settingsLoading || isFreeTrialMode}
               size="sm"
+              className={cn(
+                isFreeTrialMode && "opacity-50 cursor-not-allowed"
+              )}
+              title={isFreeTrialMode ? 'Saving message settings is not available in free trial mode' : ''}
             >
               <Save className="w-4 h-4 mr-2" />
               {settingsLoading ? 'Saving...' : 'Save Changes'}

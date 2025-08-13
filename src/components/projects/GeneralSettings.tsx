@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
 import type { Agent } from '@/types';
+import { useDemoModeContext } from '@/contexts/DemoModeContext';
 
 interface GeneralSettingsProps {
   project: Agent;
@@ -49,6 +50,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
 
   const router = useRouter();
   const { isMobile } = useBreakpoint();
+  const { isFreeTrialMode } = useDemoModeContext();
 
   useEffect(() => {
     // Clear any previous errors when project changes
@@ -89,7 +91,13 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
       
       // Update project name if it changed
       if (project_name !== project.project_name) {
-        await updateAgent(project.id, { project_name });
+        console.log('[GeneralSettings] Updating project name:', {
+          old: project.project_name,
+          new: project_name,
+          projectId: project.id
+        });
+        const updatedAgent = await updateAgent(project.id, { project_name });
+        console.log('[GeneralSettings] Update response:', updatedAgent);
         toast.success('Project name updated successfully');
       }
       
@@ -366,8 +374,9 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
             </div>
           </Card>
 
-          {/* Danger Zone */}
-          <Card className={cn(
+          {/* Danger Zone - Hidden in free trial mode */}
+          {!isFreeTrialMode && (
+            <Card className={cn(
             "border-red-500/20 bg-red-500/5",
             isMobile ? "p-4 mobile-px mobile-py" : "p-6"
           )}>
@@ -406,6 +415,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
               </div>
             </div>
           </Card>
+          )}
 
           {/* Save Button at Bottom */}
           <div className={cn(
@@ -432,7 +442,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ project }) => 
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the project
-              <span className="font-semibold"> "{project.project_name}"</span> and remove all of its data including:
+              <span className="font-semibold"> &ldquo;{project.project_name}&rdquo;</span> and remove all of its data including:
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>All data sources and uploaded files</li>
                 <li>All conversations and messages</li>

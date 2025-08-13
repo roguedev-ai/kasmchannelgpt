@@ -110,7 +110,7 @@ const MobileAgentCard: React.FC<MobileAgentCardProps> = ({
         'relative p-4 border border-border rounded-xl bg-card touch-target',
         'transition-all duration-200 active:scale-[0.98]',
         isSelected 
-          ? 'border-brand-500 bg-brand-50 dark:bg-brand-950' 
+          ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20' 
           : 'hover:border-accent-foreground/20'
       )}
       onClick={handleSelect}
@@ -207,6 +207,7 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSelecting, setIsSelecting] = useState(false);
+  const [isLoadingAllForSearch, setIsLoadingAllForSearch] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   
@@ -299,9 +300,61 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
     };
     
     fetchMissingSettings();
-  }, [isOpen]); // FIXED: Remove agents from dependencies to prevent infinite loop
+  }, [isOpen, agents]); // Add agents dependency - the function prevents infinite loops
   
   // Removed auto-focus to prevent keyboard from automatically opening
+  
+  /**
+   * Automatically load all pages when searching
+   * This ensures search works across all projects, not just loaded ones
+   */
+  useEffect(() => {
+    const loadAllAgentsForSearch = async () => {
+      // Only trigger if we have a search query and there are more pages to load
+      if (!searchQuery || !paginationMeta?.hasMore || loading || isLoadingAllForSearch) {
+        return;
+      }
+
+      console.log('🔍 [AgentSelector Mobile] Starting to load all agents for search...');
+      setIsLoadingAllForSearch(true);
+      
+      try {
+        // Keep loading pages until we have all agents
+        let attempts = 0;
+        const maxAttempts = 20; // Safety limit to prevent infinite loops
+        
+        while (attempts < maxAttempts) {
+          // Get fresh pagination state
+          const currentState = useAgentStore.getState();
+          if (!currentState.paginationMeta?.hasMore) {
+            break;
+          }
+          
+          attempts++;
+          console.log(`📥 [AgentSelector Mobile] Loading more agents... (attempt ${attempts})`);
+          
+          await loadMoreAgents();
+          
+          // Small delay to avoid overwhelming the API
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        const finalState = useAgentStore.getState();
+        console.log('✅ [AgentSelector Mobile] Finished loading all agents for search');
+        toast.success(`Loaded all ${finalState.agents.length} projects for search`);
+      } catch (error) {
+        console.error('Failed to load all agents for search:', error);
+        toast.error('Failed to load all projects for search');
+      } finally {
+        setIsLoadingAllForSearch(false);
+      }
+    };
+
+    // Only run if we have a search query
+    if (searchQuery) {
+      loadAllAgentsForSearch();
+    }
+  }, [searchQuery, paginationMeta?.hasMore, loading, loadMoreAgents]); // Include all dependencies
   
   const handleSelectAgent = async (agent: Agent) => {
     if (isSelecting || agent.id === currentAgent?.id) {
@@ -344,36 +397,38 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
     <MobileBottomSheet
       isOpen={isOpen}
       onClose={onClose}
-      title="Select Agent"
+      header={
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">Select Agent</h2>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={loading}
+            >
+              <RefreshCw className={cn(
+                'h-4 w-4',
+                loading && 'animate-spin'
+              )} />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onClose}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      }
       height="lg"
       className={className}
     >
       <div className="flex flex-col h-full">
         {/* Header with search */}
         <div className="px-6 py-4 border-b border-border">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="ml-auto flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleRefresh}
-                disabled={loading}
-              >
-                <RefreshCw className={cn(
-                  'h-4 w-4',
-                  loading && 'animate-spin'
-                )} />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={onClose}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
           
           {/* Create New Agent Button */}
           <Link href="/dashboard/projects/create" className="mb-4 block">
@@ -384,15 +439,30 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
           </Link>
           
           {/* Search */}
-          <Input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search agents..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-12 text-base rounded-xl"
-            icon={<Search className="w-5 h-5 text-muted-foreground" />}
-          />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+            <Input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search agents..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-12 text-base rounded-xl pl-10"
+            />
+            {/* Loading indicator when fetching all projects for search */}
+            {isLoadingAllForSearch && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <RefreshCw className="w-5 h-5 animate-spin text-brand-500" />
+              </div>
+            )}
+          </div>
+          
+          {/* Search loading message */}
+          {isLoadingAllForSearch && paginationMeta && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Loading all projects for search... ({agents.length} of {paginationMeta.totalCount})
+            </p>
+          )}
         </div>
         
         {/* Content */}

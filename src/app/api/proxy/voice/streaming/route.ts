@@ -334,6 +334,8 @@ async function* streamChatResponse(messages: any[], projectId: string, deploymen
         stream: true,
         lang: 'en',
         is_inline_citation: false
+        // Note: chatbot_model is not supported by the voice API
+        // The agent's configured model will be used automatically
       }),
     });
 

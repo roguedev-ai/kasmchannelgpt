@@ -122,6 +122,8 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
     }
   }, [storeCurrentConversation, loadMessages]);
 
+  const { isMobile } = useBreakpoint();
+
   // Hide sidebar for widget and floating modes
   // Only standalone mode shows the conversation sidebar
   const shouldShowSidebar = showSidebar && mode === 'standalone';
@@ -151,12 +153,10 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
         onConversationChange={onConversationChange}
         onMessage={onMessage}
         conversationRefreshKey={conversationRefreshKey}
-        isMobile={false} // widgets are typically not mobile-optimized by default
+        isMobile={isMobile}
       />
     );
   }
-
-  const { isMobile } = useBreakpoint();
 
   // On mobile, hide the sidebar and use drawer navigation instead
   if (isMobile) {

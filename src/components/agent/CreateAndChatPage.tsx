@@ -207,7 +207,7 @@ export const CreateAndChatPage: React.FC<CreateAndChatPageProps> = ({ className 
                 🎉 Agent created successfully!
               </p>
               <p className="text-sm text-brand-700">
-                Start chatting to test your agent's knowledge and personality
+                Start chatting to test your agent&apos;s knowledge and personality
               </p>
             </div>
           </div>
@@ -235,7 +235,7 @@ export const CreateAndChatPage: React.FC<CreateAndChatPageProps> = ({ className 
                 API Key Permission Issue
               </p>
               <p className="text-amber-800 text-sm mt-1">
-                Your API key doesn't have permission to access this agent's conversations. This can happen with newly created agents. 
+                Your API key doesn&apos;t have permission to access this agent&apos;s conversations. This can happen with newly created agents. 
                 Try refreshing the page or check your API key permissions in your CustomGPT dashboard.
               </p>
             </div>

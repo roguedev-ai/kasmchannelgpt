@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   MessageSquare,
   User,
@@ -23,6 +25,7 @@ import { toast } from 'sonner';
 import { MessageDetails } from '@/components/messages/MessageDetails';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { SimpleSelect } from '@/components/ui/simple-select';
 import { cn } from '@/lib/utils';
 import { getClient } from '@/lib/api/client';
 import type { ChatMessage } from '@/types';
@@ -89,9 +92,42 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, onSelect, isSelected
 
       {/* Message Content */}
       <div className="mb-3">
-        <p className="text-sm text-gray-600">
-          {expanded ? message.content : truncateText(message.content)}
-        </p>
+        {message.role === 'assistant' ? (
+          <div className="prose prose-sm max-w-none text-gray-600 markdown-content">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                // Simple inline code styling
+                code({ className, children, ...props }) {
+                  const isInline = !className;
+                  return isInline ? (
+                    <code className="px-1 py-0.5 rounded bg-gray-100 text-sm font-medium" {...props}>
+                      {children}
+                    </code>
+                  ) : (
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
+                  );
+                },
+                // Links open in new tab
+                a({ href, children }) {
+                  return (
+                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                      {children}
+                    </a>
+                  );
+                }
+              }}
+            >
+              {expanded ? message.content : truncateText(message.content)}
+            </ReactMarkdown>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600">
+            {expanded ? message.content : truncateText(message.content)}
+          </p>
+        )}
       </div>
 
       {/* Metadata Summary */}
@@ -288,16 +324,17 @@ export const ConversationMessages: React.FC<ConversationMessagesProps> = ({
               
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-gray-500" />
-                <select
+                <SimpleSelect
                   value={filterFeedback}
-                  onChange={(e) => setFilterFeedback(e.target.value as any)}
-                  className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
-                >
-                  <option value="all">All Feedback</option>
-                  <option value="like">Liked</option>
-                  <option value="dislike">Disliked</option>
-                  <option value="none">No Feedback</option>
-                </select>
+                  onValueChange={(value) => setFilterFeedback(value as any)}
+                  options={[
+                    { value: 'all', label: 'All Feedback' },
+                    { value: 'like', label: 'Liked' },
+                    { value: 'dislike', label: 'Disliked' },
+                    { value: 'none', label: 'No Feedback' }
+                  ]}
+                  placeholder="Filter feedback"
+                />
               </div>
               
               <Button variant="outline" size="sm" onClick={fetchMessages} disabled={loading}>

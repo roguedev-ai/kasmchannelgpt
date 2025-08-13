@@ -14,6 +14,7 @@ import { logger } from '@/lib/logger';
 // Conversation Store interface - widget-specific version
 export interface ConversationStore {
   conversations: Conversation[];
+  allConversations: Conversation[];
   currentConversation: Conversation | null;
   loading: boolean;
   error: string | null;
@@ -30,6 +31,11 @@ export interface ConversationStore {
   sortBy: string;
   userFilter: 'all' | string;
   
+  // Client-side filtering state
+  searchQuery: string;
+  searchMode: 'name' | 'id' | 'session';
+  dateFilter: 'all' | 'today' | 'week' | 'month';
+  
   fetchConversations: (projectId: number, params?: {
     page?: number;
     per_page?: number;
@@ -43,6 +49,13 @@ export interface ConversationStore {
   deleteConversation: (conversationId: string | number) => Promise<void>;
   selectConversation: (conversation: Conversation) => void;
   ensureConversation: (projectId: number, firstMessage?: string) => Promise<Conversation>;
+  
+  // Client-side filtering methods
+  applyFilters: () => void;
+  setSearchQuery: (query: string) => void;
+  setSearchMode: (mode: 'name' | 'id' | 'session') => void;
+  setDateFilter: (filter: 'all' | 'today' | 'week' | 'month') => void;
+  
   reset: () => void;
 }
 
@@ -98,6 +111,7 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
 
   return create<ConversationStore>((set, get) => ({
     conversations: [],
+    allConversations: [],
     currentConversation: null,
     loading: false,
     error: null,
@@ -111,6 +125,10 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
     sortOrder: 'desc' as const,
     sortBy: 'id',
     userFilter: 'all' as const,
+    // Client-side filtering state
+    searchQuery: '',
+    searchMode: 'name' as const,
+    dateFilter: 'all' as const,
 
     fetchConversations: async (projectId: number, params?: {
       page?: number;
@@ -193,7 +211,7 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
         
         // Update state with conversations and pagination data
         set({ 
-          conversations: widgetConversations, 
+          allConversations: widgetConversations, // Store raw conversations
           loading: false,
           // Update pagination state if available
           currentPage: paginationData?.current_page ?? 1,
@@ -204,6 +222,9 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
           ...(params?.orderBy && { sortBy: params.orderBy }),
           ...(params?.userFilter && { userFilter: params.userFilter }),
         });
+        
+        // Apply client-side filters
+        get().applyFilters();
         
         // Save to local storage
         saveConversationsToStorage(projectId.toString(), widgetConversations);
@@ -242,9 +263,12 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
           );
           
           set({
-            conversations: sessionConversations,
+            allConversations: sessionConversations,
             loading: false,
           });
+          
+          // Apply client-side filters
+          get().applyFilters();
           
           logger.info('CONVERSATIONS', 'Loaded session-specific conversations', {
             totalCached: cachedConversations.length,
@@ -254,6 +278,7 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
         } else {
           // No conversations yet - start with empty array
           set({
+            allConversations: [],
             conversations: [],
             loading: false,
           });
@@ -263,6 +288,7 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
         set({
           error: error instanceof Error ? error.message : 'Failed to load conversations',
           loading: false,
+          allConversations: [],
           conversations: [] // Start with empty on error
         });
       }
@@ -301,10 +327,13 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
           };
 
           set(state => ({
-            conversations: [...state.conversations, newConversation],
+            allConversations: [...state.allConversations, newConversation],
             currentConversation: newConversation,
             loading: false,
           }));
+          
+          // Apply client-side filters
+          get().applyFilters();
           
           saveConversationsToStorage(projectId.toString(), [...get().conversations]);
           return;
@@ -329,10 +358,13 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
         });
         
         set(state => ({ 
-          conversations: [...state.conversations, newConversation],
+          allConversations: [...state.allConversations, newConversation],
           currentConversation: newConversation,
           loading: false,
         }));
+        
+        // Apply client-side filters
+        get().applyFilters();
         
         // Save to local storage for this widget session
         saveConversationsToStorage(projectId.toString(), get().conversations);
@@ -354,12 +386,15 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
       });
 
       set(state => ({
-        conversations: state.conversations.map(conv =>
+        allConversations: state.allConversations.map(conv =>
           conv.id.toString() === conversationId.toString()
             ? { ...conv, name: data.name, updated_at: new Date().toISOString() }
             : conv
         ),
       }));
+      
+      // Apply client-side filters
+      get().applyFilters();
 
       // Update current conversation if it's the one being updated
       const current = get().currentConversation;
@@ -382,15 +417,18 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
         conversationId
       });
 
-      const conversation = get().conversations.find(c => c.id.toString() === conversationId);
+      const conversation = get().allConversations.find(c => c.id.toString() === conversationId);
       if (!conversation) return;
 
       set(state => ({
-        conversations: state.conversations.filter(conv => conv.id.toString() !== conversationId),
+        allConversations: state.allConversations.filter(conv => conv.id.toString() !== conversationId),
         currentConversation: state.currentConversation?.id.toString() === conversationId
           ? null
           : state.currentConversation,
       }));
+      
+      // Apply client-side filters
+      get().applyFilters();
 
       // Save to storage
       saveConversationsToStorage(conversation.project_id.toString(), get().conversations);
@@ -437,13 +475,83 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
       return newConversation;
     },
 
+    // Client-side filtering methods
+    applyFilters: () => {
+      const state = get();
+      let filtered = [...state.allConversations];
+      
+      // Apply search filter
+      if (state.searchQuery.trim()) {
+        const query = state.searchQuery.toLowerCase().trim();
+        filtered = filtered.filter(conv => {
+          switch (state.searchMode) {
+            case 'name':
+              return conv.name.toLowerCase().includes(query);
+            case 'id':
+              return conv.id.toString().includes(query);
+            case 'session':
+              return conv.session_id.toLowerCase().includes(query);
+            default:
+              return conv.name.toLowerCase().includes(query);
+          }
+        });
+      }
+      
+      // Apply date filter
+      if (state.dateFilter !== 'all') {
+        const now = new Date();
+        const filterDate = new Date();
+        
+        switch (state.dateFilter) {
+          case 'today':
+            filterDate.setHours(0, 0, 0, 0);
+            break;
+          case 'week':
+            filterDate.setDate(now.getDate() - 7);
+            break;
+          case 'month':
+            filterDate.setDate(now.getDate() - 30);
+            break;
+        }
+        
+        filtered = filtered.filter(conv => {
+          const convDate = new Date(conv.updated_at);
+          return convDate >= filterDate;
+        });
+      }
+      
+      // Note: User filter and sorting are handled server-side by the API
+      // We don't apply them client-side to avoid conflicts
+      
+      set({ conversations: filtered });
+    },
+
+    setSearchQuery: (query: string) => {
+      set({ searchQuery: query });
+      get().applyFilters();
+    },
+
+    setSearchMode: (mode: 'name' | 'id' | 'session') => {
+      set({ searchMode: mode });
+      get().applyFilters();
+    },
+
+    setDateFilter: (filter: 'all' | 'today' | 'week' | 'month') => {
+      set({ dateFilter: filter });
+      get().applyFilters();
+    },
+
     reset: () => {
       set({
         conversations: [],
+        allConversations: [],
         currentConversation: null,
         loading: false,
         error: null,
         lastConversationActivity: {},
+        searchQuery: '',
+        searchMode: 'name' as const,
+        dateFilter: 'all' as const,
       });
     },
   }));
