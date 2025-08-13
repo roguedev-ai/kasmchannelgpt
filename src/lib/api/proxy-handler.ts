@@ -156,17 +156,18 @@ export async function proxyRequest(
       }
     }
     
-    // Log the exact headers being sent to CustomGPT
+    // Log the request details without exposing sensitive data
     console.log('[Proxy] Sending request to CustomGPT:', {
       url: apiUrl,
       method: fetchOptions.method,
-      headers: fetchOptions.headers,
+      // Don't log actual headers to avoid exposing API keys
+      hasAuth: !!(fetchOptions.headers as any)?.Authorization,
+      contentType: (fetchOptions.headers as any)?.['Content-Type'],
       bodyLength: fetchOptions.body ? String(fetchOptions.body).length : 0,
       deploymentMode,
       keySource: deploymentMode === 'demo' ? 
         (isFreeTrialMode ? 'env:DEMO_KEY' : 'header:X-CustomGPT-API-Key') : 
-        'env:CUSTOMGPT_API_KEY',
-      timestamp: new Date().toISOString()
+        'env:CUSTOMGPT_API_KEY'
     });
     
     const response = await fetch(apiUrl, fetchOptions);

@@ -1,9 +1,51 @@
 <div align="center">
   <img src="logo.png" alt="CustomGPT.ai" width="100" height="100" />
-  <h1>CustomGPT Chat UI(beta)</h1>
+  <h1>CustomGPT.ai Chat UI(beta)</h1>
   <p><strong>A modern, secure chat interface for CustomGPT.ai with multiple deployment options including embedded widgets, floating buttons, and standalone applications.</strong></p>
 </div>
 
+## Screenshots
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="public/img/customgpt-main.jpeg" alt="CustomGPT Main Interface" width="400" />
+        <br />
+        <em>Main Chat Interface</em>
+      </td>
+      <td align="center">
+        <img src="public/img/customgpt-voice.jpeg" alt="CustomGPT Voice Feature" width="400" />
+        <br />
+        <em>Voice Chat Feature</em>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="public/img/customgpt-settings.jpeg" alt="CustomGPT Settings" width="400" />
+        <br />
+        <em>Agent Settings</em>
+      </td>
+      <td align="center">
+        <img src="public/img/customgpt-voice-settings.jpeg" alt="CustomGPT Voice Settings" width="400" />
+        <br />
+        <em>Voice Settings</em>
+      </td>
+    </tr>
+  </table>
+  
+  <p>📸 <a href="public/img">View full-size images</a></p>
+</div>
+
+## Demo Video
+
+<div align="center">
+  <a href="https://youtu.be/aBhsh_ea_WU">
+    <img src="https://img.youtube.com/vi/aBhsh_ea_WU/maxresdefault.jpg" alt="CustomGPT UI Demo Video" width="600" />
+  </a>
+  
+  <p>🎥 <a href="https://youtu.be/aBhsh_ea_WU">Watch the demo video on YouTube</a></p>
+</div>
 
 ## Table of Contents
 

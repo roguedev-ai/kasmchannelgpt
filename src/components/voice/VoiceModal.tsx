@@ -48,6 +48,9 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
   const [currentUserMessageId, setCurrentUserMessageId] = useState<string | null>(null);
   const [voiceConversation, setVoiceConversation] = useState<any>(null);
   
+  // Guard to prevent multiple conversation creation attempts
+  const conversationSetupRef = useRef<boolean>(false);
+  
   // Voice settings integration
   const { selectedVoice, selectedPersona, setVoiceModalOpen } = useVoiceSettingsStore();
   
@@ -95,6 +98,11 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
     
     // Extra cleanup when closing to ensure mobile navigation reappears
     if (!isOpen) {
+      // Reset conversation setup guard when modal closes
+      conversationSetupRef.current = false;
+      // Clear voice conversation reference when modal closes
+      setVoiceConversation(null);
+      
       // Small delay to ensure the state change is processed
       setTimeout(() => {
         setVoiceModalOpen(false);
@@ -133,22 +141,55 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
         console.warn('⚠️ [VOICE-MODAL] Agent is inactive - may fall back to OpenAI');
       }
       
+      // Set the model based on agent settings or use fast default for voice
+      if (agent?.settings?.chatbot_model) {
+        speechManager.setChatbotModel(agent.settings.chatbot_model);
+      } else {
+        // Default to fast model for voice if agent doesn't have a model configured
+        speechManager.setChatbotModel('gpt-3.5-turbo');
+      }
+      
       // Ensure we have a conversation before starting voice
       const setupConversation = async () => {
+        // Prevent multiple setup attempts
+        if (conversationSetupRef.current) {
+          console.log('🔄 [VOICE-MODAL] Conversation setup already in progress, skipping');
+          return;
+        }
+        
         try {
+          conversationSetupRef.current = true;
           let conversation = currentConversation;
           
-          // If no current conversation, create one for voice
-          if (!conversation) {
+          // If no current conversation and no voice conversation stored, create one for voice
+          if (!conversation && !voiceConversation) {
             console.log('🔄 [VOICE-MODAL] No current conversation, creating one for voice');
-            // Create conversation with temporary title - will be updated when we get the transcript
-            conversation = await ensureConversation(parseInt(projectId), 'New voice conversation');
+            // Create conversation with voice title
+            conversation = await ensureConversation(parseInt(projectId), 'Voice Conversation');
             console.log('✅ [VOICE-MODAL] Created conversation:', conversation.id, 'session:', conversation.session_id);
+            
+            // Immediately update the title to ensure it's set correctly
+            try {
+              await updateConversation(conversation.id, conversation.session_id, { name: 'Voice Conversation' });
+              console.log('📝 [VOICE-MODAL] Set initial voice conversation title');
+            } catch (error) {
+              console.error('❌ [VOICE-MODAL] Failed to set initial title:', error);
+            }
+            
             // Store the conversation reference for reuse
             setVoiceConversation(conversation);
-          } else {
+          } else if (conversation) {
             // Store existing conversation reference
             setVoiceConversation(conversation);
+          } else if (voiceConversation) {
+            // Use the existing voice conversation
+            conversation = voiceConversation;
+          }
+          
+          // Ensure we have a valid conversation before proceeding
+          if (!conversation) {
+            console.error('❌ [VOICE-MODAL] No conversation available after setup');
+            return;
           }
           
           // Load conversation history and session ID
@@ -169,6 +210,9 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           speechManager.setSessionId(conversation.session_id);
         } catch (error) {
           console.error('❌ [VOICE-MODAL] Failed to setup conversation:', error);
+        } finally {
+          // Reset the guard after setup is complete (success or failure)
+          conversationSetupRef.current = false;
         }
       };
       
@@ -242,21 +286,41 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
           console.log('🎯 [VOICE-MODAL] Transcript received:', transcript);
           setTranscript(transcript);
           
-          // Update conversation title if this is the first message
+          // Update conversation title for voice conversations
           const targetConversation = voiceConversation || currentConversation;
           if (targetConversation) {
             const conversationMessages = messages.get(targetConversation.id.toString()) || [];
-            // If this is the first or second message (after initial placeholder), update the title
-            if (conversationMessages.length <= 1 && targetConversation.name && 
-                (targetConversation.name === 'New voice conversation' || 
-                 targetConversation.name === 'Voice conversation' ||
-                 targetConversation.name === 'Processing...')) {
-              const newTitle = generateConversationName(transcript);
-              console.log('📝 [VOICE-MODAL] Updating conversation title to:', newTitle);
-              try {
-                await updateConversation(targetConversation.id, targetConversation.session_id, { name: newTitle });
-              } catch (error) {
-                console.error('❌ [VOICE-MODAL] Failed to update conversation title:', error);
+            // If this is the first message and conversation doesn't have a proper title yet, set voice title
+            if (conversationMessages.length <= 1) {
+              const currentTitle = targetConversation.name || '';
+              const needsVoiceTitle = !currentTitle || 
+                                      currentTitle === 'New voice conversation' || 
+                                      currentTitle === 'New Conversation' ||
+                                      currentTitle === 'Processing...' ||
+                                      currentTitle.startsWith('Chat ') ||
+                                      currentTitle.startsWith('OpenAI-') ||
+                                      currentTitle.includes('OpenAI-');
+              
+              if (needsVoiceTitle) {
+                // Generate a more descriptive title based on the transcript
+                let voiceTitle = 'Voice Conversation';
+                if (transcript && transcript.length > 0) {
+                  // Use the first few words of the transcript as the title, but clean it first
+                  const cleanTranscript = transcript
+                    .replace(/^(OpenAI-|System-|API-|Assistant:|User:)\s*/i, '')
+                    .trim();
+                  if (cleanTranscript.length > 0) {
+                    const words = cleanTranscript.split(/\s+/).slice(0, 6).join(' ');
+                    voiceTitle = `Voice: ${words.length > 40 ? words.substring(0, 40).trim() + '...' : words}`;
+                  }
+                }
+                
+                console.log('📝 [VOICE-MODAL] Setting voice conversation title:', voiceTitle);
+                try {
+                  await updateConversation(targetConversation.id, targetConversation.session_id, { name: voiceTitle });
+                } catch (error) {
+                  console.error('❌ [VOICE-MODAL] Failed to update conversation title:', error);
+                }
               }
             }
           }
@@ -416,6 +480,13 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
     if (isOpen && projectId) {
       // Update speech manager with new voice settings
       speechManager.setVoiceSettings(selectedVoice, selectedPersona);
+      
+      // Get agent's configured model
+      const currentAgentStore = useAgentStore.getState();
+      const agent = currentAgentStore.agents.find(a => a.id === parseInt(projectId));
+      if (agent?.settings?.chatbot_model) {
+        speechManager.setChatbotModel(agent.settings.chatbot_model);
+      }
       
       // Theme is now handled directly by Canvas component through themeId prop
       // The Canvas component automatically switches themes when themeId changes
@@ -833,6 +904,11 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
                 <div className="bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 text-white/70 text-xs space-y-1">
                   <div>Voice: {selectedVoice}</div>
                   <div>Persona: {selectedPersona}</div>
+                  <div>Model: {(() => {
+                    const currentAgentStore = useAgentStore.getState();
+                    const currentAgent = currentAgentStore.agents.find(a => a.id === parseInt(projectId));
+                    return currentAgent?.settings?.chatbot_model || 'gpt-3.5-turbo';
+                  })()}</div>
                 </div>
               </div>
 
@@ -877,7 +953,7 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
                 {transcript && (
                   <div className="mb-4 sm:mb-6">
                     <p className="text-xs sm:text-sm text-white/70 mb-1">You said:</p>
-                    <p className="text-sm sm:text-lg text-white/90 max-w-xs sm:max-w-md mx-auto px-2">"{transcript}"</p>
+                    <p className="text-sm sm:text-lg text-white/90 max-w-xs sm:max-w-md mx-auto px-2">&ldquo;{transcript}&rdquo;</p>
                   </div>
                 )}
                 
@@ -1075,7 +1151,8 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
       {/* Voice Settings Modal */}
       <VoiceSettings 
         isOpen={isSettingsOpen} 
-        onClose={() => setIsSettingsOpen(false)} 
+        onClose={() => setIsSettingsOpen(false)}
+        projectId={projectId}
       />
     </>
   );

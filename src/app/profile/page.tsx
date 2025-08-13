@@ -25,8 +25,8 @@
  * - Last update timestamp
  * 
  * File Upload:
- * - Image files only (validated)
- * - 5MB max file size
+ * - Image files only (JPG/PNG validated)
+ * - 1MB max file size
  * - Preview before save
  * - Object URL cleanup
  * 
@@ -197,15 +197,16 @@ export default function ProfilePage() {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file type - must be an image
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
+      // Validate file type - must be JPG or PNG
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Allowed JPG or PNG. Max size of 1MB');
         return;
       }
       
-      // Validate file size - max 5MB for performance
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image must be smaller than 5MB');
+      // Validate file size - max 1MB as per requirement
+      if (file.size > 1 * 1024 * 1024) {
+        toast.error('Allowed JPG or PNG. Max size of 1MB');
         return;
       }
       
@@ -352,7 +353,7 @@ export default function ProfilePage() {
                       <input
                         id="photo-upload"
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/jpg,image/png"
                         onChange={handleFileSelect}
                         className="hidden"
                       />

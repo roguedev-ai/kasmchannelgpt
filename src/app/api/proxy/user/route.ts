@@ -14,8 +14,12 @@ export async function GET(request: NextRequest) {
  * Proxy for updating user profile
  */
 export async function POST(request: NextRequest) {
+  // Get the FormData from the request
+  const formData = await request.formData();
+  
   return proxyRequest('/user', request, {
     method: 'POST',
+    body: formData,
     isFormData: true, // User profile updates use multipart/form-data
   });
 }
