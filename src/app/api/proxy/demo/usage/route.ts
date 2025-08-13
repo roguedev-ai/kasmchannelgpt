@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUsageStats } from '@/lib/api/demo-limits-middleware';
-import { DEMO_API_HEADERS } from '@/lib/constants/demo-limits';
+import { DEMO_API_HEADERS, FREE_TRIAL_LIMITS } from '@/lib/constants/demo-limits';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
         session: {
           sessionId,
           startTime,
-          expiresAt: startTime + (1 * 60 * 1000), // 1 minute for testing
-          remainingTime: Math.max(0, (startTime + (1 * 60 * 1000)) - Date.now())
+          expiresAt: startTime + FREE_TRIAL_LIMITS.SESSION_DURATION,
+          remainingTime: Math.max(0, (startTime + FREE_TRIAL_LIMITS.SESSION_DURATION) - Date.now())
         }
       }
     });

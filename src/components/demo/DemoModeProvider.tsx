@@ -15,6 +15,7 @@ import { DemoModeBanner } from './DemoModeBanner';
 import { SessionExpiredScreen } from './SessionExpiredScreen';
 import { apiClient } from '@/lib/api/client';
 import { DemoModeContextProvider } from '@/contexts/DemoModeContext';
+import { FREE_TRIAL_LIMITS } from '@/lib/constants/demo-limits';
 
 interface DemoModeProviderProps {
   children: React.ReactNode;
@@ -170,7 +171,7 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
           try {
             const session = JSON.parse(sessionData);
             const elapsed = Date.now() - session.startTime;
-            const expired = elapsed >= (1 * 60 * 1000); // 1 minute for testing
+            const expired = elapsed >= FREE_TRIAL_LIMITS.SESSION_DURATION;
             console.log('[DemoModeProvider] Initial expiration check:', { elapsed, expired });
             // If expired on initial check, mark it in localStorage
             if (expired) {
@@ -223,7 +224,7 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
           try {
             const session = JSON.parse(sessionData);
             const elapsed = Date.now() - session.startTime;
-            const expired = elapsed >= (1 * 60 * 1000); // 1 minute for testing
+            const expired = elapsed >= FREE_TRIAL_LIMITS.SESSION_DURATION;
             if (expired) {
               console.log('[DemoModeProvider] Free trial session expired on load');
               setIsSessionExpired(true);
@@ -377,7 +378,7 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
       try {
         const session = JSON.parse(sessionData);
         const elapsed = Date.now() - session.startTime;
-        const isExpired = elapsed >= (1 * 60 * 1000); // 1 minute for testing
+        const isExpired = elapsed >= FREE_TRIAL_LIMITS.SESSION_DURATION;
         console.log('[DemoModeProvider] Checking session expiration:', {
           startTime: session.startTime,
           currentTime: Date.now(),

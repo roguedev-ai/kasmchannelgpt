@@ -55,8 +55,8 @@ export function DemoModeBanner({ className }: DemoModeBannerProps) {
       if (storedSession) {
         try {
           const session = JSON.parse(storedSession);
-          // Calculate expiry time (1 minute from start for testing)
-          const expiresAt = session.startTime + (1 * 60 * 1000);
+          // Calculate expiry time
+          const expiresAt = session.startTime + FREE_TRIAL_LIMITS.SESSION_DURATION;
           setSessionData({ startTime: session.startTime, expiresAt });
           
           // Also immediately update timer if we have session data

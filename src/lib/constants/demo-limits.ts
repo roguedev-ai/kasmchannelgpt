@@ -13,7 +13,7 @@ export const FREE_TRIAL_LIMITS = {
   MAX_MESSAGES_PER_CONVERSATION: 2,
   
   // Time Limits (in milliseconds)
-  SESSION_DURATION: 1 * 60 * 1000, // 5 minutes
+  SESSION_DURATION: 10 * 60 * 1000, // 10 minutes
   SESSION_WARNING_TIME: 5 * 60 * 1000, // Show warning 5 minutes before expiry
   
   // Rate Limits
