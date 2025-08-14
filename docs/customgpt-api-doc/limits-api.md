@@ -2,13 +2,15 @@
 
 ## 1. Get user's agents, words and queries limit
 
+```bash
 curl --request GET \
      --url https://app.customgpt.ai/api/v1/limits/usage \
      --header 'accept: application/json'
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -20,9 +22,11 @@ curl --request GET \
     "current_queries": 10
   }
 }
- 
+```
+
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -31,10 +35,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
-
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -43,3 +48,4 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
+```

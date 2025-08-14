@@ -4,7 +4,9 @@ This directory contains examples showing how to integrate the CustomGPT widget i
 
 ## 🚨 Security Note
 
-These examples work with the new secure API proxy architecture. API keys are no longer needed client-side - authentication is handled server-side.
+The widget supports two modes:
+- **Proxy Mode** (Default): API keys are handled server-side for maximum security
+- **Direct Mode**: API key is provided client-side for standalone deployments (use with caution)
 
 ## Quick Reference
 
@@ -13,7 +15,8 @@ These examples work with the new secure API proxy architecture. API keys are no 
 - Best for: Cross-domain embedding, style isolation, maximum security
 
 ### Direct Widget Integration
-- `widget-example.html` - Direct widget embedding example
+- `widget-example.html` - Direct widget embedding example (proxy mode)
+- `widget-direct-api.html` - Direct API mode example (no proxy needed)
 - `vanilla-js-widget.html` - Complete JavaScript examples with all features
 - Best for: Same-domain integration, full API access
 
@@ -55,7 +58,7 @@ These examples work with the new secure API proxy architecture. API keys are no 
 - Most secure option
 - No CSS conflicts
 
-### Method 2: Direct Widget
+### Method 2: Direct Widget (Proxy Mode)
 
 ```html
 <!-- Include widget files -->
@@ -66,15 +69,42 @@ These examples work with the new secure API proxy architecture. API keys are no 
   const widget = CustomGPTWidget.init({
     agentId: 123,
     mode: 'embedded',
+    containerId: 'chat-widget',
+    apiUrl: 'https://your-nextjs-app.com'  // Your proxy server
+  });
+</script>
+```
+
+**Pros:**
+- Secure (API key on server)
+- Direct API access
+- More customization options
+
+### Method 3: Direct Widget (Direct API Mode)
+
+```html
+<!-- Include widget files -->
+<script src="/dist/widget/customgpt-widget.js"></script>
+
+<div id="chat-widget"></div>
+<script>
+  const widget = CustomGPTWidget.init({
+    agentId: 123,
+    apiKey: 'your-api-key',  // Direct API access
+    mode: 'embedded',
     containerId: 'chat-widget'
   });
 </script>
 ```
 
 **Pros:**
-- Direct API access
-- More customization options
-- Better performance
+- No server required
+- Works on static sites
+- Simpler deployment
+
+**Cons:**
+- API key exposed in browser
+- Only use for internal/trusted environments
 
 ## Key Features Demonstrated
 

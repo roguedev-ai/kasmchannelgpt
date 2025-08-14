@@ -4,16 +4,15 @@
 
 Retrieve a list of all sources associated with a given agent (formerly known as project). This endpoint provides a collection of sources that are linked to a specific agent. Sources serve as references or contexts for the agent.
 
-
+```bash
 curl --request GET \
      --url https://app.customgpt.ai/api/v1/projects/projectId/sources \
      --header 'accept: application/json'
-
-
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -87,9 +86,11 @@ curl --request GET \
     }
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -98,9 +99,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -109,25 +112,22 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
-
+```
 
 ## 2. Create a new agent source
 
-
 Create a new data source for a given agent (formerly known as project), allowing you to add additional context by specifying a sitemap URL or uploading a file. This endpoint enables you to enrich the agent's information by incorporating relevant data sources.
 
-
+```bash
 curl --request POST \
      --url https://app.customgpt.ai/api/v1/projects/projectId/sources \
      --header 'accept: application/json' \
      --header 'content-type: multipart/form-data'
-
-
-
-
+```
 
 ### 201 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -164,9 +164,11 @@ curl --request POST \
     ]
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -175,9 +177,11 @@ curl --request POST \
     "message": "Sitemap URL is empty"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -186,9 +190,11 @@ curl --request POST \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -197,10 +203,11 @@ curl --request POST \
     "message": "Agent with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
-
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -209,12 +216,13 @@ curl --request POST \
     "message": "Internal Server Error"
   }
 }
-
+```
 
 ## 3. Update agent source settings
 
 Update a data source settings, allowing you to change additional settings.
 
+```bash
 curl --request PUT \
      --url https://app.customgpt.ai/api/v1/projects/projectId/sources/sourceId \
      --header 'accept: application/json' \
@@ -228,10 +236,11 @@ curl --request PUT \
   "refresh_existing_pages": "never"
 }
 '
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -268,9 +277,11 @@ curl --request PUT \
     ]
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -279,9 +290,11 @@ curl --request PUT \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -290,9 +303,11 @@ curl --request PUT \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -301,9 +316,11 @@ curl --request PUT \
     "message": "Agent source with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -312,28 +329,31 @@ curl --request PUT \
     "message": "Internal Server Error"
   }
 }
-
-
+```
 
 ## 4. Delete an agent source
 Delete a source for a given agent.
 
-
+```bash
 curl --request DELETE \
      --url https://app.customgpt.ai/api/v1/projects/projectId/sources/sourceId \
      --header 'accept: application/json'
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
     "deleted": true
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -342,9 +362,11 @@ curl --request DELETE \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -353,9 +375,11 @@ curl --request DELETE \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -364,9 +388,11 @@ curl --request DELETE \
     "message": "Agent with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -375,18 +401,19 @@ curl --request DELETE \
     "message": "Internal Server Error"
   }
 }
-
-
+```
 
 ## 5. Instant sync the specified sitemap
 
-
+```bash
 curl --request PUT \
      --url https://app.customgpt.ai/api/v1/projects/projectId/sources/sourceId/instant-sync \
      --header 'accept: application/json'
+```
 
 ### 201 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -423,9 +450,11 @@ curl --request PUT \
     ]
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -434,9 +463,11 @@ curl --request PUT \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -445,9 +476,11 @@ curl --request PUT \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 403 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -456,9 +489,11 @@ curl --request PUT \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -467,8 +502,11 @@ curl --request PUT \
     "message": "Agent source with id 1 not found"
   }
 }
+```
 
 ### 500 response:
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -477,3 +515,4 @@ curl --request PUT \
     "message": "Internal Server Error"
   }
 }
+```

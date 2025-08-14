@@ -142,7 +142,7 @@ export const useConversationStore = create<ConversationStore>()(
         per_page?: number;
         order?: 'asc' | 'desc';
         orderBy?: string;
-        userFilter?: 'all' | string;
+        userFilter?: 'all' | 'me' | string;
         searchQuery?: string;
         searchMode?: 'name' | 'id' | 'session';
         dateFilter?: 'today' | 'week' | 'month';

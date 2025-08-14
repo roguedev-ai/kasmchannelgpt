@@ -4,9 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText,
-  Plus,
   Search,
-  Filter,
   MoreHorizontal,
   Upload,
   Download,
@@ -14,11 +12,9 @@ import {
   Eye,
   Edit3,
   Trash2,
-  Copy,
   ExternalLink,
   Calendar,
   Clock,
-  AlertCircle,
   CheckCircle,
   XCircle,
   Loader,

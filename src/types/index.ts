@@ -134,6 +134,9 @@ export interface AgentSettings {
   /** URL or path to the user's avatar image */
   user_avatar?: string;
   
+  /** Whether to enable user avatar display */
+  user_avatar_enabled?: boolean;
+  
   /** Whether to show a spotlight/highlight avatar */
   spotlight_avatar_enabled?: boolean;
   
@@ -144,7 +147,7 @@ export interface AgentSettings {
   spotlight_avatar_shape?: 'rectangle' | 'circle';
   
   /** Whether using default or custom spotlight avatar */
-  spotlight_avatar_type?: 'default' | 'custom';
+  spotlight_avatar_type?: 'default' | 'image';
   
   /** Layout orientation for avatars in the chat */
   user_avatar_orientation?: 'agent-left-user-right' | 'agent-right-user-left';
@@ -216,7 +219,7 @@ export interface AgentSettings {
   citations_sources_label_msg?: string;
   
   /** How images in citations are displayed */
-  image_citation_display?: 'default' | 'inline' | 'none';
+  image_citation_display?: 'default' | 'first_only';
   
   /** Whether to enable inline citations in API responses */
   enable_inline_citations_api?: boolean;
@@ -260,10 +263,13 @@ export interface AgentSettings {
   conversation_time_window?: boolean;
   
   /** How long to retain conversation history */
-  conversation_retention_period?: 'year' | 'month' | 'week' | 'day';
+  conversation_retention_period?: 'custom' | 'year' | 'never';
   
   /** Number of days to retain conversations */
   conversation_retention_days?: number;
+  
+  /** Use context-aware starter questions */
+  use_context_aware_starter_question?: boolean;
   
   /** Enable agent to be aware of its own knowledge base limitations */
   enable_agent_knowledge_base_awareness?: boolean;
@@ -839,6 +845,9 @@ export interface MessageProps extends BaseComponentProps {
   /** Handler for when a citation is clicked */
   onCitationClick?: (citation: Citation) => void;
   
+  /** Deployment mode - affects citation visibility */
+  mode?: 'standalone' | 'widget' | 'floating';
+  
   /** Handler for when a citation preview is requested */
   onPreviewClick?: (citation: Citation) => void;
   
@@ -868,6 +877,9 @@ export interface InputProps extends BaseComponentProps {
   
   /** Mobile optimization mode */
   isMobile?: boolean;
+  
+  /** Deployment mode - hides customization options for widget/floating modes */
+  mode?: 'standalone' | 'widget' | 'floating';
 }
 
 /**
@@ -1008,7 +1020,7 @@ export interface ConversationStore {
   /** Sorting and filtering state */
   sortOrder: 'asc' | 'desc';
   sortBy: string;
-  userFilter: 'all' | string;
+  userFilter: 'all' | 'me' | string;
   
   /** Client-side filtering state */
   searchQuery: string;
@@ -1021,7 +1033,7 @@ export interface ConversationStore {
     per_page?: number;
     order?: 'asc' | 'desc';
     orderBy?: string;
-    userFilter?: 'all' | string;
+    userFilter?: 'all' | 'me' | string;
     searchQuery?: string;
     searchMode?: 'name' | 'id' | 'session';
     dateFilter?: 'today' | 'week' | 'month';
@@ -1316,3 +1328,5 @@ export interface CustomerIntelligenceResponse {
     total: number;
   };
 }
+// Re-export message types
+export * from './message.types';

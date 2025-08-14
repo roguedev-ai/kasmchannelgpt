@@ -12,6 +12,8 @@ import { useBreakpoint } from '@/hooks/useMediaQuery';
 import type { Agent } from '@/types';
 import { useDemoModeContext } from '@/contexts/DemoModeContext';
 import { SimpleSelect } from '@/components/ui/simple-select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface AppearanceSettingsProps {
   project: Agent;
@@ -39,13 +41,20 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
     chatbot_title: '',
     chatbot_title_color: '#000000',
     user_avatar: '',
+    user_avatar_enabled: false,
     user_avatar_orientation: 'agent-left-user-right',
     input_field_addendum: '',
+    // Spotlight avatar settings
+    spotlight_avatar_enabled: false,
+    spotlight_avatar: '',
+    spotlight_avatar_shape: 'rectangle' as 'rectangle' | 'circle',
+    spotlight_avatar_type: 'default' as 'default' | 'image',
   });
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [backgroundFile, setBackgroundFile] = useState<File | null>(null);
   const [userAvatarFile, setUserAvatarFile] = useState<File | null>(null);
+  const [spotlightAvatarFile, setSpotlightAvatarFile] = useState<File | null>(null);
   const [isModified, setIsModified] = useState(false);
 
   useEffect(() => {
@@ -65,8 +74,14 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
         chatbot_title: settings.chatbot_title || '',
         chatbot_title_color: settings.chatbot_title_color || '#000000',
         user_avatar: settings.user_avatar || '',
+        user_avatar_enabled: settings.user_avatar_enabled || false,
         user_avatar_orientation: settings.user_avatar_orientation || 'agent-left-user-right',
         input_field_addendum: settings.input_field_addendum || '',
+        // Spotlight avatar settings
+        spotlight_avatar_enabled: settings.spotlight_avatar_enabled || false,
+        spotlight_avatar: settings.spotlight_avatar || '',
+        spotlight_avatar_shape: (settings.spotlight_avatar_shape || 'rectangle') as 'rectangle' | 'circle',
+        spotlight_avatar_type: (settings.spotlight_avatar_type || 'default') as 'default' | 'image',
       });
       setIsModified(false);
     }
@@ -150,6 +165,29 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
     }
   };
 
+  const handleSpotlightAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (isFreeTrialMode) {
+      toast.error('Uploading images is not available in free trial mode');
+      return;
+    }
+    
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image must be smaller than 5MB');
+        return;
+      }
+      
+      setSpotlightAvatarFile(file);
+      setIsModified(true);
+    }
+  };
+
   const handleSave = async () => {
     if (isFreeTrialMode) {
       toast.error('Saving appearance settings is not available in free trial mode');
@@ -171,12 +209,17 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
         updateData.user_avatar = userAvatarFile;
       }
       
+      if (spotlightAvatarFile) {
+        updateData.spotlight_avatar = spotlightAvatarFile;
+      }
+      
       await updateSettings(project.id, updateData);
       
       setIsModified(false);
       setAvatarFile(null);
       setBackgroundFile(null);
       setUserAvatarFile(null);
+      setSpotlightAvatarFile(null);
     } catch (error) {
       console.error('Failed to save settings:', error);
     }
@@ -188,6 +231,7 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
     setAvatarFile(null);
     setBackgroundFile(null);
     setUserAvatarFile(null);
+    setSpotlightAvatarFile(null);
   };
 
   return (
@@ -740,6 +784,22 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
             </div>
             
             <div className="space-y-4">
+              {/* User Avatar Enable Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="user_avatar_enabled" className="text-sm font-medium">Enable User Avatar</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Show user avatars in chat conversations
+                  </p>
+                </div>
+                <Switch
+                  id="user_avatar_enabled"
+                  checked={formData.user_avatar_enabled}
+                  onCheckedChange={(checked) => handleInputChange('user_avatar_enabled', checked)}
+                  disabled={isFreeTrialMode}
+                />
+              </div>
+
               {/* User Avatar Upload or URL */}
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
@@ -818,6 +878,150 @@ export const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ project 
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Position of avatars in the chat conversation
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Spotlight Avatar Settings */}
+          <Card className={cn(
+            "p-6",
+            isMobile && "p-4 mobile-px mobile-py"
+          )}>
+            <div className={cn(
+              "flex items-start justify-between mb-4",
+              isMobile && "flex-col gap-2"
+            )}>
+              <h3 className={cn(
+                "font-semibold text-foreground",
+                isMobile ? "text-base mobile-text-lg" : "text-lg"
+              )}>Spotlight Avatar Configuration</h3>
+              {!isMobile && (
+                <span className="text-xs text-muted-foreground font-mono bg-accent px-2 py-1 rounded">
+                  POST /projects/{project.id}/settings
+                </span>
+              )}
+            </div>
+            
+            <div className="space-y-4">
+              {/* Spotlight Avatar Enable Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="spotlight_avatar_enabled" className="text-sm font-medium">Enable Spotlight Avatar</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Show a highlight avatar for featured messages
+                  </p>
+                </div>
+                <Switch
+                  id="spotlight_avatar_enabled"
+                  checked={formData.spotlight_avatar_enabled}
+                  onCheckedChange={(checked) => handleInputChange('spotlight_avatar_enabled', checked)}
+                  disabled={isFreeTrialMode}
+                />
+              </div>
+
+              {/* Spotlight Avatar Type */}
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Avatar Type
+                </label>
+                <SimpleSelect
+                  value={formData.spotlight_avatar_type}
+                  onValueChange={(value) => handleInputChange('spotlight_avatar_type', value)}
+                  options={[
+                    { value: 'default', label: 'Default Avatar' },
+                    { value: 'image', label: 'Custom Image' }
+                  ]}
+                  placeholder="Select avatar type"
+                  className={cn(
+                    isMobile ? "h-12" : "h-10"
+                  )}
+                  disabled={isFreeTrialMode || !formData.spotlight_avatar_enabled}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Use default avatar or upload a custom image
+                </p>
+              </div>
+
+              {/* Spotlight Avatar Upload (only if type is 'image') */}
+              {formData.spotlight_avatar_type === 'image' && (
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                    Spotlight Avatar Image
+                  </label>
+                  
+                  <div className="space-y-3">
+                    {/* Upload Option */}
+                    <div>
+                      <input
+                        type="file"
+                        id="spotlight-avatar-upload"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleSpotlightAvatarUpload}
+                        disabled={isFreeTrialMode || !formData.spotlight_avatar_enabled}
+                      />
+                      <label htmlFor="spotlight-avatar-upload" className={cn("cursor-pointer", (isFreeTrialMode || !formData.spotlight_avatar_enabled) && "cursor-not-allowed opacity-50")}>
+                        <div className={cn(
+                          "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground px-4 py-2",
+                          isMobile ? "h-12 w-full mobile-btn touch-target" : "h-10",
+                          (isFreeTrialMode || !formData.spotlight_avatar_enabled) && "pointer-events-none opacity-50"
+                        )}>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Spotlight Avatar
+                        </div>
+                      </label>
+                      {spotlightAvatarFile && (
+                        <p className="text-sm text-green-600 mt-2">
+                          New spotlight avatar selected: {spotlightAvatarFile.name}
+                        </p>
+                      )}
+                    </div>
+                    
+                    {/* URL Option */}
+                    <div>
+                      <input
+                        type="text"
+                        value={formData.spotlight_avatar}
+                        onChange={(e) => handleInputChange('spotlight_avatar', e.target.value)}
+                        placeholder="Or enter avatar URL: https://example.com/spotlight-avatar.png"
+                        className={cn(
+                          "w-full border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground",
+                          isMobile ? "px-4 py-3 text-base mobile-input" : "px-3 py-2"
+                        )}
+                        disabled={isFreeTrialMode || !formData.spotlight_avatar_enabled}
+                      />
+                    </div>
+                  </div>
+                  
+                  <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                    <li>• Used for highlighting important messages</li>
+                    <li>• Accepted formats: JPEG, PNG, JPG, GIF</li>
+                    <li>• Maximum file size: 5MB</li>
+                  </ul>
+                </div>
+              )}
+
+              {/* Spotlight Avatar Shape */}
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Avatar Shape
+                </label>
+                <SimpleSelect
+                  value={formData.spotlight_avatar_shape}
+                  onValueChange={(value) => handleInputChange('spotlight_avatar_shape', value)}
+                  options={[
+                    { value: 'rectangle', label: 'Rectangle' },
+                    { value: 'circle', label: 'Circle' }
+                  ]}
+                  placeholder="Select avatar shape"
+                  className={cn(
+                    isMobile ? "h-12" : "h-10"
+                  )}
+                  disabled={isFreeTrialMode || !formData.spotlight_avatar_enabled}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Shape of the spotlight avatar display
                 </p>
               </div>
             </div>

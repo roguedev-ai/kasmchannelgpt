@@ -1,44 +1,90 @@
 /**
- * CustomGPT API Client
+ * API Client Abstraction
  * 
- * This file now uses the proxy client that communicates with our Next.js API routes.
- * The API key is stored securely on the server and never exposed to the client.
- * 
- * Migration from direct API calls to proxy:
- * - All API calls now go through /api/proxy/* endpoints
- * - No API key is needed or stored client-side
- * - Server handles authentication with CustomGPT
+ * This module provides the appropriate API client based on the configuration.
+ * It can switch between:
+ * - Proxy mode: For Next.js app (API key stored server-side)
+ * - Direct mode: For widget deployments (API key provided client-side)
  */
 
-// Re-export everything from the proxy client
-export { proxyClient as apiClient } from './proxy-client';
-export type { ProxyCustomGPTClient as CustomGPTClient } from './proxy-client';
+import { ProxyCustomGPTClient, proxyClient } from './proxy-client';
+import { DirectCustomGPTClient } from './direct-client';
 
-// Export a singleton instance getter
-import { proxyClient } from './proxy-client';
+// Type that represents either client
+export type CustomGPTClient = ProxyCustomGPTClient | DirectCustomGPTClient;
 
+// Configuration interface
+interface ClientConfig {
+  mode?: 'proxy' | 'direct';
+  apiKey?: string;
+  apiUrl?: string;
+}
+
+// Singleton instance
+let clientInstance: CustomGPTClient | null = null;
 let initialized = false;
 
 /**
  * Initialize the API client
- * No longer needs API key as it's handled server-side
+ * @param config Configuration object with mode, apiKey, and optional apiUrl
  */
-export function initializeClient(config?: any): void {
-  // Mark as initialized without needing API key
-  initialized = true;
+export function initializeClient(config?: ClientConfig): void {
+  if (config) {
+    if (config.mode === 'direct' && config.apiKey) {
+      // Direct mode for widget deployments
+      clientInstance = new DirectCustomGPTClient(config.apiKey, config.apiUrl);
+      initialized = true;
+    } else {
+      // Proxy mode (default)
+      clientInstance = proxyClient;
+      if (config.apiUrl) {
+        proxyClient.setApiUrl(config.apiUrl);
+      }
+      initialized = true;
+    }
+  } else {
+    // Default to proxy client
+    clientInstance = proxyClient;
+    initialized = true;
+  }
 }
 
 /**
  * Get the API client instance
  */
-export function getClient() {
-  return proxyClient;
+export function getClient(): CustomGPTClient {
+  if (!clientInstance) {
+    // Default to proxy client if not initialized
+    clientInstance = proxyClient;
+  }
+  return clientInstance;
+}
+
+/**
+ * Get or create the API client instance
+ * @deprecated Use getClient() instead
+ */
+export function getApiClient(config?: ClientConfig): CustomGPTClient {
+  if (config) {
+    initializeClient(config);
+  }
+  return getClient();
 }
 
 /**
  * Check if client is initialized
  */
 export function isClientInitialized(): boolean {
-  // Always return true since proxy client doesn't need initialization
-  return true;
+  return initialized || clientInstance !== null;
 }
+
+/**
+ * Reset the client instance
+ */
+export function resetApiClient(): void {
+  clientInstance = null;
+  initialized = false;
+}
+
+// Export default client getter for backward compatibility
+export const apiClient = getClient();

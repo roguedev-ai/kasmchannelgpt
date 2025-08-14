@@ -1,13 +1,16 @@
 # Messeges
 
 ## 1. Get a message by message ID
+
+```bash
 curl --request GET \
      --url https://app.customgpt.ai/api/v1/projects/projectId/conversations/sessionId/messages/promptId \
      --header 'accept: application/json'
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -37,9 +40,11 @@ curl --request GET \
     }
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -48,9 +53,11 @@ curl --request GET \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -59,9 +66,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -70,9 +79,11 @@ curl --request GET \
     "message": "Conversation message with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -81,22 +92,20 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
+```
 
 ## 2. Update the reaction for a specific message
 
+```bash
 curl --request PUT \
      --url https://app.customgpt.ai/api/v1/projects/projectId/conversations/sessionId/messages/promptId/feedback \
      --header 'accept: application/json' \
      --header 'content-type: application/json'
-
-
-
-
-
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -126,9 +135,11 @@ curl --request PUT \
     }
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -137,9 +148,11 @@ curl --request PUT \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -148,9 +161,11 @@ curl --request PUT \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -159,9 +174,11 @@ curl --request PUT \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -170,5 +187,4 @@ curl --request PUT \
     "message": "API Token is either missing or invalid"
   }
 }
-
-2nd
+```

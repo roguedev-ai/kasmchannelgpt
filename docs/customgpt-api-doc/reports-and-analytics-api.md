@@ -4,16 +4,15 @@
 
 Provide summary of various metrics of users interactions with the application such as the users number (both named and anonymous), their geographical locations, the browsers they use, and the sources from which they arrived at the application.
 
-
-
+```bash
 curl --request GET \
      --url https://app.customgpt.ai/api/v1/projects/projectId/reports/traffic \
      --header 'accept: application/json'
-
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -25,9 +24,11 @@ curl --request GET \
     ]
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -36,9 +37,11 @@ curl --request GET \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -47,9 +50,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -58,9 +63,11 @@ curl --request GET \
     "message": "Agent with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -69,19 +76,19 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
-
-
+```
 
 ## 2. Provide summary of overall query metrics accross all conversations
 
+```bash
 curl --request GET \
      --url https://app.customgpt.ai/api/v1/projects/projectId/reports/queries \
      --header 'accept: application/json'
-
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -94,9 +101,11 @@ curl --request GET \
     ]
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -105,9 +114,11 @@ curl --request GET \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -116,9 +127,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -127,10 +140,11 @@ curl --request GET \
     "message": "Agent with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
-
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -139,23 +153,19 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
-
-
-
-
-
-
-
+```
 
 ## 3. Provide summary of overall conversation metrics
 
+```bash
 curl --request GET \
      --url https://app.customgpt.ai/api/v1/projects/projectId/reports/conversations \
      --header 'accept: application/json'
-
-
+```
 
 ### 200 Response
+
+```json
 {
   "status": "success",
   "data": {
@@ -163,10 +173,11 @@ curl --request GET \
     "average_queries_per_conversation": 1.2
   }
 }
-
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -175,9 +186,11 @@ curl --request GET \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -186,9 +199,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -197,9 +212,11 @@ curl --request GET \
     "message": "Agent with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -208,23 +225,19 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
-
-
-
-
-
-
+```
 
 ## 4. Provide graph-ready analysis data of various metrics
 
+```bash
 curl --request GET \
      --url 'https://app.customgpt.ai/api/v1/projects/projectId/reports/analysis?interval=weekly' \
      --header 'accept: application/json'
-
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -248,9 +261,11 @@ curl --request GET \
     ]
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -259,9 +274,11 @@ curl --request GET \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -270,9 +287,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -281,10 +300,11 @@ curl --request GET \
     "message": "Agent with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
-
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -293,3 +313,4 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
+```

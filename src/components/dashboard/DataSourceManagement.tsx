@@ -6,7 +6,6 @@ import {
   Database,
   Plus,
   Search,
-  Filter,
   MoreHorizontal,
   RefreshCw,
   Edit3,
@@ -15,19 +14,14 @@ import {
   Globe,
   FileText,
   Upload,
-  Link,
-  Calendar,
   Clock,
   CheckCircle,
   XCircle,
   Loader,
   AlertTriangle,
-  Settings,
-  Download,
   ArrowUpRight,
   Monitor,
   Server,
-  Cloud,
   HardDrive,
   Rss,
   Zap
@@ -561,7 +555,7 @@ export const DataSourceManagement: React.FC = () => {
               placeholder="Search sources..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-80"
+              className="pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-80 bg-background text-foreground placeholder:text-muted-foreground"
             />
           </div>
 

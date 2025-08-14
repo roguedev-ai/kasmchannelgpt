@@ -29,7 +29,7 @@ export interface ConversationStore {
   // Sorting and filtering state
   sortOrder: 'asc' | 'desc';
   sortBy: string;
-  userFilter: 'all' | string;
+  userFilter: 'all' | 'me' | string;
   
   // Client-side filtering state
   searchQuery: string;
@@ -41,7 +41,7 @@ export interface ConversationStore {
     per_page?: number;
     order?: 'asc' | 'desc';
     orderBy?: string;
-    userFilter?: 'all' | string;
+    userFilter?: 'all' | 'me' | string;
   }) => Promise<void>;
   loadConversations: (agentId: string) => Promise<void>; // Keep for compatibility
   createConversation: (projectId: number, name?: string) => Promise<void>;
@@ -135,7 +135,7 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
       per_page?: number;
       order?: 'asc' | 'desc';
       orderBy?: string;
-      userFilter?: 'all' | string;
+      userFilter?: 'all' | 'me' | string;
     }) => {
       // For widgets, we load conversations differently
       const isDemoMode = typeof window !== 'undefined' && (window as any).__customgpt_demo_mode;

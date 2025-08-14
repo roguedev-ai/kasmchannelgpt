@@ -4,19 +4,15 @@
 
 Retrieve a list of all pages associated with an agent (formerly known as project). This endpoint allows you to fetch agent details and a collection of pages that belong to a specific agent. Each page object includes information such as the page ID, URL, hash of the URL, agent ID, crawl status, index status, file details (if applicable), creation and update timestamps, and other relevant attributes
 
-Retrieve a list of all pages associated with an agent (formerly known as project).
-
-This endpoint allows you to fetch agent details and a collection of pages that belong to a specific agent.
-
-Each page object includes information such as the page ID, URL, hash of the URL, agent ID, crawl status, index status, file details (if applicable), creation and update timestamps, and other relevant attributes.
-
-
-
+```bash
 curl --request GET \
      --url 'https://app.customgpt.ai/api/v1/projects/projectId/pages?page=1&limit=20&order=desc&crawl_status=all&index_status=all' \
      --header 'accept: application/json'
+```
 
 ### 200 response:
+
+```json
 {
   "status": "success",
   "data": {
@@ -72,8 +68,11 @@ curl --request GET \
     }
   }
 }
+```
 
 ### 400 response:
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -82,8 +81,11 @@ curl --request GET \
     "message": "Agent id must be integer"
   }
 }
+```
 
-### 401 response 
+### 401 response
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -92,9 +94,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -103,8 +107,11 @@ curl --request GET \
     "message": "Agent with id 1 not found"
   }
 }
+```
 
 ### 500 response
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -113,23 +120,31 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
+```
 
 ## 2. Delete a certain page that belongs to a certain agent
 Delete a specific page within an agent (formerly known as project) based on its unique projectId and pageId. This endpoint allows you to remove a particular page from the agent, permanently deleting its associated context
 
+```bash
 curl --request DELETE \
      --url https://app.customgpt.ai/api/v1/projects/projectId/pages/pageId \
      --header 'accept: application/json'
+```
 
 ### 200 Response
+
+```json
 {
   "status": "success",
   "data": {
     "deleted": true
   }
 }
+```
 
 ### 400 response
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -138,8 +153,11 @@ curl --request DELETE \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -148,8 +166,11 @@ curl --request DELETE \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -158,8 +179,11 @@ curl --request DELETE \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 500 response:
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -168,29 +192,31 @@ curl --request DELETE \
     "message": "Internal Server Error"
   }
 }
-
-
+```
 
 ## 3. Reindex a certain page that belongs to a certain agent
 Reindex a specific page within an agent (formerly known as project) based on its unique projectId and pageId. This endpoint allows you to refresh a particular page from the agent. Our system will crawl and index page content newly
 
+```bash
 curl --request POST \
      --url https://app.customgpt.ai/api/v1/projects/projectId/pages/pageId/reindex \
      --header 'accept: application/json'
-
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
     "updated": true
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -199,9 +225,11 @@ curl --request POST \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -210,9 +238,11 @@ curl --request POST \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 403 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -221,9 +251,11 @@ curl --request POST \
     "message": "The Document with the id 1 couldn't have been updated"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -232,16 +264,19 @@ curl --request POST \
     "message": "Internal Server Error"
   }
 }
+```
 
 ## 4. Preview file from citation
 
+```bash
 curl --request GET \
      --url https://app.customgpt.ai/api/v1/preview/id \
      --header 'accept: application/json'
-
-
+```
 
 ### 400 response
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -250,9 +285,11 @@ curl --request GET \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -261,9 +298,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -272,9 +311,11 @@ curl --request GET \
     "message": "Page with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -283,3 +324,4 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
+```

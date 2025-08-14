@@ -335,8 +335,13 @@ export const SecurityAndPrivacy: React.FC<SecurityAndPrivacyProps> = ({ project 
                     value={formData.conversation_retention_period}
                     onValueChange={(value) => handleInputChange('conversation_retention_period', value)}
                     options={[
+                      { value: 'day', label: '1 Day' },
+                      { value: 'week', label: '1 Week' },
+                      { value: 'month', label: '1 Month' },
+                      { value: 'quarter', label: '3 Months' },
                       { value: 'year', label: '1 Year' },
-                      { value: 'custom', label: 'Custom Days' }
+                      { value: 'custom', label: 'Custom Days' },
+                      { value: 'never', label: 'Never Delete' }
                     ]}
                     className={cn(
                       "w-full",

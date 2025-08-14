@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { 
   Bot, 
   MessageSquare, 
-  Users, 
   BarChart3,
   TrendingUp,
   TrendingDown,

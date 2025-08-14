@@ -114,7 +114,7 @@ export const SourcePageDetails: React.FC<SourcePageDetailsProps> = ({
         const batch = response.data.pages.data;
         
         // Filter pages that belong to this source
-        const sourcePagesInBatch = batch.filter(p => {
+        const sourcePagesInBatch = batch.filter((p: any) => {
           if (source.type === 'sitemap' && source.settings.sitemap_path) {
             try {
               const sitemapDomain = new URL(source.settings.sitemap_path).hostname;
@@ -202,7 +202,7 @@ export const SourcePageDetails: React.FC<SourcePageDetailsProps> = ({
       case 'failed':
         return <XCircle className="w-4 h-4 text-red-600" />;
       default:
-        return <RefreshCw className="w-4 h-4 text-gray-600" />;
+        return <RefreshCw className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -210,14 +210,14 @@ export const SourcePageDetails: React.FC<SourcePageDetailsProps> = ({
     switch (status) {
       case 'indexed':
       case 'crawled':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-400';
       case 'indexing':
       case 'crawling':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400';
       case 'failed':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-secondary text-secondary-foreground';
     }
   };
 
@@ -233,27 +233,27 @@ export const SourcePageDetails: React.FC<SourcePageDetailsProps> = ({
 
         <div className="space-y-4">
           {/* Source Summary */}
-          <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+          <div className="bg-secondary p-4 rounded-lg space-y-2">
             <div className="flex items-center gap-2">
-              <Database className="w-4 h-4 text-gray-600" />
+              <Database className="w-4 h-4 text-muted-foreground" />
               <span className="font-medium">Source Type:</span>
               <span>{source.type}</span>
             </div>
             {source.settings.sitemap_path && (
               <div className="flex items-center gap-2 min-w-0">
-                <Link className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                <Link className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 <span className="font-medium flex-shrink-0">URL:</span>
                 <span className="text-sm truncate flex-1 min-w-0">{source.settings.sitemap_path}</span>
               </div>
             )}
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-gray-600" />
+              <FileText className="w-4 h-4 text-muted-foreground" />
               <span className="font-medium">Total Pages:</span>
               <span>{totalPageCount}</span>
               {(totalPageCount === 0 || (typeof totalPageCount === 'number' && totalPageCount > 0 && pages.length === 0)) && !loadFullList && (
                 <button
                   onClick={loadAllPages}
-                  className="ml-2 text-sm text-brand-600 hover:text-brand-700 underline"
+                  className="ml-2 text-sm text-primary hover:text-primary/90 underline"
                 >
                   Load pages
                 </button>
@@ -266,7 +266,7 @@ export const SourcePageDetails: React.FC<SourcePageDetailsProps> = ({
             <h3 className="font-medium mb-2">
               Pages ({totalPageCount})
               {displayedPages.length < pages.length && (
-                <span className="text-sm font-normal text-gray-500 ml-2">
+                <span className="text-sm font-normal text-muted-foreground ml-2">
                   (showing {displayedPages.length})
                 </span>
               )}
@@ -274,28 +274,28 @@ export const SourcePageDetails: React.FC<SourcePageDetailsProps> = ({
             <ScrollArea className="h-[400px] border rounded-lg">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-2">
-                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-                  <p className="text-sm text-gray-500">Loading pages...</p>
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Loading pages...</p>
                 </div>
               ) : error ? (
                 <div className="p-4 text-center text-red-600">{error}</div>
               ) : pages.length === 0 && !loadFullList ? (
                 <div className="p-4 text-center space-y-4">
-                  <p className="text-gray-500">Page details not loaded</p>
+                  <p className="text-muted-foreground">Page details not loaded</p>
                   <button
                     onClick={loadAllPages}
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-brand-600 border border-transparent rounded-md hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary border border-transparent rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                   >
                     Load All Pages
                   </button>
                 </div>
               ) : pages.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">No pages found for this source</div>
+                <div className="p-4 text-center text-muted-foreground">No pages found for this source</div>
               ) : (
                 <div>
                   <div className="divide-y">
                     {displayedPages.map((page, index) => (
-                  <div key={page.id} className="p-4 hover:bg-gray-50 overflow-hidden">
+                  <div key={page.id} className="p-4 hover:bg-accent overflow-hidden">
                     <div className="space-y-2">
                       {/* Page URL/Filename */}
                       <div className="flex items-start gap-2 min-w-0">
@@ -309,7 +309,7 @@ export const SourcePageDetails: React.FC<SourcePageDetailsProps> = ({
                             {page.filename || page.page_url}
                           </p>
                           {page.is_file && page.page_url && (
-                            <p className="text-xs text-gray-500 truncate" title={page.page_url}>{page.page_url}</p>
+                            <p className="text-xs text-muted-foreground truncate" title={page.page_url}>{page.page_url}</p>
                           )}
                         </div>
                       </div>
@@ -327,7 +327,7 @@ export const SourcePageDetails: React.FC<SourcePageDetailsProps> = ({
                       </div>
 
                       {/* Additional Details */}
-                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                         {page.filesize && (
                           <div className="flex items-center gap-1">
                             <HardDrive className="w-3 h-3" />
@@ -351,7 +351,7 @@ export const SourcePageDetails: React.FC<SourcePageDetailsProps> = ({
                       </div>
 
                       {/* Timestamps */}
-                      <div className="text-xs text-gray-500 space-y-1">
+                      <div className="text-xs text-muted-foreground space-y-1">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           <span>Created: {formatTimestamp(page.created_at)}</span>
@@ -372,7 +372,7 @@ export const SourcePageDetails: React.FC<SourcePageDetailsProps> = ({
 
                       {/* Page Hash */}
                       {page.page_url_hash && (
-                        <div className="flex items-center gap-1 text-xs text-gray-400 min-w-0">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground/70 min-w-0">
                           <Hash className="w-3 h-3 flex-shrink-0" />
                           <span className="font-mono truncate" title={page.page_url_hash}>{page.page_url_hash}</span>
                         </div>
@@ -387,10 +387,10 @@ export const SourcePageDetails: React.FC<SourcePageDetailsProps> = ({
                     <div className="p-4 text-center border-t">
                       <button
                         onClick={handleShowMore}
-                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
+                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-foreground bg-background border border-border rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                       >
                         Show More
-                        <span className="ml-1 text-gray-500">
+                        <span className="ml-1 text-muted-foreground">
                           ({pages.length - displayedPages.length} more)
                         </span>
                       </button>

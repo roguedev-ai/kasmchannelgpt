@@ -38,7 +38,7 @@ export const MessagesSettings: React.FC<MessagesSettingsProps> = ({ project }) =
     citations_answer_source_label_msg: 'Where did this answer come from?',
     citations_sources_label_msg: 'Sources',
     hang_in_there_msg: 'Hang in there! I\'m thinking..',
-    chatbot_siesta_msg: 'Oops! The agent is taking a siesta. This usually happens when OpenAI is down! Please try again later.',
+    chatbot_siesta_msg: 'Oops! The agent is taking a siesta. We are aware of this and will get it back soon! Please try again later.',
   };
 
   useEffect(() => {

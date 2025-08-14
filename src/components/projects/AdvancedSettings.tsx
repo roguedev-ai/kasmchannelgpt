@@ -61,7 +61,7 @@ export function AdvancedSettings({ project, settings: propSettings, onChange: pr
     // Handle agent capability change
     if (field === 'agent_capability' && value === 'fastest-responses') {
       // Check if current model is a mini model
-      const miniModels = ['gpt-4o-mini', 'gpt-o3-mini-low', 'gpt-o3-mini-medium', 'gpt-o3-mini-high'];
+      const miniModels = ['gpt-4o-mini', 'gpt-4-1-mini', 'gpt-o4-mini-low', 'gpt-o4-mini-medium', 'gpt-o4-mini-high'];
       if (!miniModels.includes(formData.chatbot_model)) {
         // Switch to first available mini model
         setFormData(prev => ({ 
@@ -106,7 +106,9 @@ export function AdvancedSettings({ project, settings: propSettings, onChange: pr
     }
     
     try {
-      await updateSettings(project.id, formData);
+      // Only send fields that are documented in the API
+      const { agent_capability, ...settingsToSave } = formData;
+      await updateSettings(project.id, settingsToSave);
       setIsModified(false);
       toast.success('Advanced settings saved successfully');
     } catch (error) {
@@ -215,18 +217,21 @@ export function AdvancedSettings({ project, settings: propSettings, onChange: pr
                   // Only show mini models for fastest-responses
                   <>
                     <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
-                    <SelectItem value="gpt-o3-mini-low">GPT O3 Mini (Low)</SelectItem>
-                    <SelectItem value="gpt-o3-mini-medium">GPT O3 Mini (Medium)</SelectItem>
-                    <SelectItem value="gpt-o3-mini-high">GPT O3 Mini (High)</SelectItem>
+                    <SelectItem value="gpt-4-1-mini">GPT-4.1 Mini</SelectItem>
+                    <SelectItem value="gpt-o4-mini-low">GPT O4 Mini (Low)</SelectItem>
+                    <SelectItem value="gpt-o4-mini-medium">GPT O4 Mini (Medium)</SelectItem>
+                    <SelectItem value="gpt-o4-mini-high">GPT O4 Mini (High)</SelectItem>
                   </>
                 ) : (
                   // Show all models for other capabilities
                   <>
                     <SelectItem value="gpt-4-o">GPT-4o</SelectItem>
+                    <SelectItem value="gpt-4-1">GPT-4.1</SelectItem>
                     <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
-                    <SelectItem value="gpt-o3-mini-low">GPT O3 Mini (Low)</SelectItem>
-                    <SelectItem value="gpt-o3-mini-medium">GPT O3 Mini (Medium)</SelectItem>
-                    <SelectItem value="gpt-o3-mini-high">GPT O3 Mini (High)</SelectItem>
+                    <SelectItem value="gpt-4-1-mini">GPT-4.1 Mini</SelectItem>
+                    <SelectItem value="gpt-o4-mini-low">GPT O4 Mini (Low)</SelectItem>
+                    <SelectItem value="gpt-o4-mini-medium">GPT O4 Mini (Medium)</SelectItem>
+                    <SelectItem value="gpt-o4-mini-high">GPT O4 Mini (High)</SelectItem>
                     <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
                     <SelectItem value="claude-3.5-sonnet">Claude 3.5 Sonnet</SelectItem>
                   </>

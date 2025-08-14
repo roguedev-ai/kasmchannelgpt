@@ -56,7 +56,6 @@ import {
   Palette,
   MessageCircle,
   Brain,
-  Plug,
   BarChart3,
   Info,
   RefreshCw,

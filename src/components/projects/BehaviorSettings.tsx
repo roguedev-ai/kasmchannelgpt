@@ -8,6 +8,8 @@ import { useProjectSettingsStore } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SimpleSelect } from '@/components/ui/simple-select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
 import type { Agent } from '@/types';
@@ -32,6 +34,7 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
     persona_instructions: '',
     response_source: 'own_content' as 'default' | 'own_content' | 'openai_content',
     chatbot_msg_lang: 'en',
+    use_context_aware_starter_question: false,
   });
 
   const [isModified, setIsModified] = useState(false);
@@ -46,6 +49,7 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
         persona_instructions: settings.persona_instructions || '',
         response_source: settings.response_source || 'own_content',
         chatbot_msg_lang: settings.chatbot_msg_lang || 'en',
+        use_context_aware_starter_question: settings.use_context_aware_starter_question || false,
       });
       setIsModified(false);
     }
@@ -449,6 +453,24 @@ export const BehaviorSettings: React.FC<BehaviorSettingsProps> = ({ project }) =
             )}>Advanced Behavior</h3>
             
             <div className="space-y-4">
+              {/* Context-Aware Starter Questions */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="use_context_aware_starter_question" className="text-sm font-medium">
+                    Context-Aware Starter Questions
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Generate starter questions based on your content
+                  </p>
+                </div>
+                <Switch
+                  id="use_context_aware_starter_question"
+                  checked={formData.use_context_aware_starter_question}
+                  onCheckedChange={(checked) => handleInputChange('use_context_aware_starter_question', checked)}
+                  disabled={isFreeTrialMode}
+                />
+              </div>
+
               <div className="p-4 bg-accent border border-border rounded-lg">
                 <h4 className="text-sm font-medium text-foreground mb-2">Response Guidelines</h4>
                 <ul className="text-sm text-muted-foreground space-y-1">

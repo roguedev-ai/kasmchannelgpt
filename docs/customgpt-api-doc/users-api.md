@@ -4,17 +4,15 @@
 
 Retrieve the profile information of the current user. This endpoint allows you to fetch the details and attributes associated with the user's profile, providing valuable information about the user's account and preferences.
 
-
-
+```bash
 curl --request GET \
      --url https://app.customgpt.ai/api/v1/user \
      --header 'accept: application/json'
-
-
-
-
+```
 
 ### 200 Response
+
+```json
 {
   "status": "success",
   "data": {
@@ -27,8 +25,11 @@ curl --request GET \
     "updated_at": "2023-04-30 16:43:53"
   }
 }
+```
 
 ### 400 response
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -37,8 +38,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 500 response:
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -47,20 +51,22 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
-
+```
 
 ## 2. Update the user's profile
 
 Update the profile of the current user. This endpoint allows the user to modify and update their profile information and preferences within the application or system
 
+```bash
 curl --request POST \
      --url https://app.customgpt.ai/api/v1/user \
      --header 'accept: application/json' \
      --header 'content-type: multipart/form-data'
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -73,9 +79,11 @@ curl --request POST \
     "updated_at": "2023-04-30 16:43:53"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -84,10 +92,11 @@ curl --request POST \
     "message": "API Token is either missing or invalid"
   }
 }
-
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -96,3 +105,4 @@ curl --request POST \
     "message": "Internal Server Error"
   }
 }
+```

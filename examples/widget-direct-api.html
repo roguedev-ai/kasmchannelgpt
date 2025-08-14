@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CustomGPT Widget - Direct API Mode Example</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 40px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .description {
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    .demo-section {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      margin-bottom: 30px;
+    }
+    .demo-section h2 {
+      margin-top: 0;
+      color: #444;
+      font-size: 20px;
+    }
+    #chat-container {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    .config-info {
+      background: #f0f0f0;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      margin-top: 20px;
+      overflow-x: auto;
+    }
+    .warning {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      color: #856404;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 8px 16px;
+      border: 1px solid #007bff;
+      background: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button.secondary {
+      background: white;
+      color: #007bff;
+    }
+    button.secondary:hover {
+      background: #f8f9fa;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>CustomGPT Widget - Direct API Mode</h1>
+    <p class="description">
+      This example demonstrates using the CustomGPT widget in direct API mode, where the widget 
+      communicates directly with the CustomGPT API without needing a proxy server. This is ideal 
+      for static websites or when you want to deploy the widget without running a Next.js server.
+    </p>
+
+    <div class="warning">
+      <strong>⚠️ Security Warning:</strong> In direct mode, your API key is exposed in the browser. 
+      Only use this mode for internal tools or applications where you control access. For public-facing 
+      applications, use proxy mode with a server to keep your API key secure.
+    </div>
+
+    <!-- Embedded Widget Example -->
+    <div class="demo-section">
+      <h2>Embedded Widget (Direct API Mode)</h2>
+      <p>The widget below communicates directly with the CustomGPT API using the provided API key.</p>
+      
+      <div id="chat-container"></div>
+
+      <div class="config-info">
+        <strong>Configuration:</strong><br>
+        {<br>
+        &nbsp;&nbsp;agentId: '123',<br>
+        &nbsp;&nbsp;apiKey: 'your-api-key-here',<br>
+        &nbsp;&nbsp;containerId: 'chat-container',<br>
+        &nbsp;&nbsp;mode: 'embedded',<br>
+        &nbsp;&nbsp;theme: 'light',<br>
+        &nbsp;&nbsp;enableConversationManagement: true<br>
+        }
+      </div>
+    </div>
+
+    <!-- Floating Widget Example -->
+    <div class="demo-section">
+      <h2>Floating Widget (Direct API Mode)</h2>
+      <p>Click the button below to create a floating widget that appears in the bottom-right corner.</p>
+      
+      <div class="controls">
+        <button onclick="createFloatingWidget()">Create Floating Widget</button>
+        <button onclick="toggleFloatingWidget()" class="secondary">Toggle Widget</button>
+        <button onclick="destroyFloatingWidget()" class="secondary">Destroy Widget</button>
+      </div>
+
+      <div class="config-info">
+        <strong>Configuration:</strong><br>
+        {<br>
+        &nbsp;&nbsp;agentId: '123',<br>
+        &nbsp;&nbsp;apiKey: 'your-api-key-here',<br>
+        &nbsp;&nbsp;mode: 'floating',<br>
+        &nbsp;&nbsp;position: 'bottom-right',<br>
+        &nbsp;&nbsp;theme: 'light',<br>
+        &nbsp;&nbsp;enableConversationManagement: true<br>
+        }
+      </div>
+    </div>
+
+    <!-- Usage Instructions -->
+    <div class="demo-section">
+      <h2>How to Use Direct API Mode</h2>
+      <ol>
+        <li><strong>Get your API key</strong> from the CustomGPT dashboard</li>
+        <li><strong>Include the widget script</strong> in your HTML</li>
+        <li><strong>Initialize the widget</strong> with your API key and agent ID</li>
+      </ol>
+
+      <h3>Example Code:</h3>
+      <div class="config-info">
+&lt;!-- Include the widget script --&gt;<br>
+&lt;script src="path/to/customgpt-widget.js"&gt;&lt;/script&gt;<br>
+<br>
+&lt;!-- Initialize the widget --&gt;<br>
+&lt;script&gt;<br>
+&nbsp;&nbsp;// Embedded widget<br>
+&nbsp;&nbsp;const widget = CustomGPTWidget.init({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;agentId: '123',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;apiKey: 'your-api-key-here',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;containerId: 'chat-container',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mode: 'embedded'<br>
+&nbsp;&nbsp;});<br>
+<br>
+&nbsp;&nbsp;// Or floating widget<br>
+&nbsp;&nbsp;const floatingWidget = CustomGPTWidget.init({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;agentId: '123',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;apiKey: 'your-api-key-here',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mode: 'floating',<br>
+&nbsp;&nbsp;&nbsp;&nbsp;position: 'bottom-right'<br>
+&nbsp;&nbsp;});<br>
+&lt;/script&gt;
+      </div>
+
+      <h3>Custom API Endpoint:</h3>
+      <p>If you're using a self-hosted CustomGPT instance, you can specify a custom API URL:</p>
+      <div class="config-info">
+const widget = CustomGPTWidget.init({<br>
+&nbsp;&nbsp;agentId: '123',<br>
+&nbsp;&nbsp;apiKey: 'your-api-key-here',<br>
+&nbsp;&nbsp;apiUrl: 'https://your-customgpt-instance.com/api/v1',<br>
+&nbsp;&nbsp;containerId: 'chat-container'<br>
+});
+      </div>
+    </div>
+
+    <!-- Comparison with Proxy Mode -->
+    <div class="demo-section">
+      <h2>Direct Mode vs Proxy Mode</h2>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <tr>
+          <th style="text-align: left; padding: 10px; border-bottom: 2px solid #e0e0e0;">Feature</th>
+          <th style="text-align: left; padding: 10px; border-bottom: 2px solid #e0e0e0;">Direct Mode</th>
+          <th style="text-align: left; padding: 10px; border-bottom: 2px solid #e0e0e0;">Proxy Mode</th>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">API Key Location</td>
+          <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">Client-side (exposed)</td>
+          <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">Server-side (secure)</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">Server Required</td>
+          <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">No</td>
+          <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">Yes (Next.js)</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">Best For</td>
+          <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">Internal tools, prototypes</td>
+          <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">Public websites</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">CORS</td>
+          <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">Handled by CustomGPT</td>
+          <td style="padding: 10px; border-bottom: 1px solid #f0f0f0;">Handled by proxy</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px;">Setup Complexity</td>
+          <td style="padding: 10px;">Simple</td>
+          <td style="padding: 10px;">Requires server setup</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Include the widget script -->
+  <script src="../dist/widget/customgpt-widget.js"></script>
+
+  <script>
+    // Replace with your actual API key and agent ID
+    const API_KEY = 'your-api-key-here';
+    const AGENT_ID = '123';
+
+    // Initialize embedded widget in direct mode
+    let embeddedWidget;
+    try {
+      embeddedWidget = CustomGPTWidget.init({
+        agentId: AGENT_ID,
+        apiKey: API_KEY,
+        containerId: 'chat-container',
+        mode: 'embedded',
+        theme: 'light',
+        width: '100%',
+        height: '500px',
+        enableConversationManagement: true,
+        maxConversations: 5,
+        onMessage: (message) => {
+          console.log('Message received:', message);
+        },
+        onConversationChange: (conversation) => {
+          console.log('Conversation changed:', conversation);
+        }
+      });
+      console.log('Embedded widget initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize embedded widget:', error);
+      document.getElementById('chat-container').innerHTML = 
+        '<div style="padding: 20px; color: #d32f2f;">Failed to initialize widget. Please check your API key and agent ID.</div>';
+    }
+
+    // Floating widget management
+    let floatingWidget;
+
+    function createFloatingWidget() {
+      if (floatingWidget) {
+        alert('Floating widget already exists!');
+        return;
+      }
+
+      try {
+        floatingWidget = CustomGPTWidget.init({
+          agentId: AGENT_ID,
+          apiKey: API_KEY,
+          mode: 'floating',
+          position: 'bottom-right',
+          theme: 'light',
+          enableConversationManagement: true,
+          maxConversations: 3,
+          onOpen: () => {
+            console.log('Floating widget opened');
+          },
+          onClose: () => {
+            console.log('Floating widget closed');
+          }
+        });
+        console.log('Floating widget created successfully');
+      } catch (error) {
+        console.error('Failed to create floating widget:', error);
+        alert('Failed to create floating widget. Please check the console for details.');
+      }
+    }
+
+    function toggleFloatingWidget() {
+      if (!floatingWidget) {
+        alert('Please create a floating widget first!');
+        return;
+      }
+      floatingWidget.toggle();
+    }
+
+    function destroyFloatingWidget() {
+      if (!floatingWidget) {
+        alert('No floating widget to destroy!');
+        return;
+      }
+      floatingWidget.destroy();
+      floatingWidget = null;
+      console.log('Floating widget destroyed');
+    }
+
+    // Log API client configuration
+    console.log('CustomGPT Widget Direct API Mode Example');
+    console.log('Using direct API communication (no proxy)');
+    console.log('API endpoint:', 'https://app.customgpt.ai/api/v1');
+  </script>
+</body>
+</html>

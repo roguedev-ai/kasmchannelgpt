@@ -117,10 +117,20 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
     // Skip API calls in demo mode to prevent errors
     const isDemoMode = typeof window !== 'undefined' && (window as any).__customgpt_demo_mode;
     
-    if (storeCurrentConversation && !isDemoMode) {
-      loadMessages(storeCurrentConversation.id.toString());
+    // In widget mode with isolated conversations, use the prop instead of store
+    const conversationToLoad = (mode === 'widget' || mode === 'floating') && currentConversation 
+      ? currentConversation 
+      : storeCurrentConversation;
+    
+    if (conversationToLoad && !isDemoMode) {
+      console.log('[ChatLayout] Loading messages for conversation:', {
+        conversationId: conversationToLoad.id,
+        mode,
+        isFromProp: !!(currentConversation && (mode === 'widget' || mode === 'floating'))
+      });
+      loadMessages(conversationToLoad.id.toString());
     }
-  }, [storeCurrentConversation, loadMessages]);
+  }, [storeCurrentConversation, currentConversation, loadMessages, mode]);
 
   const { isMobile } = useBreakpoint();
 

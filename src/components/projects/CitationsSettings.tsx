@@ -1,4 +1,3 @@
-import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -61,8 +60,8 @@ export function CitationsSettings({ settings, onChange }: CitationsSettingsProps
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">User View</SelectItem>
-                <SelectItem value="admin">Admin View</SelectItem>
-                <SelectItem value="detailed">Detailed View</SelectItem>
+                <SelectItem value="show">Show Citations</SelectItem>
+                <SelectItem value="hide">Hide Citations</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -78,9 +77,8 @@ export function CitationsSettings({ settings, onChange }: CitationsSettingsProps
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="default">Default</SelectItem>
-                <SelectItem value="compact">Compact</SelectItem>
-                <SelectItem value="expanded">Expanded</SelectItem>
-                <SelectItem value="hidden">Hidden</SelectItem>
+                <SelectItem value="inline">Inline</SelectItem>
+                <SelectItem value="none">None</SelectItem>
               </SelectContent>
             </Select>
           </div>

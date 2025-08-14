@@ -3,29 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { 
   MessageCircle,
-  Search,
-  Filter,
-  RefreshCw,
-  Download,
-  Share2,
   Trash2,
   Eye,
-  Users,
   Clock,
-  AlertCircle,
-  Calendar,
-  BarChart3,
   ExternalLink,
-  Archive,
-  Star,
   MessageSquare,
-  User,
-  Globe,
-  Lock,
-  Settings,
-  Plus,
-  FileDown,
-  Mail
+  RefreshCw,
+  AlertCircle,
+  Search
 } from 'lucide-react';
 import { toast } from 'sonner';
 

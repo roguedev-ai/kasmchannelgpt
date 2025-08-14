@@ -3,13 +3,15 @@
 ## 1. Get agent settings
 Retrieve the agent (formerly known as project) settings for a specific agent. This endpoint allows you to fetch the configuration and settings associated with the project
 
+```bash
 curl --request GET \
      --url https://app.customgpt.ai/api/v1/projects/projectId/settings \
      --header 'accept: application/json'
-    
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -67,9 +69,11 @@ curl --request GET \
     "markdown_enabled": true
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -78,9 +82,11 @@ curl --request GET \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -89,9 +95,11 @@ curl --request GET \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -100,9 +108,11 @@ curl --request GET \
     "message": "Agent with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -111,12 +121,13 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
+```
 
 ## 2. Update agent settings
 
 Update the agent (formerly known as project) settings for a specific agent. This endpoint allows you to update the configuration and settings associated with the agent
 
-
+```bash
 curl --request POST \
      --url https://app.customgpt.ai/api/v1/projects/projectId/settings \
      --header 'accept: application/json' \
@@ -148,19 +159,22 @@ curl --request POST \
      --form conversation_retention_days=0 \
      --form enable_agent_knowledge_base_awareness=true \
      --form markdown_enabled=true
+```
 
- 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
     "updated": true
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -169,9 +183,11 @@ curl --request POST \
     "message": "Please upload a valid image file for avatar"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -180,9 +196,11 @@ curl --request POST \
     "message": "API Token is either missing or invalid"
   }
 }
-
+```
 
 ### 500 response:
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -191,3 +209,4 @@ curl --request POST \
     "message": "Internal Server Error"
   }
 }
+```

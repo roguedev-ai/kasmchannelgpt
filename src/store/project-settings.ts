@@ -14,10 +14,11 @@ export interface ProjectSettings {
   chatbot_title?: string;
   chatbot_title_color?: string;
   user_avatar?: string;
+  user_avatar_enabled?: boolean;
   spotlight_avatar_enabled?: boolean;
   spotlight_avatar?: string;
-  spotlight_avatar_shape?: 'rectangle' | 'circle' | 'rounded' | 'square';
-  spotlight_avatar_type?: 'default' | 'animated' | '3d' | 'custom';
+  spotlight_avatar_shape?: 'rectangle' | 'circle';
+  spotlight_avatar_type?: 'default' | 'image';
   user_avatar_orientation?: 'agent-left-user-right' | 'agent-right-user-left' | 'both-left' | 'both-right';
   
   // Messages & Behavior
@@ -45,7 +46,7 @@ export interface ProjectSettings {
   citations_view_type?: 'user' | 'show' | 'hide';
   citations_answer_source_label_msg?: string;
   citations_sources_label_msg?: string;
-  image_citation_display?: 'default' | 'inline' | 'none';
+  image_citation_display?: 'default' | 'first_only';
   enable_inline_citations_api?: boolean;
   hide_sources_from_responses?: boolean;
   
@@ -54,6 +55,7 @@ export interface ProjectSettings {
   is_loading_indicator_enabled?: boolean;
   remove_branding?: boolean;
   private_deployment?: boolean;
+  use_context_aware_starter_question?: boolean;
   enable_recaptcha_for_public_chatbots?: boolean;
   is_selling_enabled?: boolean;
   license_slug?: boolean;
@@ -61,7 +63,7 @@ export interface ProjectSettings {
   can_share_conversation?: boolean;
   can_export_conversation?: boolean;
   conversation_time_window?: boolean;
-  conversation_retention_period?: 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
+  conversation_retention_period?: 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom' | 'never';
   conversation_retention_days?: number;
   enable_agent_knowledge_base_awareness?: boolean;
   markdown_enabled?: boolean;
@@ -176,6 +178,19 @@ export const useProjectSettingsStore = create<ProjectSettingsStore>((set, get) =
       // Create FormData for multipart/form-data
       const formData = new FormData();
       
+      // Default values for fields that API requires to have a value
+      const defaultValues: Record<string, string> = {
+        ending_message: 'Please email us for further support',
+        no_answer_message: 'Sorry, I don\'t have an answer for that.',
+        try_asking_questions_msg: 'Try asking these questions...',
+        view_more_msg: 'View more',
+        view_less_msg: 'View less',
+        citations_answer_source_label_msg: 'Where did this answer come from?',
+        citations_sources_label_msg: 'Sources',
+        hang_in_there_msg: 'Hang in there! I\'m thinking..',
+        chatbot_siesta_msg: 'Oops! The agent is taking a siesta. We are aware of this and will get it back soon! Please try again later.'
+      };
+
       Object.entries(settingsUpdate).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (key === 'example_questions' && Array.isArray(value)) {
@@ -188,7 +203,13 @@ export const useProjectSettingsStore = create<ProjectSettingsStore>((set, get) =
             formData.append(key, value);
           } else {
             // Handle regular fields
-            formData.append(key, String(value));
+            // If the value is empty and there's a default, use the default
+            const stringValue = String(value);
+            if (stringValue === '' && defaultValues[key]) {
+              formData.append(key, defaultValues[key]);
+            } else {
+              formData.append(key, stringValue);
+            }
           }
         }
       });

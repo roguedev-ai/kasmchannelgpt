@@ -10,6 +10,7 @@ export interface SourceSettings {
   remove_unexist_pages: boolean;
   refresh_existing_pages: string;
   sitemap_path?: string;
+  allow_extra_timeout?: boolean;
 }
 
 // Individual source
@@ -53,6 +54,7 @@ export interface UpdateSourceSettingsRequest {
   create_new_pages?: boolean;
   remove_unexist_pages?: boolean;
   refresh_existing_pages?: string;
+  allow_extra_timeout?: boolean;
 }
 
 // Create source request (for sitemap)
@@ -63,4 +65,5 @@ export interface CreateSitemapSourceRequest {
   create_new_pages?: boolean;
   remove_unexist_pages?: boolean;
   refresh_existing_pages?: string;
+  allow_extra_timeout?: boolean;
 }

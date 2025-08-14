@@ -92,7 +92,7 @@ export interface ConversationsListParams {
   page?: number;
   order?: 'asc' | 'desc';
   orderBy?: string;
-  userFilter?: 'all' | string;
+  userFilter?: 'all' | 'me' | string;
 }
 
 export interface MessagesListParams {

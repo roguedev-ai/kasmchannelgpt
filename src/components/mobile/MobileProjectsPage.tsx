@@ -35,7 +35,7 @@ import {
   Shield,
   AlertCircle,
   Activity,
-  Zap,
+  Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 

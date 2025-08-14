@@ -1,17 +1,18 @@
 # Citations
 
-
 ## 1. Get the Open Graph data for a citation
 
 Retrieve the Open Graph data for a citation based on its unique identifier. This endpoint allows you to fetch the Open Graph metadata associated with a specific citation.
 
-
+```bash
 curl --request GET \
      --url https://app.customgpt.ai/api/v1/projects/projectId/citations/citationId \
      --header 'accept: application/json'
-
+```
 
 ### 200 Response
+
+```json
 {
   "status": "success",
   "data": {
@@ -22,9 +23,11 @@ curl --request GET \
     "image": "https://www.example.com/image.png"
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -33,9 +36,11 @@ curl --request GET \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -44,9 +49,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -55,4 +62,4 @@ curl --request GET \
     "message": "Page with id 1 not found"
   }
 }
-
+```

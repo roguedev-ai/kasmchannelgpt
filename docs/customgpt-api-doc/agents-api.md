@@ -2,15 +2,15 @@
 
 ## 1. List all agents
 
+```bash
 curl --request GET \
      --url 'https://app.customgpt.ai/api/v1/projects?page=1&order=desc&orderBy=id&width=100%25&height=auto' \
      --header 'accept: application/json'
-
-
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -47,9 +47,11 @@ curl --request GET \
     "total": 1
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -58,10 +60,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
-
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -70,19 +73,22 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
+```
 
 ## 2. Create a new agent
 
 Create a new agent by importing data either from a sitemap or an uploaded file. This endpoint enables you to initiate the creation of a new agent by supplying the necessary agent data that will be used as the context. You can choose to import the agent knowledge and content from a sitemap url or upload a specific file format that contains the context can be any text, audio or video format. The system will process the provided data and generate a new agent based on the imported or uploaded information.
 
+```bash
 curl --request POST \
      --url https://app.customgpt.ai/api/v1/projects \
      --header 'accept: application/json' \
      --header 'content-type: multipart/form-data'
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -104,9 +110,11 @@ curl --request POST \
     "are_licenses_allowed": true
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -115,9 +123,11 @@ curl --request POST \
     "message": "Agent name can't be empty"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -126,10 +136,11 @@ curl --request POST \
     "message": "API Token is either missing or invalid"
   }
 }
-
-
+```
 
 ### 500 response:
+
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -138,19 +149,21 @@ curl --request POST \
     "message": "Internal Server Error"
   }
 }
+```
 
 ## 3. Show a certain agent
 
 Retrieve details of an agent (formerly known as project) based on its unique project ID. This endpoint allows you to fetch specific information about an agent
 
+```bash
 curl --request GET \
      --url 'https://app.customgpt.ai/api/v1/projects/projectId?width=100%25&height=auto' \
      --header 'accept: application/json'
-
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -172,9 +185,11 @@ curl --request GET \
     "are_licenses_allowed": true
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -183,9 +198,11 @@ curl --request GET \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -194,9 +211,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -205,9 +224,11 @@ curl --request GET \
     "message": "Agent with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -216,23 +237,23 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
-
+```
 
 ## 4. Update a certain agent
 
 Update an agent (formerly known as project) with specific details based on its unique projectId. This endpoint allows you to modify and revise the information associated with a particular agent
 
-
+```bash
 curl --request POST \
      --url https://app.customgpt.ai/api/v1/projects/projectId \
      --header 'accept: application/json' \
      --header 'content-type: multipart/form-data' \
      --form are_licenses_allowed=false
-
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -254,9 +275,11 @@ curl --request POST \
     "are_licenses_allowed": true
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -265,9 +288,11 @@ curl --request POST \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -276,9 +301,11 @@ curl --request POST \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -287,9 +314,11 @@ curl --request POST \
     "message": "Agent with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -298,29 +327,31 @@ curl --request POST \
     "message": "Internal Server Error"
   }
 }
-
+```
 
 ## 5. Delete a certain agent
 Delete an agent (formerly known as project) by its unique project ID. This endpoint allows you to remove an existing agent from the system based on its ID
 
-
+```bash
 curl --request DELETE \
      --url https://app.customgpt.ai/api/v1/projects/projectId \
      --header 'accept: application/json'
-
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
     "deleted": true
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -329,9 +360,11 @@ curl --request DELETE \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -340,9 +373,11 @@ curl --request DELETE \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -351,11 +386,11 @@ curl --request DELETE \
     "message": "Agent with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
-
-
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -364,22 +399,21 @@ curl --request DELETE \
     "message": "Internal Server Error"
   }
 }
-
-
-
+```
 
 ## 6. Replicate agent by given ID
 
-
 Replicate an agent (formerly known as project) by copying the agent info, settings, sitemap sources and uploaded files. This endpoint enables you to initiate the replication of an agent by supplying the necessary ID. The system will process the replicated data and generate a new agent based on the information of existing agent.
 
+```bash
 curl --request POST \
      --url https://app.customgpt.ai/api/v1/projects/projectId/replicate \
      --header 'accept: application/json'
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -401,9 +435,11 @@ curl --request POST \
     "are_licenses_allowed": true
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -412,9 +448,11 @@ curl --request POST \
     "message": "Agent name can't be empty"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -423,9 +461,11 @@ curl --request POST \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -434,19 +474,20 @@ curl --request POST \
     "message": "Internal Server Error"
   }
 }
-
-
+```
 
 ## 7. Get the stats for a certain agent
 Retrieve statistical data for an agent (formerly known as project) using its unique projectId. This endpoint provides extensive statistics about the agent's performance, activity, or other relevant metrics
 
+```bash
 curl --request GET \
      --url https://app.customgpt.ai/api/v1/projects/projectId/stats \
      --header 'accept: application/json'
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -460,9 +501,11 @@ curl --request GET \
     "total_storage_credits_used": 100
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -471,9 +514,11 @@ curl --request GET \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -482,9 +527,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -493,9 +540,11 @@ curl --request GET \
     "message": "Agent with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -504,3 +553,4 @@ curl --request GET \
     "message": "Internal Server Error"
   }
 }
+```

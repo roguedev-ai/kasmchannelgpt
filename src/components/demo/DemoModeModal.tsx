@@ -229,7 +229,7 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  Welcome to CustomGPT UI
+                  Welcome to the CustomGPT.ai Developer Starter Kit
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Experience the power of custom AI chatbots

@@ -304,6 +304,7 @@ export const Message: React.FC<MessageProps> = ({
   onCitationClick,
   onPreviewClick,
   onFeedback,
+  mode = 'standalone',
   className 
 }) => {
   const isUser = message.role === 'user';
@@ -372,8 +373,8 @@ export const Message: React.FC<MessageProps> = ({
             />
           )}
           
-          {/* Citations */}
-          {message.citations && message.citations.length > 0 && (
+          {/* Citations - Only shown in standalone mode */}
+          {mode === 'standalone' && message.citations && message.citations.length > 0 && (
             <CitationList 
               citations={message.citations}
               onCitationClick={onCitationClick}

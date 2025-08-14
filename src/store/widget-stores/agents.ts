@@ -92,8 +92,23 @@ export function createAgentStore(sessionId: string): StoreApi<AgentStore> {
       const isDemoMode = typeof window !== 'undefined' && (window as any).__customgpt_demo_mode;
       
       // Get widget instance from window using session ID
-      const widgetKey = `__customgpt_widget_${sessionId}`;
-      const widget = typeof window !== 'undefined' ? (window as any)[widgetKey] : null;
+      let widget = null;
+      if (typeof window !== 'undefined') {
+        // Try multiple possible keys where widget might be stored
+        const widgetKey = `__customgpt_widget_${sessionId}`;
+        widget = (window as any)[widgetKey];
+        
+        // Fallback to check the instances object
+        if (!widget) {
+          const instances = (window as any).__customgpt_widget_instances;
+          widget = instances?.[sessionId];
+        }
+        
+        // Fallback to the main instance for backward compatibility
+        if (!widget) {
+          widget = (window as any).__customgpt_widget_instance;
+        }
+      }
       
       logger.info('AGENTS', 'Loading agents for widget store', {
         sessionId,
@@ -105,69 +120,126 @@ export function createAgentStore(sessionId: string): StoreApi<AgentStore> {
       set({ loading: true, error: null });
 
       try {
-        // If widget has a configured agentId, fetch that specific agent from API
+        // If widget has a configured agentId, create the agent directly
         if (widget?.config?.agentId) {
-          const client = getClient();
+          const agentId = typeof widget.config.agentId === 'string' ? parseInt(widget.config.agentId) : widget.config.agentId;
           
-          if (isDemoMode) {
-            // Demo mode - create fake agent
-            const singleAgent: Agent = {
-              id: widget.config.agentId,
-              project_name: widget.config.name || 'CustomGPT Assistant',
-              type: 'WIDGET',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              is_chat_active: true,
-              is_shared: false,
-              user_id: 0,
-              team_id: 0,
-            };
-
-            set({
-              agents: [singleAgent],
-              currentAgent: singleAgent,
-              loading: false,
-            });
-
-            saveAgentsToStorage([singleAgent]);
-            saveSelectedAgentToStorage(singleAgent.id.toString());
-            return;
-          }
+          // Create fallback agent immediately to ensure widget works
+          const fallbackAgent: Agent = {
+            id: agentId,
+            project_name: widget.config.agentName || widget.config.name || `Agent ${agentId}`,
+            type: 'WIDGET',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            is_chat_active: true,
+            is_shared: false,
+            user_id: 0,
+            team_id: 0,
+            settings: {
+              chatbot_avatar: './logo.png'
+            }
+          };
           
-          try {
-            // Fetch the specific agent from API
-            const response = await client.getAgent(widget.config.agentId);
-            const agent = response.data || response;
-            
-            logger.info('AGENTS', 'Fetched specific agent from API', {
-              agentId: agent.id,
-              agentName: agent.project_name
-            });
-            
-            set({
-              agents: [agent],
-              currentAgent: agent,
-              loading: false,
-            });
-
-            saveAgentsToStorage([agent]);
-            saveSelectedAgentToStorage(agent.id.toString());
-            return;
-          } catch (error) {
-            logger.error('AGENTS', 'Failed to fetch specific agent', error);
-            // Fall back to cached data if available
-            const cachedAgents = loadAgentsFromStorage();
-            if (cachedAgents && cachedAgents.length > 0) {
-              const agent = cachedAgents.find(a => a.id === widget.config.agentId) || cachedAgents[0];
+          logger.info('AGENTS', 'Creating fallback agent for widget', {
+            agentId,
+            agentName: fallbackAgent.project_name,
+            isDemoMode
+          });
+          
+          set({
+            agents: [fallbackAgent],
+            currentAgent: fallbackAgent,
+            loading: false,
+          });
+          
+          saveAgentsToStorage([fallbackAgent]);
+          saveSelectedAgentToStorage(fallbackAgent.id.toString());
+          
+          // Try to fetch the actual agent details in the background
+          if (!isDemoMode) {
+            try {
+              const client = getClient();
+              const response = await client.getAgent(agentId);
+              const agent = response.data || response;
+              
+              // Fetch agent settings to get chatbot_avatar and other settings
+              try {
+                const settingsResponse = await client.getAgentSettings(agentId);
+                const settings = settingsResponse.data || settingsResponse;
+                
+                // Merge settings into agent object
+                agent.settings = settings;
+                
+                logger.info('AGENTS', 'Fetched agent settings', {
+                  agentId: agent.id,
+                  hasAvatar: !!settings?.chatbot_avatar,
+                  avatarUrl: settings?.chatbot_avatar
+                });
+              } catch (settingsError) {
+                logger.warn('AGENTS', 'Failed to fetch agent settings', settingsError);
+                // Use default settings with logo
+                agent.settings = {
+                  chatbot_avatar: './logo.png'
+                };
+              }
+              
+              // Apply custom name if provided
+              if (widget.config.agentName) {
+                agent.project_name = widget.config.agentName;
+              }
+              
+              logger.info('AGENTS', 'Updated agent with API data', {
+                agentId: agent.id,
+                agentName: agent.project_name,
+                hasSettings: !!agent.settings,
+                avatarUrl: agent.settings?.chatbot_avatar
+              });
+              
+              // Update the store with the actual agent data
               set({
-                agents: cachedAgents,
+                agents: [agent],
                 currentAgent: agent,
                 loading: false,
               });
-              return;
+              
+              saveAgentsToStorage([agent]);
+              saveSelectedAgentToStorage(agent.id.toString());
+            } catch (error) {
+              logger.warn('AGENTS', 'Failed to fetch agent from API, using fallback', error);
+              // Keep the fallback agent that was already set
             }
-            throw error;
           }
+          
+          return;
+        }
+        
+        // If no widget configuration found, create a basic demo agent
+        if (!widget) {
+          logger.warn('AGENTS', 'No widget configuration found, creating demo agent');
+          const demoAgent: Agent = {
+            id: 1,
+            project_name: 'Demo Assistant',
+            type: 'DEMO',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            is_chat_active: true,
+            is_shared: false,
+            user_id: 0,
+            team_id: 0,
+            settings: {
+              chatbot_avatar: './logo.png'
+            }
+          };
+          
+          set({
+            agents: [demoAgent],
+            currentAgent: demoAgent,
+            loading: false,
+          });
+          
+          saveAgentsToStorage([demoAgent]);
+          saveSelectedAgentToStorage(demoAgent.id.toString());
+          return;
         }
 
         // No specific agent ID - fetch agents from API with enterprise-scale pagination
@@ -229,6 +301,9 @@ export function createAgentStore(sessionId: string): StoreApi<AgentStore> {
               is_shared: false,
               user_id: 0,
               team_id: 0,
+              settings: {
+                chatbot_avatar: '/logo.png'
+              }
             },
           ];
           

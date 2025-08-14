@@ -74,6 +74,12 @@ export class ProxyCustomGPTClient {
     if (typeof window !== 'undefined') {
       const deploymentMode = localStorage.getItem('customgpt.deploymentMode');
       this.isDemoMode = deploymentMode === 'demo';
+      
+      // Check if there's a global API URL configuration for widgets
+      const globalApiUrl = (window as any).__customgpt_api_url;
+      if (globalApiUrl) {
+        this.baseURL = `${globalApiUrl}/api/proxy`;
+      }
     }
     
     logger.info('PROXY_CLIENT', 'Proxy API Client initialized', {
@@ -81,6 +87,14 @@ export class ProxyCustomGPTClient {
       timeout: this.timeout,
       isDemoMode: this.isDemoMode,
     });
+  }
+  
+  /**
+   * Set the base API URL (for widget usage)
+   */
+  public setApiUrl(apiUrl: string) {
+    this.baseURL = `${apiUrl}/api/proxy`;
+    logger.info('PROXY_CLIENT', 'API URL updated', { baseURL: this.baseURL });
   }
   
   /**
@@ -433,7 +447,7 @@ export class ProxyCustomGPTClient {
     per_page?: number;
     order?: 'asc' | 'desc';
     orderBy?: string;
-    userFilter?: 'all' | string;
+    userFilter?: 'all' | 'me' | string;
   }): Promise<ConversationsResponse> {
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append('page', params.page.toString());
@@ -555,7 +569,8 @@ export class ProxyCustomGPTClient {
                 onComplete?.();
                 return;
               }
-              const chunk = parseStreamChunk(data);
+              // parseStreamChunk expects the full line with "data: " prefix
+              const chunk = parseStreamChunk(line);
               if (chunk) {
                 onChunk(chunk);
               }

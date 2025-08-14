@@ -3,14 +3,15 @@
 ## 1. Get the Metadata for a certain page
 Retrieve the Metadata for a page based on its unique identifier. This endpoint allows you to fetch the metadata associated with a specific page.
 
+```bash
 curl --request GET \
      --url https://app.customgpt.ai/api/v1/projects/projectId/pages/pageId/metadata \
      --header 'accept: application/json'
-
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -21,9 +22,11 @@ curl --request GET \
     "image": "https://www.example.com/image.png"
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "success",
   "data": {
@@ -34,9 +37,11 @@ curl --request GET \
     "image": "https://www.example.com/image.png"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -45,9 +50,11 @@ curl --request GET \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -56,22 +63,22 @@ curl --request GET \
     "message": "Page with id 1 not found"
   }
 }
-
+```
 
 ## 2. Update metadata for a certain page
 
-
 Update the metadata for a specific page identified by its unique pageId. This endpoint allows you to update the associated metadata of the page.
 
+```bash
 curl --request PUT \
      --url https://app.customgpt.ai/api/v1/projects/projectId/pages/pageId/metadata \
      --header 'accept: application/json' \
      --header 'content-type: application/json'
-
-
+```
 
 ### 200 Response
 
+```json
 {
   "status": "success",
   "data": {
@@ -82,9 +89,11 @@ curl --request PUT \
     "image": "https://www.example.com/image.png"
   }
 }
+```
 
 ### 400 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -93,9 +102,11 @@ curl --request PUT \
     "message": "Agent id must be integer"
   }
 }
+```
 
 ### 401 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -104,9 +115,11 @@ curl --request PUT \
     "message": "API Token is either missing or invalid"
   }
 }
+```
 
 ### 404 response
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -115,9 +128,11 @@ curl --request PUT \
     "message": "Page with id 1 not found"
   }
 }
+```
 
 ### 500 response:
 
+```json
 {
   "status": "error",
   "url": "https://app.customgpt.ai/api/v1/projects/1",
@@ -126,4 +141,4 @@ curl --request PUT \
     "message": "Internal Server Error"
   }
 }
-
+```

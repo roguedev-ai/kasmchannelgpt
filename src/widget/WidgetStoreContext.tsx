@@ -59,6 +59,14 @@ export const WidgetStoreProvider: React.FC<WidgetStoreProviderProps> = ({
       conversationStore,
       agentStore,
     };
+    
+    // Store the widget stores globally for access by the widget instance
+    if (typeof window !== 'undefined') {
+      if (!(window as any).__customgpt_widget_stores) {
+        (window as any).__customgpt_widget_stores = {};
+      }
+      (window as any).__customgpt_widget_stores[sessionId] = storesRef.current;
+    }
   }
   
   return (

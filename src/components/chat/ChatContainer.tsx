@@ -237,6 +237,8 @@ const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ onPromptClick }) => {
 interface MessageAreaProps {
   /** Additional CSS classes for styling */
   className?: string;
+  /** Deployment mode - affects behavior */
+  mode?: 'standalone' | 'widget' | 'floating';
 }
 
 /**
@@ -251,7 +253,7 @@ interface MessageAreaProps {
  * - Welcome message when empty
  * - Loading states with typing indicator
  */
-const MessageArea: React.FC<MessageAreaProps> = ({ className }) => {
+const MessageArea: React.FC<MessageAreaProps> = ({ className, mode = 'standalone' }) => {
   const { 
     messages, 
     streamingMessage, 
@@ -290,6 +292,21 @@ const MessageArea: React.FC<MessageAreaProps> = ({ className }) => {
   const conversationMessages = currentConversation 
     ? messages.get(currentConversation.id.toString()) || []
     : [];
+    
+  // Debug logging for widget mode
+  useEffect(() => {
+    if (mode === 'widget' || mode === 'floating') {
+      console.log('[ChatContainer] Widget conversation state:', {
+        currentConversation: currentConversation,
+        conversationId: currentConversation?.id,
+        messageCount: conversationMessages.length,
+        messagesMapSize: messages.size,
+        messagesMapKeys: Array.from(messages.keys()),
+        isLoadingMessages,
+        loading
+      });
+    }
+  }, [currentConversation, conversationMessages, mode, messages, isLoadingMessages, loading]);
   
   // Detect conversation change
   useEffect(() => {
@@ -464,6 +481,7 @@ const MessageArea: React.FC<MessageAreaProps> = ({ className }) => {
               onCitationClick={handleCitationClick}
               onPreviewClick={handlePreviewClick}
               onFeedback={(feedback) => handleMessageFeedback(message.id, feedback)}
+              mode={mode}
             />
           ))}
         </div>
@@ -478,6 +496,7 @@ const MessageArea: React.FC<MessageAreaProps> = ({ className }) => {
           isLast={true}
           onCitationClick={handleCitationClick}
           onPreviewClick={handlePreviewClick}
+          mode={mode}
         />
       )}
       
@@ -495,7 +514,7 @@ const MessageArea: React.FC<MessageAreaProps> = ({ className }) => {
             setSelectedCitationId(null);
           }}
           citationId={selectedCitationId}
-          projectId={currentAgent?.id}
+          projectId={currentAgent?.id || 0}
         />
       )}
       
@@ -585,7 +604,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
               <img 
-                src="/logo.png" 
+                src={mode === 'widget' || mode === 'floating' ? './logo.png' : '/logo.png'} 
                 alt="CustomGPT.ai Logo" 
                 className="w-8 h-8 rounded-lg"
               />
@@ -776,15 +795,20 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     }
   };
   
-  const handleCreateConversation = () => {
+  const handleCreateConversation = async () => {
     if (widget) {
-      const newConv = widget.createConversation();
-      if (newConv) {
-        setCurrentConversationId(newConv.id);
-      } else {
-        // Show user-friendly message when conversation limit is reached
-        const maxConversations = widget.configuration?.maxConversations || 5;
-        toast.error(`You've reached the maximum limit of ${maxConversations} conversations. Please delete an existing conversation to create a new one.`);
+      try {
+        const newConv = await widget.createConversation();
+        if (newConv) {
+          setCurrentConversationId(newConv.id);
+        } else {
+          // Show user-friendly message when conversation limit is reached
+          const maxConversations = widget.configuration?.maxConversations || 5;
+          toast.error(`You've reached the maximum limit of ${maxConversations} conversations. Please delete an existing conversation to create a new one.`);
+        }
+      } catch (error) {
+        console.error('Failed to create conversation:', error);
+        toast.error('Failed to create conversation. Please try again.');
       }
     }
   };
@@ -888,7 +912,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         onCreateConversation={handleCreateConversation}
         conversationRefreshKey={conversationRefreshKey}
       />
-      <MessageArea className="flex-1 overflow-y-auto" />
+      <MessageArea className="flex-1 overflow-y-auto" mode={mode} />
       <div className={cn(
         "mt-auto",
         isMobile && mode === 'standalone' ? "pb-[30px]" : ""
@@ -905,6 +929,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
           }
           onVoiceClick={handleVoiceClick}
           isMobile={isMobile}
+          mode={mode}
         />
       </div>
       
@@ -927,7 +952,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       </div>
       
       {/* Voice Modal */}
-      {currentAgent && (
+      {currentAgent && currentAgent.id && (
         <VoiceModal
           isOpen={isVoiceModalOpen}
           onClose={() => setIsVoiceModalOpen(false)}

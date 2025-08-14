@@ -5,7 +5,6 @@
  * Blocks all UI interaction and forces user to restart.
  */
 
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Clock, AlertTriangle } from 'lucide-react';

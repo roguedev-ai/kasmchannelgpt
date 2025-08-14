@@ -258,7 +258,8 @@ export const ChatInput: React.FC<InputProps> = ({
   maxLength = CONSTANTS.MAX_MESSAGE_LENGTH,
   className,
   onVoiceClick,
-  isMobile = false
+  isMobile = false,
+  mode = 'standalone'
 }) => {
   const [input, setInput] = useState('');
   const [files, setFiles] = useState<FileUpload[]>([]);
@@ -580,8 +581,8 @@ export const ChatInput: React.FC<InputProps> = ({
         {/* Text Input Area */}
         <form onSubmit={handleSubmit} className="relative">
           <div className="flex items-center p-3 pb-1">
-            {/* File Upload Button - Hidden in free trial mode */}
-            {!isFreeTrialMode && (
+            {/* File Upload Button - Hidden in free trial mode and widget/floating modes */}
+            {!isFreeTrialMode && mode === 'standalone' && (
               <FileUploadButton
                 onUpload={handleFileUpload}
                 disabled={disabled}
@@ -589,18 +590,20 @@ export const ChatInput: React.FC<InputProps> = ({
               />
             )}
             
-            {/* Speech to Text Button */}
-            <SpeechToTextButton
-              onTranscription={handleTranscription}
-              onTranscriptionStart={handleTranscriptionStart}
-              onTranscriptionEnd={handleTranscriptionEnd}
-              disabled={disabled}
-              isMobile={isMobile}
-              className={cn(
-                "!h-8 !w-8 !min-w-0 mr-2",
-                isMobile && "!h-9 !w-9"
-              )}
-            />
+            {/* Speech to Text Button - Hidden in widget/floating modes */}
+            {mode === 'standalone' && (
+              <SpeechToTextButton
+                onTranscription={handleTranscription}
+                onTranscriptionStart={handleTranscriptionStart}
+                onTranscriptionEnd={handleTranscriptionEnd}
+                disabled={disabled}
+                isMobile={isMobile}
+                className={cn(
+                  "!h-8 !w-8 !min-w-0 mr-2",
+                  isMobile && "!h-9 !w-9"
+                )}
+              />
+            )}
             
             {/* Textarea */}
             <div className="flex-1 relative">
@@ -657,8 +660,8 @@ export const ChatInput: React.FC<InputProps> = ({
             
             {/* Action Buttons */}
             <div className="flex items-center gap-1">
-              {/* Voice Button */}
-              {onVoiceClick && (
+              {/* Voice Button - Hidden in widget/floating modes */}
+              {onVoiceClick && mode === 'standalone' && (
                 <Button
                   type="button"
                   size="icon"
@@ -712,7 +715,8 @@ export const ChatInput: React.FC<InputProps> = ({
           </div>
         </form>
         
-        {/* Settings Toggle Button */}
+        {/* Settings Toggle Button - Hidden in widget/floating modes */}
+        {mode === 'standalone' && (
         <div className="border-t border-gray-200/50 dark:border-gray-800/30">
           <Button
             variant="ghost"
@@ -934,6 +938,7 @@ export const ChatInput: React.FC<InputProps> = ({
             )}
           </AnimatePresence>
         </div>
+        )}
       </div>
       
       {/* Input Hints - Below configuration options */}

@@ -1,4 +1,3 @@
-import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
 
@@ -10,6 +9,8 @@ import { ChatLayout } from '../components/chat/ChatLayout';
 import { getClient } from '../lib/api/client';
 import { WidgetProvider } from './WidgetContext';
 import { WidgetStoreProvider } from './WidgetStoreContext';
+import { WidgetToaster } from './isolated-toast';
+import { widgetDebugger } from './debug-utils';
 
 /**
  * Widget Configuration Interface
@@ -18,6 +19,9 @@ import { WidgetStoreProvider } from './WidgetStoreContext';
  * This interface is used by both embedded widgets and floating buttons.
  * 
  * @property agentId - Required: Agent/Project ID from CustomGPT dashboard
+ * @property apiKey - Optional: API key for direct mode (bypasses proxy server)
+ * @property apiUrl - Optional: Base URL for API (proxy URL or CustomGPT API URL)
+ * @property useProxy - Optional: Force proxy mode even with API key (default: false)
  * @property agentName - Optional: Custom name to display instead of "Agent - {ID}"
  * @property containerId - DOM element ID for embedded mode (ignored in floating mode)
  * @property mode - Widget deployment mode: 'embedded' | 'floating' | 'widget'
@@ -42,8 +46,13 @@ import { WidgetStoreProvider } from './WidgetStoreContext';
  * @property onConversationChange - Called when conversation switches
  */
 export interface CustomGPTWidgetConfig {
-  // Required properties (API key no longer needed - handled by server)
+  // Required properties
   agentId: number | string;
+  
+  // API Configuration
+  apiKey?: string; // API key for direct mode (bypasses proxy)
+  apiUrl?: string; // Base URL for the API server (defaults to CustomGPT API or proxy)
+  useProxy?: boolean; // Whether to use proxy mode (default: true if no apiKey)
   
   // Display properties
   agentName?: string;
@@ -77,12 +86,25 @@ export interface CustomGPTWidgetConfig {
  * 
  * Main widget class that manages the lifecycle of CustomGPT chat instances.
  * Supports both embedded and floating deployment modes with full conversation management.
+ * Can operate in two modes:
+ * - Proxy mode (default): Communicates through a Next.js server proxy
+ * - Direct mode: Communicates directly with CustomGPT API using provided API key
  * 
  * @example
- * // Basic embedded widget
+ * // Basic embedded widget (proxy mode)
  * const widget = CustomGPTWidget.init({
  *   agentId: '123',
- *   containerId: 'chat-container'
+ *   containerId: 'chat-container',
+ *   apiUrl: 'https://your-nextjs-app.com'
+ * });
+ * 
+ * @example
+ * // Direct mode with API key (no proxy needed)
+ * const widget = CustomGPTWidget.init({
+ *   agentId: '123',
+ *   apiKey: 'your-api-key',
+ *   mode: 'floating',
+ *   enableConversationManagement: true
  * });
  * 
  * @example
@@ -150,6 +172,12 @@ class CustomGPTWidget {
       const instanceKey = `__customgpt_widget_${this.sessionId}`;
       (window as any)[instanceKey] = this;
       
+      // Also store in instances object for easier access
+      if (!(window as any).__customgpt_widget_instances) {
+        (window as any).__customgpt_widget_instances = {};
+      }
+      (window as any).__customgpt_widget_instances[this.sessionId] = this;
+      
       // DEPRECATED: Global reference kept for backward compatibility
       // Don't overwrite if already exists to preserve first widget
       if (!(window as any).__customgpt_widget_instance) {
@@ -172,7 +200,32 @@ class CustomGPTWidget {
   }
 
   private async init() {
-    // Config store no longer needs API key setup
+    // Initialize API client based on configuration
+    const { initializeClient } = require('../lib/api/client');
+    
+    // Determine if using direct mode or proxy mode
+    const useDirectMode = this.config.apiKey && (this.config.useProxy !== true);
+    
+    if (useDirectMode) {
+      // Direct mode - API key provided, communicate directly with CustomGPT
+      initializeClient({
+        mode: 'direct',
+        apiKey: this.config.apiKey,
+        apiUrl: this.config.apiUrl || 'https://app.customgpt.ai/api/v1'
+      });
+    } else {
+      // Proxy mode - use Next.js server proxy
+      const proxyUrl = this.config.apiUrl || '';
+      initializeClient({
+        mode: 'proxy',
+        apiUrl: proxyUrl
+      });
+      
+      // Store globally for the API client to pick up
+      if (proxyUrl) {
+        (window as any).__customgpt_api_url = proxyUrl;
+      }
+    }
     
     // Configure session for conversation isolation
     if (this.config.enableConversationManagement) {
@@ -209,57 +262,9 @@ class CustomGPTWidget {
       (window as any).__customgpt_demo_mode = false;
     }
     
-    // Fetch the actual agent details
-    const agentId = typeof this.config.agentId === 'string' ? parseInt(this.config.agentId) : this.config.agentId;
-    
-    if (!isDemoMode) {
-      try {
-        // Try to fetch agent details to get the project name
-        const client = getClient();
-        const agentsResponse = await client.getAgents();
-        const agents = Array.isArray(agentsResponse) ? agentsResponse : (agentsResponse as any).data || [];
-        const agent = agents.find((a: any) => a.id === agentId);
-        
-        if (agent) {
-          // Use custom agent name if provided
-          if (this.config.agentName) {
-            agent.project_name = this.config.agentName;
-          }
-          
-          // Use the actual agent with proper project name
-          useAgentStore.getState().selectAgent(agent);
-          // Clear other agents to ensure only this one is available
-          useAgentStore.getState().setAgents([agent]);
-        } else {
-          // Fallback if agent not found
-          const fallbackAgent: any = {
-            id: agentId,
-            project_name: this.config.agentName || `Project ${agentId}`,
-            is_chat_active: true,
-          };
-          useAgentStore.getState().selectAgent(fallbackAgent);
-          useAgentStore.getState().setAgents([fallbackAgent]);
-        }
-      } catch (error) {
-        // Use fallback on error
-        const fallbackAgent: any = {
-          id: agentId,
-          project_name: this.config.agentName || `Project ${agentId}`,
-          is_chat_active: true,
-        };
-        useAgentStore.getState().selectAgent(fallbackAgent);
-        useAgentStore.getState().setAgents([fallbackAgent]);
-      }
-    } else {
-      // For demo mode, always use fallback agent
-      const fallbackAgent: any = {
-        id: agentId,
-        project_name: this.config.agentName || `Demo Assistant`,
-        is_chat_active: true,
-      };
-      useAgentStore.getState().selectAgent(fallbackAgent);
-      useAgentStore.getState().setAgents([fallbackAgent]);
-    }
+    // Agent initialization is now handled by the widget-specific store
+    // The WidgetStoreProvider will create and initialize the agent store
+    // which includes proper error handling and fallback mechanisms
 
     // Create container based on mode
     this.createContainer();
@@ -273,15 +278,44 @@ class CustomGPTWidget {
       
       if (conversations.length === 0) {
         // Create initial conversation after a small delay to ensure components are mounted
-        setTimeout(() => {
-          this.createConversation('New Chat');
+        setTimeout(async () => {
+          await this.createConversation('New Chat');
         }, 100);
       } else {
         // Set current conversation to the first one
         this.currentConversationId = conversations[0].id;
         
-        // Only sync with global store if explicitly not isolated
-        if (this.config.isolateConversations === false && typeof window !== 'undefined') {
+        // Update the widget conversation store if in isolated mode
+        if (this.config.isolateConversations !== false && typeof window !== 'undefined') {
+          // Wait a bit to ensure stores are initialized
+          setTimeout(() => {
+            const widgetStores = (window as any).__customgpt_widget_stores;
+            if (widgetStores && widgetStores[this.sessionId]) {
+              const conversationStore = widgetStores[this.sessionId].conversationStore;
+              const messageStore = widgetStores[this.sessionId].messageStore;
+              
+              if (conversationStore) {
+                const currentConv = conversations[0];
+                const fullConversation = {
+                  ...currentConv,
+                  id: parseInt(currentConv.id) || currentConv.id,
+                  project_id: parseInt(this.config.agentId as string) || 0,
+                  session_id: this.sessionId,
+                  name: currentConv.title
+                };
+                
+                console.log('[Widget] Setting initial conversation in store:', fullConversation);
+                conversationStore.getState().selectConversation(fullConversation as any);
+                
+                // Load messages for the initial conversation
+                if (messageStore) {
+                  messageStore.getState().loadMessages(currentConv.id);
+                }
+              }
+            }
+          }, 200);
+        } else if (this.config.isolateConversations === false && typeof window !== 'undefined') {
+          // Only sync with global store if explicitly not isolated
           const { useConversationStore } = require('../store');
           const currentConv = conversations[0];
           const fullConversation = {
@@ -457,17 +491,7 @@ class CustomGPTWidget {
                 // Pass refresh key to trigger ConversationManager updates
                 conversationRefreshKey={this.conversationRefreshKey}
               />
-              <Toaster 
-                position="top-center"
-                closeButton
-                gap={8}
-                toastOptions={{
-                  style: { 
-                    zIndex: 10000,
-                    marginTop: '8px'
-                  }
-                }}
-              />
+              <WidgetToaster sessionId={this.sessionId} />
             </div>
           </WidgetProvider>
         </WidgetStoreProvider>
@@ -503,14 +527,101 @@ class CustomGPTWidget {
    * @param conversationId - ID of conversation to switch to
    */
   public switchConversation(conversationId: string): void {
+    widgetDebugger.log('WIDGET', 'switchConversation called', {
+      conversationId,
+      conversationIdType: typeof conversationId,
+      sessionId: this.sessionId,
+      isolateConversations: this.config.isolateConversations,
+      currentConversations: this.getConversations().map(c => ({
+        id: c.id,
+        idType: typeof c.id,
+        title: c.title
+      }))
+    });
+    
     const conversations = this.getConversations();
-    const conversation = conversations.find(c => c.id === conversationId);
+    const conversation = conversations.find(c => c.id === conversationId || c.id === parseInt(conversationId));
+    
+    widgetDebugger.log('WIDGET', 'Found conversation', {
+      found: !!conversation,
+      conversationId,
+      searchedId: conversationId,
+      conversationDetails: conversation ? {
+        id: conversation.id,
+        idType: typeof conversation.id,
+        title: conversation.title,
+        session_id: conversation.session_id
+      } : null
+    });
     
     if (conversation) {
       this.currentConversationId = conversationId;
       
       // Increment refresh key to trigger ConversationManager update
       this.conversationRefreshKey++;
+      
+      // Load messages for the new conversation from widget store
+      if (this.config.isolateConversations !== false && typeof window !== 'undefined') {
+        // Get the widget's message store and load messages
+        const widgetStores = (window as any).__customgpt_widget_stores;
+        
+        widgetDebugger.log('WIDGET', 'Accessing widget stores', {
+          hasWidgetStores: !!widgetStores,
+          sessionId: this.sessionId,
+          hasSessionStore: widgetStores && !!widgetStores[this.sessionId],
+          availableSessions: widgetStores ? Object.keys(widgetStores) : []
+        });
+        
+        if (widgetStores && widgetStores[this.sessionId]) {
+          const messageStore = widgetStores[this.sessionId].messageStore;
+          const conversationStore = widgetStores[this.sessionId].conversationStore;
+          
+          if (messageStore) {
+            // Load messages for this conversation
+            widgetDebugger.log('WIDGET', 'Loading messages via store', {
+              conversationId,
+              storeHasLoadMessages: typeof messageStore.getState().loadMessages === 'function'
+            });
+            
+            widgetDebugger.traceMessageFlow('SWITCH_CONVERSATION', {
+              conversationId,
+              sessionId: this.sessionId,
+              action: 'Loading messages'
+            });
+            
+            // Ensure conversationId is a string for consistency
+            const convIdStr = String(conversationId);
+            widgetDebugger.log('WIDGET', 'Calling loadMessages with string ID', {
+              originalId: conversationId,
+              stringId: convIdStr,
+              typeOfOriginal: typeof conversationId
+            });
+            messageStore.getState().loadMessages(convIdStr);
+          }
+          
+          if (conversationStore) {
+            // Update the conversation store's currentConversation
+            widgetDebugger.log('WIDGET', 'Updating conversation store', {
+              conversationId: conversation.id,
+              conversationIdType: typeof conversation.id
+            });
+            
+            const fullConversation = {
+              ...conversation,
+              id: parseInt(conversation.id) || conversation.id, // Ensure proper ID type
+              project_id: parseInt(this.config.agentId as string) || 0,
+              session_id: this.sessionId,
+              name: conversation.title
+            };
+            conversationStore.getState().selectConversation(fullConversation as any);
+          }
+        } else {
+          widgetDebugger.log('WIDGET', 'Widget stores not found', {
+            sessionId: this.sessionId,
+            availableStores: Object.keys(widgetStores || {})
+          }, 'error');
+        }
+      }
       
       // Don't update the global store if we're in isolated mode
       // The render() method will handle passing the correct conversation
@@ -552,7 +663,7 @@ class CustomGPTWidget {
    * @param title - Optional title for the conversation
    * @returns The new conversation object
    */
-  public createConversation(title?: string): any {
+  public async createConversation(title?: string): Promise<any> {
     const conversations = this.getConversations();
     
     // Check max conversations limit (only if specified by user)
@@ -561,12 +672,67 @@ class CustomGPTWidget {
       return null; // Return null instead of throwing error
     }
     
+    // Use the conversation store to create a proper API conversation
+    if (this.config.isolateConversations !== false && typeof window !== 'undefined') {
+      const widgetStores = (window as any).__customgpt_widget_stores;
+      if (widgetStores && widgetStores[this.sessionId]) {
+        const conversationStore = widgetStores[this.sessionId].conversationStore;
+        const messageStore = widgetStores[this.sessionId].messageStore;
+        
+        if (conversationStore) {
+          try {
+            // Create conversation via the store (which uses API)
+            await conversationStore.getState().createConversation(
+              parseInt(this.config.agentId as string) || 0,
+              title || `Conversation ${conversations.length + 1}`
+            );
+            
+            // Get the newly created conversation
+            const newConversation = conversationStore.getState().currentConversation;
+            
+            if (newConversation) {
+              // Add to widget's local conversation list
+              const widgetConversation = {
+                id: newConversation.id.toString(), // Ensure string ID for consistency
+                title: newConversation.name || title || `Conversation ${conversations.length + 1}`,
+                createdAt: newConversation.created_at || new Date().toISOString(),
+                messages: [],
+                project_id: newConversation.project_id,
+                session_id: newConversation.session_id,
+                name: newConversation.name
+              };
+              
+              conversations.unshift(widgetConversation);
+              this.saveConversations(conversations);
+              this.currentConversationId = widgetConversation.id;
+              
+              // Clear any existing messages for this conversation ID
+              if (messageStore) {
+                messageStore.getState().clearMessages(widgetConversation.id);
+              }
+              
+              // Increment refresh key to trigger ConversationManager update
+              this.conversationRefreshKey++;
+              
+              // Trigger re-render with new conversation
+              this.render();
+              
+              return widgetConversation;
+            }
+          } catch (error) {
+            console.error('Failed to create conversation via API:', error);
+            // Fall back to local creation if API fails
+          }
+        }
+      }
+    }
+    
+    // Fallback: Create conversation locally if API creation fails
     const newConversation = {
       id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       title: title || `Conversation ${conversations.length + 1}`,
       createdAt: new Date().toISOString(),
       messages: [],
-      // Add required fields for conversation store compatibility
       project_id: parseInt(this.config.agentId as string) || 0,
       session_id: this.sessionId,
       name: title || `Conversation ${conversations.length + 1}`
@@ -575,35 +741,6 @@ class CustomGPTWidget {
     conversations.unshift(newConversation);
     this.saveConversations(conversations);
     this.currentConversationId = newConversation.id;
-    
-    // Don't update the global store if we're in isolated mode
-    if (!this.config.isolateConversations) {
-      // Only update global store if sharing conversations
-      if (typeof window !== 'undefined') {
-        const { useConversationStore, useMessageStore } = require('../store');
-        const messageStore = useMessageStore.getState();
-        
-        // Get all widget conversations (local storage)
-        const allWidgetConversations = this.getConversations();
-        
-        // Convert all widget conversations to store format
-        const storeConversations = allWidgetConversations.map(conv => ({
-          ...conv,
-          project_id: parseInt(this.config.agentId as string) || 0,
-          session_id: this.sessionId,
-          name: conv.title
-        }));
-        
-        // Update store with all widget conversations, with new one as current
-        useConversationStore.setState({
-          conversations: storeConversations as any,
-          currentConversation: newConversation as any
-        });
-        
-        // Clear any existing messages for this conversation ID to ensure welcome message shows
-        messageStore.clearMessages(newConversation.id);
-      }
-    }
     
     // Increment refresh key to trigger ConversationManager update
     this.conversationRefreshKey++;
@@ -650,7 +787,9 @@ class CustomGPTWidget {
       if (filtered.length > 0) {
         this.switchConversation(filtered[0].id);
       } else {
-        this.createConversation();
+        this.createConversation().catch(err => 
+          console.error('Failed to create conversation after deletion:', err)
+        );
       }
     } else {
       // Still need to re-render to update the conversation list
@@ -740,6 +879,24 @@ class CustomGPTWidget {
     
     if (this.container && this.container.parentNode) {
       this.container.parentNode.removeChild(this.container);
+    }
+    
+    // Clean up widget stores
+    if (typeof window !== 'undefined') {
+      const widgetStores = (window as any).__customgpt_widget_stores;
+      if (widgetStores && widgetStores[this.sessionId]) {
+        delete widgetStores[this.sessionId];
+      }
+      
+      // Clean up widget instance references
+      const instances = (window as any).__customgpt_widget_instances;
+      if (instances && instances[this.sessionId]) {
+        delete instances[this.sessionId];
+      }
+      
+      if (this.instanceKey) {
+        delete (window as any)[this.instanceKey];
+      }
     }
     
     this.container = null;

@@ -799,7 +799,8 @@ export const ConversationSidebar: React.FC<ConversationSidebarProps> = ({
                     }
                   }}
                   options={[
-                    { value: 'all', label: 'All Users' }
+                    { value: 'all', label: 'All Users' },
+                    { value: 'me', label: 'My Conversations' }
                     // Additional user options could be dynamically loaded
                   ]}
                   className="w-full text-xs"

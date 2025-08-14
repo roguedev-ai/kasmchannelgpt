@@ -136,7 +136,7 @@ export const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onComplete }) => {
               <Key className="w-8 h-8 text-brand-600" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              Welcome to CustomGPT UI
+              Welcome to the CustomGPT.ai Developer Starter Kit
             </h1>
             <p className="text-muted-foreground">
               Enter your CustomGPT.ai API key to get started

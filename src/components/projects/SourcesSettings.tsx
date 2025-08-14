@@ -5,27 +5,20 @@ import {
   Upload,
   Database,
   File,
-  Link,
-  Type,
   Settings,
   Trash2,
-  Download,
   RefreshCw,
   Search,
-  Filter,
-  Edit,
   Eye,
   AlertCircle,
   CheckCircle,
   Clock,
   XCircle,
-  RotateCcw,
   Plus,
   MoreHorizontal,
   Globe,
   FileText,
-  Zap,
-  ChevronDown
+  Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDropzone } from 'react-dropzone';
@@ -94,6 +87,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
   const [createNewPages, setCreateNewPages] = useState(true);
   const [removeUnexistPages, setRemoveUnexistPages] = useState(false);
   const [refreshExistingPages, setRefreshExistingPages] = useState('never');
+  const [allowExtraTimeout, setAllowExtraTimeout] = useState(false);
 
   // Fetch sources from API
   const fetchSources = useCallback(async () => {
@@ -144,7 +138,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
                   page: page 
                 });
                 
-                const sitemapPages = response.data.pages.data.filter(p => {
+                const sitemapPages = response.data.pages.data.filter((p: any) => {
                   try {
                     return new URL(p.page_url).hostname === sitemapDomain;
                   } catch {
@@ -225,6 +219,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
         formData.append('create_new_pages', (createNewPages ?? true).toString());
         formData.append('remove_unexist_pages', (removeUnexistPages ?? false).toString());
         formData.append('refresh_existing_pages', refreshExistingPages || 'never');
+        formData.append('allow_extra_timeout', (allowExtraTimeout ?? false).toString());
         
         await client.uploadFileSource(project.id, formData);
       }
@@ -305,6 +300,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
         create_new_pages: createNewPages,
         remove_unexist_pages: removeUnexistPages,
         refresh_existing_pages: refreshExistingPages,
+        allow_extra_timeout: allowExtraTimeout,
       });
       
       toast.success('Sitemap source created successfully');
@@ -353,6 +349,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
         create_new_pages: createNewPages,
         remove_unexist_pages: removeUnexistPages,
         refresh_existing_pages: refreshExistingPages,
+        allow_extra_timeout: allowExtraTimeout,
       });
       
       toast.success('Source settings updated successfully');
@@ -617,7 +614,7 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
             placeholder="Search sources, URLs, or files..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent bg-background text-foreground placeholder:text-muted-foreground"
           />
         </div>
       </div>
@@ -778,7 +775,10 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
                             setDataRefreshFrequency(source.settings.data_refresh_frequency);
                             setCreateNewPages(source.settings.create_new_pages);
                             setRemoveUnexistPages(source.settings.remove_unexist_pages);
-                            setRefreshExistingPages(source.settings.refresh_existing_pages);
+                            // Handle invalid "if_modified" value from API
+                            const refreshValue = source.settings.refresh_existing_pages;
+                            setRefreshExistingPages(refreshValue === 'if_modified' ? 'never' : refreshValue);
+                            setAllowExtraTimeout(source.settings.allow_extra_timeout || false);
                             setShowEditModal(true);
                           }}
                           disabled={isFreeTrialMode}
@@ -1048,7 +1048,12 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="refresh-existing">Refresh Existing Pages</Label>
+                <Label htmlFor="refresh-existing">
+                  Refresh Existing Pages
+                  <p className="text-xs text-muted-foreground font-normal mt-1">
+                    Control when to refresh already indexed pages
+                  </p>
+                </Label>
                 <Select
                   value={refreshExistingPages}
                   onValueChange={setRefreshExistingPages}
@@ -1059,7 +1064,6 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
                   <SelectContent>
                     <SelectItem value="never">Never</SelectItem>
                     <SelectItem value="always">Always</SelectItem>
-                    <SelectItem value="if_modified">If Modified</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1152,7 +1156,12 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-refresh-existing">Refresh Existing Pages</Label>
+              <Label htmlFor="edit-refresh-existing">
+                Refresh Existing Pages
+                <p className="text-xs text-muted-foreground font-normal mt-1">
+                  Control when to refresh already indexed pages
+                </p>
+              </Label>
               <Select
                 value={refreshExistingPages}
                 onValueChange={setRefreshExistingPages}
@@ -1163,7 +1172,6 @@ export const SourcesSettings: React.FC<SourcesSettingsProps> = ({ project }) => 
                 <SelectContent>
                   <SelectItem value="never">Never</SelectItem>
                   <SelectItem value="always">Always</SelectItem>
-                  <SelectItem value="if_modified">If Modified</SelectItem>
                 </SelectContent>
               </Select>
             </div>

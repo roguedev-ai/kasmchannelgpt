@@ -53,6 +53,9 @@ import { getClient } from '@/lib/api/client';
 import { logger } from '@/lib/logger';
 import { useAgentStore } from '@/store/agents';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
+import { useWidgetSafe } from '@/widget/WidgetContext';
+import { useContext } from 'react';
+import { WidgetStoreContext } from '@/widget/WidgetStoreContext';
 
 /**
  * Open Graph data structure for citations
@@ -103,8 +106,20 @@ export const CitationDetailsModal: React.FC<CitationDetailsModalProps> = ({
   const [citationData, setCitationData] = useState<CitationOpenGraphData | null>(null);
   const [imageError, setImageError] = useState(false);
   
-  const { currentAgent } = useAgentStore();
   const { isMobile } = useBreakpoint();
+  const widgetInstance = useWidgetSafe();
+  
+  // Always call the global store hook
+  const globalStore = useAgentStore();
+  
+  // Check if widget store context is available
+  const widgetStoreContext = useContext(WidgetStoreContext);
+  
+  // Use widget store if available and we're in widget mode
+  const currentAgent = widgetInstance && widgetStoreContext 
+    ? widgetStoreContext.stores.agentStore.getState().currentAgent
+    : globalStore.currentAgent;
+  
   const effectiveProjectId = projectId || currentAgent?.id;
 
   /**
