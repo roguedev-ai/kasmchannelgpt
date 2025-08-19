@@ -3,7 +3,8 @@ import { Toaster } from 'sonner';
 
 import '../app/globals.css';
 import './widget-styles.css';
-import { WidgetConfig } from '../types';
+import { WidgetConfig, Conversation } from '../types';
+import type { ConversationStore } from '../store/widget-stores/conversations';
 import { useConfigStore, useAgentStore } from '../store';
 import { ChatLayout } from '../components/chat/ChatLayout';
 import { getClient } from '../lib/api/client';
@@ -142,14 +143,20 @@ class CustomGPTWidget {
       height: '600px',
       enableCitations: true,
       enableFeedback: true,
-      enableConversationManagement: false,
+      enableConversationManagement: false, // Always false for widget mode
       ...config,
     };
 
     // Initialize session ID
-    // If isolateConversations is true, ensure each widget has a unique session
-    if (this.config.isolateConversations !== false) {
-      // Default to isolated conversations - each widget gets its own session
+    // For widget mode, use a persistent session ID based on agentId to maintain conversations across refreshes
+    if ((this.config.mode === 'widget' || this.config.mode === 'floating') && this.config.isolateConversations !== false) {
+      // Create a stable session ID for widgets that persists across refreshes
+      this.sessionId = `widget_session_${this.config.agentId}`;
+      
+      // Also store this as the persistent session for this agent
+      localStorage.setItem(`customgpt_widget_session_${this.config.agentId}`, this.sessionId);
+    } else if (this.config.isolateConversations !== false) {
+      // For other modes with isolated conversations, create unique session
       const modePrefix = this.config.mode || 'widget';
       const containerId = this.config.containerId || 'default';
       // Create a unique session ID that includes mode, container info, and a random component
@@ -272,66 +279,83 @@ class CustomGPTWidget {
     // Render the widget first
     this.render();
     
-    // Initialize conversation after render to ensure ConversationManager is mounted
-    if (this.config.enableConversationManagement) {
-      const conversations = this.getConversations();
+    // For widget mode, always ensure a single conversation exists and is persisted
+    const persistedConversationId = localStorage.getItem(`customgpt_widget_conversation_${this.config.agentId}`);
+    
+    // Load existing conversations for this session
+    const existingConversations = this.getConversations();
+    
+    if (persistedConversationId && existingConversations.length > 0) {
+      // Find the persisted conversation in our saved conversations
+      const persistedConversation = existingConversations.find(c => c.id === persistedConversationId);
       
-      if (conversations.length === 0) {
-        // Create initial conversation after a small delay to ensure components are mounted
-        setTimeout(async () => {
-          await this.createConversation('New Chat');
-        }, 100);
-      } else {
-        // Set current conversation to the first one
-        this.currentConversationId = conversations[0].id;
+      if (persistedConversation) {
+        // Load the persisted conversation
+        this.currentConversationId = persistedConversationId;
         
-        // Update the widget conversation store if in isolated mode
-        if (this.config.isolateConversations !== false && typeof window !== 'undefined') {
-          // Wait a bit to ensure stores are initialized
-          setTimeout(() => {
+        // Update the widget conversation store after a delay to ensure components are mounted
+        setTimeout(async () => {
+          if (typeof window !== 'undefined') {
             const widgetStores = (window as any).__customgpt_widget_stores;
             if (widgetStores && widgetStores[this.sessionId]) {
               const conversationStore = widgetStores[this.sessionId].conversationStore;
               const messageStore = widgetStores[this.sessionId].messageStore;
               
               if (conversationStore) {
-                const currentConv = conversations[0];
+                // First, ensure the conversation is in the store
+                const existingConvs = conversationStore.getState().conversations;
+                const convExists = existingConvs.some((c: Conversation) => c.id === persistedConversation.id);
+                
+                if (!convExists) {
+                  // Add the conversation to the store's list
+                  conversationStore.getState().setSearchQuery(''); // Clear any filters
+                  conversationStore.setState((state: ConversationStore) => ({
+                    allConversations: [...state.allConversations, persistedConversation],
+                    conversations: [...state.conversations, persistedConversation]
+                  }));
+                }
+                
                 const fullConversation = {
-                  ...currentConv,
-                  id: parseInt(currentConv.id) || currentConv.id,
+                  ...persistedConversation,
+                  id: parseInt(persistedConversation.id) || persistedConversation.id,
                   project_id: parseInt(this.config.agentId as string) || 0,
                   session_id: this.sessionId,
-                  name: currentConv.title
+                  name: persistedConversation.title || persistedConversation.name || 'Chat'
                 };
                 
-                console.log('[Widget] Setting initial conversation in store:', fullConversation);
+                console.log('[Widget] Restoring persisted conversation:', fullConversation);
                 conversationStore.getState().selectConversation(fullConversation as any);
                 
-                // Load messages for the initial conversation
+                // Load messages for the persisted conversation
                 if (messageStore) {
-                  messageStore.getState().loadMessages(currentConv.id);
+                  // Wait a bit to ensure the conversation is selected
+                  setTimeout(() => {
+                    console.log('[Widget] Loading messages for conversation:', persistedConversationId);
+                    messageStore.getState().loadMessages(persistedConversationId);
+                  }, 100);
                 }
               }
             }
-          }, 200);
-        } else if (this.config.isolateConversations === false && typeof window !== 'undefined') {
-          // Only sync with global store if explicitly not isolated
-          const { useConversationStore } = require('../store');
-          const currentConv = conversations[0];
-          const fullConversation = {
-            ...currentConv,
-            project_id: parseInt(this.config.agentId as string) || 0,
-            session_id: this.sessionId,
-            name: currentConv.title
-          };
-          
-          // Set only the current conversation
-          useConversationStore.setState({
-            conversations: [fullConversation as any],
-            currentConversation: fullConversation as any
-          });
-        }
+          }
+        }, 300);
+      } else {
+        // Persisted ID exists but conversation not found, create new
+        setTimeout(async () => {
+          const newConversation = await this.createConversation('Chat');
+          if (newConversation) {
+            localStorage.setItem(`customgpt_widget_conversation_${this.config.agentId}`, newConversation.id.toString());
+          }
+        }, 100);
       }
+    } else {
+      // No persisted conversation or no conversations exist, create a new one
+      setTimeout(async () => {
+        const newConversation = await this.createConversation('Chat');
+        if (newConversation) {
+          // Persist the conversation ID
+          localStorage.setItem(`customgpt_widget_conversation_${this.config.agentId}`, newConversation.id.toString());
+        }
+      }, 100);
     }
     
     // For isolated widgets, we need to prevent the global store from being used
@@ -706,10 +730,10 @@ class CustomGPTWidget {
               this.saveConversations(conversations);
               this.currentConversationId = widgetConversation.id;
               
-              // Clear any existing messages for this conversation ID
-              if (messageStore) {
-                messageStore.getState().clearMessages(widgetConversation.id);
-              }
+              // Persist the conversation ID for widget mode
+              localStorage.setItem(`customgpt_widget_conversation_${this.config.agentId}`, widgetConversation.id.toString());
+              
+              // Don't clear messages - they should persist
               
               // Increment refresh key to trigger ConversationManager update
               this.conversationRefreshKey++;
@@ -741,6 +765,9 @@ class CustomGPTWidget {
     conversations.unshift(newConversation);
     this.saveConversations(conversations);
     this.currentConversationId = newConversation.id;
+    
+    // Persist the conversation ID for widget mode
+    localStorage.setItem(`customgpt_widget_conversation_${this.config.agentId}`, newConversation.id.toString());
     
     // Increment refresh key to trigger ConversationManager update
     this.conversationRefreshKey++;

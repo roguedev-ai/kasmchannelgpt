@@ -488,7 +488,7 @@ const MessageArea: React.FC<MessageAreaProps> = ({ className, mode = 'standalone
       )}
       
       {/* Streaming Message */}
-      {streamingMessage && (
+      {streamingMessage && !conversationMessages.some(m => m.id === streamingMessage.id) && (
         <Message
           message={streamingMessage}
           agent={currentAgent}
@@ -584,21 +584,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   if (mode === 'widget' || mode === 'floating') {
     return (
       <header className="border-b border-border bg-background">
-        {/* Conversation Manager */}
-        {enableConversationManagement && sessionId && (
-          <div className="px-4 py-2 border-b border-border">
-            <ConversationManager
-              sessionId={sessionId}
-              maxConversations={maxConversations}
-              currentConversationId={currentConversationId}
-              onConversationChange={onConversationChange}
-              onCreateConversation={onCreateConversation}
-              className="w-full"
-              refreshKey={conversationRefreshKey}
-            />
-          </div>
-        )}
-        
         {/* Header Content */}
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3 flex-1 min-w-0">

@@ -452,11 +452,19 @@ export function createConversationStore(sessionId: string): StoreApi<Conversatio
     },
 
     ensureConversation: async (projectId: number, firstMessage?: string) => {
-      const { currentConversation } = get();
+      const { currentConversation, allConversations } = get();
       
       // If we have a current conversation for this agent, use it
       if (currentConversation && currentConversation.project_id === projectId) {
         return currentConversation;
+      }
+
+      // Check if we have any existing conversations for this project
+      // This helps when the widget is reloading and currentConversation isn't set yet
+      const existingConversation = allConversations.find(c => c.project_id === projectId);
+      if (existingConversation) {
+        set({ currentConversation: existingConversation });
+        return existingConversation;
       }
 
       // If no current conversation, always create a new one

@@ -8,28 +8,30 @@ The widget supports two modes:
 - **Proxy Mode** (Default): API keys are handled server-side for maximum security
 - **Direct Mode**: API key is provided client-side for standalone deployments (use with caution)
 
-## Quick Reference
+## Example Files
 
-### Iframe Integration (Most Secure)
-- `iframe-embed-example.html` - Complete iframe integration with security isolation
-- Best for: Cross-domain embedding, style isolation, maximum security
-
-### Direct Widget Integration
-- `widget-example.html` - Direct widget embedding example (proxy mode)
-- `widget-direct-api.html` - Direct API mode example (no proxy needed)
-- `vanilla-js-widget.html` - Complete JavaScript examples with all features
-- Best for: Same-domain integration, full API access
-
-### React Integration
-- `react-integration.jsx` - React component integration
-- `react-widget.jsx` - React widget patterns
-- `react-floating-button.jsx` - Floating button in React
-- `SimplifiedWidget.jsx` - Simplified wrapper component
-- `SimplifiedFloatingButton.jsx` - Simplified floating button
-
-### Quick Start Examples
-- `quick-start.html` - Minimal setup to get started
+### 🚀 Quick Start
+- `quick-start.html` - Minimal setup to get started (proxy mode)
 - `simplified-demo.html` - Basic demo with common features
+
+### 🔒 Secure Integration (Recommended)
+- `iframe-embed-example.html` - Complete iframe integration with security isolation
+- `widget-example.html` - Direct widget embedding (proxy mode)
+- `widget-with-logo.html` - Widget with custom branding
+
+### 🔑 Direct API Integration
+- `widget-direct-api.html` - Direct API mode (no proxy needed)
+- `vanilla-js-widget.html` - Complete JavaScript example with all features
+
+### ⚛️ React Integration
+- `react-integration.jsx` - Full React component integration
+- `react-widget.jsx` - React widget component patterns
+- `react-floating-button.jsx` - Floating button implementation
+- `react-standalone-example.jsx` - Standalone React app example
+
+### 📦 Helper Components
+- `SimplifiedWidget.jsx` - Simplified React wrapper component
+- `SimplifiedFloatingButton.jsx` - Simplified floating button component
 
 
 ## Integration Methods
@@ -284,10 +286,19 @@ localStorage.removeItem('customgpt_conversations');
 
 ## Next Steps
 
-1. Choose an integration method (iframe or direct)
-2. Copy the relevant example
-3. Replace the agent ID
-4. Deploy to your server
-5. Test the integration
+1. Start with `quick-start.html` for the fastest setup
+2. Choose your integration method:
+   - **Most Secure**: Use `iframe-embed-example.html`
+   - **Most Flexible**: Use `widget-example.html` (proxy mode)
+   - **No Server**: Use `widget-direct-api.html` (API key required)
+   - **React App**: Use `react-integration.jsx` or simplified components
+3. Replace the agent ID with your own
+4. Configure your server (if using proxy mode)
+5. Deploy and test
+
+## File Organization
+
+- **Main examples**: Essential integration patterns
+- **Archive folder**: Legacy and duplicate examples (kept for reference)
 
 For more details, see the main [README.md](../README.md).

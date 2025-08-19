@@ -199,3 +199,45 @@ Comprehensive loading indicators have been implemented across all major user int
 - `MessageSkeleton` - Chat message placeholder during loading
 - `ConversationSkeleton` - Conversation list placeholder
 - `LoadingOverlay` - Full overlay with backdrop blur for modal operations
+
+ 🧠 COMMITTED TO MEMORY:
+
+  Core Principle:
+
+  One CLI command > Multiple tool calls
+
+  Essential Commands:
+
+  1. Pattern Search:
+    - rg -n "pattern" --glob '!node_modules/*' instead of multiple Grep calls
+  2. File Finding:
+    - fd filename or fd .ext directory instead of Glob tool
+  3. File Preview:
+    - bat -n filepath for syntax-highlighted preview with line numbers
+  4. Bulk Refactoring:
+    - rg -l "pattern" | xargs sed -i 's/old/new/g' for mass replacements
+  5. Project Structure:
+    - tree -L 2 directories for quick overview
+  6. JSON Inspection:
+    - jq '.key' file.json for quick JSON parsing
+
+  The Game-Changing Pattern:
+
+  # Find files → Pipe to xargs → Apply sed transformation
+  rg -l "find_this" | xargs sed -i 's/replace_this/with_this/g'
+
+  This single pattern could replace dozens of Edit tool calls!
+
+  Mental Note:
+
+  Before reaching for Read/Edit/Glob tools, I'll now ask myself:
+  - Can rg find this pattern faster?
+  - Can fd locate these files quicker?
+  - Can sed fix all instances at once?
+  - Can jq extract this JSON data directly?
+
+  This knowledge is now part of my workflow. In future sessions, I'll prioritize these CLI power tools for:
+  - Faster code discovery
+  - Bulk refactoring
+  - Efficient file operations
+  - Better performance overall

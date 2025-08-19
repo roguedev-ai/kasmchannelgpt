@@ -543,14 +543,14 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
               if (finalMessage) {
                 finalMessage.status = 'sent';
                 
-                // Add message immediately to ensure it's visible
-                get().addMessage(conversation.id.toString(), finalMessage);
-                
-                // Clear streaming state now that message is added
+                // Clear streaming state FIRST to prevent duplication
                 set({ 
                   streamingMessage: null,
                   isStreaming: false,
                 });
+                
+                // Then add message to ensure it's visible
+                get().addMessage(conversation.id.toString(), finalMessage);
                 
                 // Fetch latest messages to enrich the streaming message with API metadata
                 try {

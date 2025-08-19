@@ -717,33 +717,33 @@ export const ChatInput: React.FC<InputProps> = ({
         
         {/* Settings Toggle Button - Hidden in widget/floating modes */}
         {mode === 'standalone' && (
-        <div className="border-t border-gray-200/50 dark:border-gray-800/30">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowSettings(!showSettings)}
-            className={cn(
-              "flex items-center gap-2 text-xs",
-              isMobile ? "w-full justify-center h-9 px-3 py-2" : "w-auto justify-start h-8 px-3 py-1.5",
-              "hover:bg-accent/50 transition-all duration-200",
-              showSettings && "bg-accent/30"
-            )}
-            title="Customize chat settings including response source, AI model, and persona"
-          >
-            <SlidersHorizontal className={cn(
-              "transition-colors",
-              showSettings ? "text-brand-500" : "text-muted-foreground",
-              isMobile ? "h-4 w-4" : "h-3.5 w-3.5"
-            )} />
-            <span className={cn(
-              "font-medium text-muted-foreground",
-              showSettings && "text-brand-600"
-            )}>Customize Chat</span>
-            <ChevronDown className={cn(
-              "h-3 w-3 opacity-50 transition-transform duration-200",
-              showSettings && "rotate-180"
-            )} />
-          </Button>
+          <div className="border-t border-gray-200/50 dark:border-gray-800/30">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSettings(!showSettings)}
+              className={cn(
+                "flex items-center gap-2 text-xs",
+                isMobile ? "w-full justify-center h-9 px-3 py-2" : "w-auto justify-start h-8 px-3 py-1.5",
+                "hover:bg-accent/50 transition-all duration-200",
+                showSettings && "bg-accent/30"
+              )}
+              title="Customize chat settings including response source, AI model, and persona"
+            >
+              <SlidersHorizontal className={cn(
+                "transition-colors",
+                showSettings ? "text-brand-500" : "text-muted-foreground",
+                isMobile ? "h-4 w-4" : "h-3.5 w-3.5"
+              )} />
+              <span className={cn(
+                "font-medium text-muted-foreground",
+                showSettings && "text-brand-600"
+              )}>Customize Chat</span>
+              <ChevronDown className={cn(
+                "h-3 w-3 opacity-50 transition-transform duration-200",
+                showSettings && "rotate-180"
+              )} />
+            </Button>
           
           {/* Expandable Settings Panel */}
           <AnimatePresence>
