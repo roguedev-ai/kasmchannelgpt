@@ -74,7 +74,7 @@ const inter = Inter({
  * @see https://nextjs.org/docs/app/api-reference/functions/generate-metadata
  */
 export const metadata: Metadata = {
-  title: "CustomGPT Chat UI",
+  title: "Developer Starter Kit",
   description: "A modern chat interface for CustomGPT.ai's RAG platform",
   icons: {
     icon: [

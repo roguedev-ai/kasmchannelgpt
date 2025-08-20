@@ -14,6 +14,7 @@ interface FloatingButtonProps {
   showLabel?: boolean;
   label?: string;
   className?: string;
+  avatarUrl?: string;
 }
 
 export const FloatingButton: React.FC<FloatingButtonProps> = ({
@@ -25,7 +26,8 @@ export const FloatingButton: React.FC<FloatingButtonProps> = ({
   size = 'md',
   showLabel = true,
   label = 'Chat with us',
-  className
+  className,
+  avatarUrl
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -67,9 +69,9 @@ export const FloatingButton: React.FC<FloatingButtonProps> = ({
         className
       )}
     >
-      {/* Chat Label */}
+      {/* Chat Label - Hidden on mobile, visible on desktop */}
       <AnimatePresence>
-        {showLabel && !isOpen && (isHovered || !isOpen) && (
+        {showLabel && !isOpen && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8, x: position.includes('right') ? 10 : -10 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
@@ -77,6 +79,7 @@ export const FloatingButton: React.FC<FloatingButtonProps> = ({
             transition={{ duration: 0.2 }}
             className={cn(
               'absolute whitespace-nowrap px-3 py-2 bg-white text-gray-800 text-sm font-medium rounded-lg shadow-lg border border-gray-200',
+              'hidden sm:block', // Hide on mobile, show on desktop
               labelPosition[position]
             )}
           >
@@ -125,20 +128,22 @@ export const FloatingButton: React.FC<FloatingButtonProps> = ({
           style={{ backgroundColor: primaryColor }}
         />
         
-        {/* Icon */}
-        <MessageCircle 
-          className={cn(iconSizes[size], 'text-white relative z-10')} 
-        />
+        {/* Icon or Avatar */}
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt="Chat Avatar"
+            className={cn(
+              iconSizes[size],
+              'relative z-10 rounded-full object-cover'
+            )}
+          />
+        ) : (
+          <MessageCircle 
+            className={cn(iconSizes[size], 'text-white relative z-10')} 
+          />
+        )}
 
-        {/* Notification badge (optional) */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold"
-          style={{ fontSize: '10px' }}
-        >
-          1
-        </motion.div>
       </motion.button>
     </div>
   );

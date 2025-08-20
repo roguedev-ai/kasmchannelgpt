@@ -108,7 +108,7 @@ export const Navbar: React.FC<NavbarProps> = ({ showBackButton = true }) => {
                 />
               </div>
               <span className="text-lg font-semibold text-foreground hidden sm:block">
-                CustomGPT Chat
+                Developer Starter Kit
               </span>
             </Link>
           </div>

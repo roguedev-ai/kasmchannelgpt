@@ -1,3 +1,4 @@
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
 
@@ -12,6 +13,7 @@ import { WidgetProvider } from './WidgetContext';
 import { WidgetStoreProvider } from './WidgetStoreContext';
 import { WidgetToaster } from './isolated-toast';
 import { widgetDebugger } from './debug-utils';
+import { FloatingButton } from './FloatingButton';
 
 /**
  * Widget Configuration Interface
@@ -63,6 +65,12 @@ export interface CustomGPTWidgetConfig {
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
   width?: string;
   height?: string;
+  
+  // Floating button properties
+  primaryColor?: string;
+  buttonSize?: 'sm' | 'md' | 'lg';
+  showLabel?: boolean;
+  label?: string;
   
   // Feature flags
   enableCitations?: boolean;
@@ -126,6 +134,9 @@ class CustomGPTWidget {
   private currentConversationId: string | null = null;
   private instanceKey?: string;
   private conversationRefreshKey: number = 0;
+  private floatingButtonContainer: HTMLElement | null = null;
+  private floatingButtonRoot: any = null;
+  private agentAvatar: string | null = null;
 
   constructor(config: CustomGPTWidgetConfig) {
     // Validate required fields
@@ -275,6 +286,11 @@ class CustomGPTWidget {
 
     // Create container based on mode
     this.createContainer();
+    
+    // For floating mode, create the floating button first
+    if (this.config.mode === 'floating') {
+      this.createFloatingButton();
+    }
     
     // Render the widget first
     this.render();
@@ -446,6 +462,67 @@ class CustomGPTWidget {
     this.container.style.display = 'none';
     this.container.style.opacity = '0';
     this.container.style.transform = 'translateY(20px)';
+  }
+
+  private async fetchAgentAvatar() {
+    try {
+      const client = getClient();
+      // Convert agentId to number as required by the API
+      const agentId = typeof this.config.agentId === 'string' 
+        ? parseInt(this.config.agentId, 10) 
+        : this.config.agentId;
+      
+      const response = await client.getAgentSettings(agentId);
+      const settings = response.data || response;
+      
+      if (settings.chatbot_avatar) {
+        this.agentAvatar = settings.chatbot_avatar;
+        // Update floating button if it exists
+        if (this.floatingButtonRoot) {
+          this.createFloatingButton();
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to fetch agent avatar:', error);
+    }
+  }
+
+  private createFloatingButton() {
+    if (this.config.mode !== 'floating') return;
+
+    // Create button container if it doesn't exist
+    if (!this.floatingButtonContainer) {
+      this.floatingButtonContainer = document.createElement('div');
+      this.floatingButtonContainer.id = 'customgpt-floating-button-container';
+      document.body.appendChild(this.floatingButtonContainer);
+    }
+
+    // Create or update the button root
+    if (!this.floatingButtonRoot) {
+      this.floatingButtonRoot = createRoot(this.floatingButtonContainer);
+    }
+
+    const FloatingButtonApp = () => {
+      return (
+        <FloatingButton
+          isOpen={this.isOpen}
+          onToggle={() => this.toggle()}
+          position={this.config.position}
+          primaryColor={this.config.primaryColor || '#007acc'}
+          size={this.config.buttonSize || 'md'}
+          showLabel={this.config.showLabel !== false}
+          label={this.config.label || 'Chat with us'}
+          avatarUrl={this.agentAvatar || undefined}
+        />
+      );
+    };
+
+    this.floatingButtonRoot.render(<FloatingButtonApp />);
+    
+    // Also fetch avatar if we don't have it yet
+    if (!this.agentAvatar) {
+      this.fetchAgentAvatar();
+    }
   }
 
   private render() {
@@ -869,6 +946,11 @@ class CustomGPTWidget {
           this.container.style.opacity = '1';
         }
       }, 10);
+      
+      // Update floating button
+      if (this.floatingButtonRoot) {
+        this.createFloatingButton();
+      }
     }
 
     this.config.onOpen?.();
@@ -888,6 +970,11 @@ class CustomGPTWidget {
           this.container.style.display = 'none';
         }
       }, 300);
+      
+      // Update floating button
+      if (this.floatingButtonRoot) {
+        this.createFloatingButton();
+      }
     }
   }
 
@@ -906,6 +993,15 @@ class CustomGPTWidget {
     
     if (this.container && this.container.parentNode) {
       this.container.parentNode.removeChild(this.container);
+    }
+    
+    // Clean up floating button
+    if (this.floatingButtonRoot) {
+      this.floatingButtonRoot.unmount();
+    }
+    
+    if (this.floatingButtonContainer && this.floatingButtonContainer.parentNode) {
+      this.floatingButtonContainer.parentNode.removeChild(this.floatingButtonContainer);
     }
     
     // Clean up widget stores
@@ -928,6 +1024,8 @@ class CustomGPTWidget {
     
     this.container = null;
     this.root = null;
+    this.floatingButtonContainer = null;
+    this.floatingButtonRoot = null;
   }
 
   public updateConfig(newConfig: Partial<CustomGPTWidgetConfig>) {

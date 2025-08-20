@@ -276,7 +276,7 @@ npm run build && npm start`;
                   disabled={!apiKeyInput.trim() || (enableVoice && !openAIKeyInput.trim())}
                 >
                   <Key className="h-4 w-4 mr-2" />
-                  Start Demo Session
+                  Try Demo with you data
                 </Button>
               </form>
             </Card>

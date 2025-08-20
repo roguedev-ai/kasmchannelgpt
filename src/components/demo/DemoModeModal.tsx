@@ -232,7 +232,7 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
                   Welcome to the CustomGPT.ai Developer Starter Kit
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Experience the power of custom AI chatbots
+                  A completely open-source reference app - working code you can customize and deploy today.
                 </p>
               </div>
               {canClose && (
@@ -358,7 +358,7 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
                           disabled={isFreeTrialPermanentlyExpired}
                         >
                           <Zap className="h-4 w-4 mr-2" />
-                          {isFreeTrialPermanentlyExpired ? 'Free Trial Unavailable' : 'Try CustomGPT Now'}
+                          {isFreeTrialPermanentlyExpired ? 'Free Trial Unavailable' : 'Try Demo with Sample Data Now'}
                         </Button>
                         
                         <p className="text-xs text-center text-gray-500 dark:text-gray-500">
@@ -498,7 +498,7 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
                       disabled={!apiKeyInput.trim() || (enableVoice && !openAIKeyInput.trim()) || isValidating}
                     >
                       <Key className="h-4 w-4 mr-2" />
-                      {isValidating ? 'Validating...' : 'Start Demo Session'}
+                      {isValidating ? 'Validating...' : 'Try Demo with you data'}
                     </Button>
                     
                     <p className="text-xs text-center text-gray-500 dark:text-gray-500">

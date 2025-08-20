@@ -587,12 +587,16 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         {/* Header Content */}
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
-              <img 
-                src={mode === 'widget' || mode === 'floating' ? './logo.png' : '/logo.png'} 
-                alt="CustomGPT.ai Logo" 
-                className="w-8 h-8 rounded-lg"
-              />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden bg-accent">
+              {currentAgent?.settings?.chatbot_avatar ? (
+                <img 
+                  src={currentAgent.settings.chatbot_avatar} 
+                  alt={`${currentAgent.project_name} avatar`} 
+                  className="w-8 h-8 rounded-lg object-cover"
+                />
+              ) : (
+                <Bot className="w-5 h-5 text-accent-foreground" />
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="font-semibold text-foreground truncate">
