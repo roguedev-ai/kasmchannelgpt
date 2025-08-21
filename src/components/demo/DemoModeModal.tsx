@@ -358,7 +358,7 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
                           disabled={isFreeTrialPermanentlyExpired}
                         >
                           <Zap className="h-4 w-4 mr-2" />
-                          {isFreeTrialPermanentlyExpired ? 'Free Trial Unavailable' : 'Try Demo with Sample Data Now'}
+                          {isFreeTrialPermanentlyExpired ? 'Free Trial Unavailable' : 'Try Demo with Sample Data'}
                         </Button>
                         
                         <p className="text-xs text-center text-gray-500 dark:text-gray-500">
@@ -498,7 +498,7 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
                       disabled={!apiKeyInput.trim() || (enableVoice && !openAIKeyInput.trim()) || isValidating}
                     >
                       <Key className="h-4 w-4 mr-2" />
-                      {isValidating ? 'Validating...' : 'Try Demo with you data'}
+                      {isValidating ? 'Validating...' : 'Try Demo with your Data'}
                     </Button>
                     
                     <p className="text-xs text-center text-gray-500 dark:text-gray-500">
