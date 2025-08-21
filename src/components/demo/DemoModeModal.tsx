@@ -67,77 +67,88 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
   
   const handleDemoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (apiKeyInput.trim()) {
-      console.log('[DemoModeModal] Starting demo session', {
-        hideFreeTrial,
-        canClose,
-        currentDeploymentMode: localStorage.getItem(DEMO_STORAGE_KEYS.DEPLOYMENT_MODE),
-        currentFreeTrialMode: localStorage.getItem(DEMO_STORAGE_KEYS.FREE_TRIAL_MODE)
+    
+    // Check if API key is empty
+    if (!apiKeyInput.trim()) {
+      setError('Please provide your API Key');
+      return;
+    }
+    
+    // Check if voice is enabled but OpenAI key is missing
+    if (enableVoice && !openAIKeyInput.trim()) {
+      setError('Please provide your OpenAI API Key for voice capability');
+      return;
+    }
+    
+    console.log('[DemoModeModal] Starting demo session', {
+      hideFreeTrial,
+      canClose,
+      currentDeploymentMode: localStorage.getItem(DEMO_STORAGE_KEYS.DEPLOYMENT_MODE),
+      currentFreeTrialMode: localStorage.getItem(DEMO_STORAGE_KEYS.FREE_TRIAL_MODE)
+    });
+    
+    setIsValidating(true);
+    setError(null);
+    
+    // First, validate the API key by making a test request
+    try {
+      // Test the API key by fetching projects
+      const response = await fetch('/api/proxy/projects', {
+        headers: {
+          'X-CustomGPT-API-Key': apiKeyInput.trim(),
+          'X-Deployment-Mode': 'demo'
+        }
       });
       
-      setIsValidating(true);
-      setError(null);
-      
-      // First, validate the API key by making a test request
-      try {
-        // Test the API key by fetching projects
-        const response = await fetch('/api/proxy/projects', {
-          headers: {
-            'X-CustomGPT-API-Key': apiKeyInput.trim(),
-            'X-Deployment-Mode': 'demo'
-          }
-        });
-        
-        if (!response.ok) {
-          if (response.status === 401 || response.status === 403) {
-            setError('Invalid API key. Please check your key and try again.');
-          } else {
-            setError('Failed to validate API key. Please try again.');
-          }
-          
-          setIsValidating(false);
-          return;
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          setError('Invalid API key. Please check your key and try again.');
+        } else {
+          setError('Failed to validate API key. Please try again.');
         }
         
-        // API key is valid, proceed with setup
-        // Track user API key demo start
-        usageTracker.track({
-          eventType: 'session_start',
-          eventName: 'user_api_key_demo_started',
-          metadata: {
-            source: 'modal',
-            voice_enabled: enableVoice
-          }
-        });
-        
-        // Clear free trial mode flag when switching to API key mode
-        localStorage.removeItem(DEMO_STORAGE_KEYS.FREE_TRIAL_MODE);
-        sessionStorage.removeItem(DEMO_STORAGE_KEYS.FREE_TRIAL_SESSION);
-        sessionStorage.removeItem('customgpt.captchaVerified');
-        
-        // Set up demo mode with API key
-        localStorage.setItem(DEMO_STORAGE_KEYS.DEPLOYMENT_MODE, 'demo');
-        
-        // Create demo session for 120 minutes
-        const demoSessionData = {
-          startTime: Date.now(),
-          sessionId: `demo_${Date.now()}_${Math.random().toString(36).substring(7)}`
-        };
-        sessionStorage.setItem(DEMO_STORAGE_KEYS.DEMO_SESSION, JSON.stringify(demoSessionData));
-        
-        setApiKey(apiKeyInput);
-        if (enableVoice && openAIKeyInput.trim()) {
-          setOpenAIApiKey(openAIKeyInput);
-        }
-        
-        setTimeout(() => {
-          window.location.href = window.location.href;
-        }, 100);
-      } catch (error) {
-        console.error('[DemoModeModal] Error validating API key:', error);
-        setError('Failed to validate API key. Please check your connection and try again.');
         setIsValidating(false);
+        return;
       }
+      
+      // API key is valid, proceed with setup
+      // Track user API key demo start
+      usageTracker.track({
+        eventType: 'session_start',
+        eventName: 'user_api_key_demo_started',
+        metadata: {
+          source: 'modal',
+          voice_enabled: enableVoice
+        }
+      });
+      
+      // Clear free trial mode flag when switching to API key mode
+      localStorage.removeItem(DEMO_STORAGE_KEYS.FREE_TRIAL_MODE);
+      sessionStorage.removeItem(DEMO_STORAGE_KEYS.FREE_TRIAL_SESSION);
+      sessionStorage.removeItem('customgpt.captchaVerified');
+      
+      // Set up demo mode with API key
+      localStorage.setItem(DEMO_STORAGE_KEYS.DEPLOYMENT_MODE, 'demo');
+      
+      // Create demo session for 120 minutes
+      const demoSessionData = {
+        startTime: Date.now(),
+        sessionId: `demo_${Date.now()}_${Math.random().toString(36).substring(7)}`
+      };
+      sessionStorage.setItem(DEMO_STORAGE_KEYS.DEMO_SESSION, JSON.stringify(demoSessionData));
+      
+      setApiKey(apiKeyInput);
+      if (enableVoice && openAIKeyInput.trim()) {
+        setOpenAIApiKey(openAIKeyInput);
+      }
+      
+      setTimeout(() => {
+        window.location.href = window.location.href;
+      }, 100);
+    } catch (error) {
+      console.error('[DemoModeModal] Error validating API key:', error);
+      setError('Failed to validate API key. Please check your connection and try again.');
+      setIsValidating(false);
     }
   };
 
@@ -495,10 +506,10 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
                       type="submit" 
                       className="w-full"
                       size="lg"
-                      disabled={!apiKeyInput.trim() || (enableVoice && !openAIKeyInput.trim()) || isValidating}
+                      disabled={isValidating}
                     >
                       <Key className="h-4 w-4 mr-2" />
-                      {isValidating ? 'Validating...' : 'Try Demo with your Data'}
+                      {isValidating ? 'Validating...' : 'Try Demo with Your Data'}
                     </Button>
                     
                     <p className="text-xs text-center text-gray-500 dark:text-gray-500">
