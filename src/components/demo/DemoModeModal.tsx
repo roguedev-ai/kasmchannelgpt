@@ -424,14 +424,14 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
                     <div className="flex items-start gap-2">
                       <Info className="h-4 w-4 text-blue-500 mt-0.5" />
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Get your API key from{' '}
+                        Don&apos;t have an API Key? Create{' '}
                         <a 
                           href="https://app.customgpt.ai/" 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
                         >
-                          CustomGPT.ai Dashboard
+                          one now
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       </p>

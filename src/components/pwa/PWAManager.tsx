@@ -111,10 +111,10 @@ export const PWAManager: React.FC = () => {
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-foreground mb-1">
-                Install CustomGPT
+                Add App to Home Screen
               </h3>
               <p className="text-sm text-muted-foreground mb-3">
-                Add to your home screen for a better experience
+                Install now for a native app experience
               </p>
               <div className="flex gap-2">
                 <Button

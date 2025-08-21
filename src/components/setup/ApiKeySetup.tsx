@@ -197,15 +197,18 @@ export const ApiKeySetup: React.FC<ApiKeySetupProps> = ({ onComplete }) => {
               </li>
             </ol>
             
-            <a
-              href="https://app.customgpt.ai"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 text-sm mt-4 group"
-            >
-              Get your API key
-              <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-            </a>
+            <p className="text-sm mt-4">
+              Don&apos;t have an API Key? Create{' '}
+              <a
+                href="https://app.customgpt.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 group"
+              >
+                one now
+                <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+            </p>
             
             <p className="text-xs text-muted-foreground mt-4">
               You can change your API key anytime from the Settings page after setup.

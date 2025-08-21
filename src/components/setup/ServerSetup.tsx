@@ -107,15 +107,18 @@ export const ServerSetup: React.FC<ServerSetupProps> = ({ onComplete }) => {
               <h4 className="text-sm font-medium text-foreground mb-2">
                 Need an API key?
               </h4>
-              <a
-                href="https://app.customgpt.ai"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 text-sm group"
-              >
-                Get your API key from CustomGPT
-                <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-              </a>
+              <span className="text-sm">
+                Don&apos;t have an API Key? Create{' '}
+                <a
+                  href="https://app.customgpt.ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-brand-600 hover:text-brand-700 group"
+                >
+                  one now
+                  <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </a>
+              </span>
             </div>
           </div>
 

@@ -202,14 +202,14 @@ npm run build && npm start`;
                     "text-gray-600 dark:text-gray-400",
                     isMobile ? "text-xs" : "text-sm"
                   )}>
-                    {!isMobile && "Get your API key from "}
+                    Don&apos;t have an API Key? Create{' '}
                     <a 
                       href="https://app.customgpt.ai/" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
                     >
-                      {isMobile ? "Get API Key" : "CustomGPT.ai Dashboard"}
+                      one now
                       <ExternalLink className={isMobile ? "h-2.5 w-2.5" : "h-3 w-3"} />
                     </a>
                   </p>
@@ -276,7 +276,7 @@ npm run build && npm start`;
                   disabled={!apiKeyInput.trim() || (enableVoice && !openAIKeyInput.trim())}
                 >
                   <Key className="h-4 w-4 mr-2" />
-                  Try Demo with your Data
+                  Try Demo with Your Data
                 </Button>
               </form>
             </Card>
