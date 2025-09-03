@@ -27,7 +27,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from 'sonner';
-import { PWAManager } from '@/components/pwa/PWAManager';
+// import { PWAManager } from '@/components/pwa/PWAManager'; // Disabled - Uncomment to enable PWA install prompts
 import { DemoModeProvider } from '@/components/demo/DemoModeProvider';
 import "./globals.css";
 
@@ -88,6 +88,12 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "CustomGPT",
+  },
+  alternates: {
+    types: {
+      'application/json+oembed': `/api/oembed?url=${encodeURIComponent('https://starterkit.customgpt.ai')}&format=json`,
+      'text/xml+oembed': `/api/oembed?url=${encodeURIComponent('https://starterkit.customgpt.ai')}&format=xml`,
+    },
   },
   other: {
     "mobile-web-app-capable": "yes",
@@ -181,8 +187,10 @@ export default function RootLayout({
         {/* Add global providers here */}
         <DemoModeProvider>
           {children}
-          {/* PWA Manager for install prompts and updates */}
-          <PWAManager />
+          {/* PWA Manager for install prompts and updates - DISABLED 
+              Uncomment the line below to enable PWA install prompts
+              <PWAManager />
+          */}
           {/* Global toast notifications with close button */}
           <Toaster 
             position="top-center" 

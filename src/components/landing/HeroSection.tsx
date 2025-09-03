@@ -24,12 +24,12 @@ export function HeroSection() {
         
         {/* Main Heading */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-6 bg-gradient-to-r from-customgpt-primary via-customgpt-secondary to-customgpt-primary bg-clip-text text-transparent">
-          CustomGPT.ai Developer Starter Kit
+          Developer Starter Kit
         </h1>
         
         {/* Subtitle */}
         <p className="text-xl sm:text-2xl lg:text-3xl text-landing-text-secondary mb-4 font-medium">
-          Build production-ready RAG interfaces in minutes, not months
+          We pre-built everything developers have been asking for
         </p>
         
         {/* Description */}
@@ -46,7 +46,7 @@ export function HeroSection() {
           <a href="https://github.com/Poll-The-People/customgpt-starter-kit" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border-2 border-customgpt-primary text-customgpt-primary font-semibold rounded-lg hover:bg-customgpt-primary hover:text-white hover:-translate-y-0.5 transition-all duration-200 text-lg">
             <GitHubIcon size={20} /> View on GitHub
           </a>
-          <a href="https://www.youtube.com/playlist?list=PLqm0evVmDZ_0_w2GubDwNU2gLPKMAthZj" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border-2 border-customgpt-secondary text-customgpt-secondary font-semibold rounded-lg hover:bg-customgpt-secondary hover:text-white hover:-translate-y-0.5 transition-all duration-200 text-lg">
+          <a href="https://www.youtube.com/playlist?list=PLqm0evVmDZ_2ErSA69P4o68h5ZdYDF0jF" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border-2 border-customgpt-secondary text-customgpt-secondary font-semibold rounded-lg hover:bg-customgpt-secondary hover:text-white hover:-translate-y-0.5 transition-all duration-200 text-lg">
             <VideoIcon size={20} /> Watch Tutorial
           </a>
         </div>

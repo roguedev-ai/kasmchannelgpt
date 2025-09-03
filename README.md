@@ -89,6 +89,7 @@ Simply enter your CustomGPT.ai API key and agent ID to get started instantly!
 - 🏢 **Multi-Agent Support**: Switch between different CustomGPT.ai agents
 - 🎭 **Demo Mode**: Try the app without server setup using your own API keys
 - 🎤 **Voice Features**: Speech-to-text and voice chat capabilities (requires OpenAI API key)
+- 📱 **PWA Ready**: Progressive Web App functionality built-in but disabled by default (see PWA section below)
 
 ## Security
 
@@ -331,6 +332,38 @@ import SimplifiedWidget from './examples/SimplifiedWidget';
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
 | `iframeSrc` | string | Yes | URL where iframe app is hosted |
+
+## Progressive Web App (PWA)
+
+This application includes full PWA functionality but it is **disabled by default** to provide a cleaner user experience. The PWA features include:
+
+- **Install prompts**: "Add to Home Screen" functionality
+- **Offline support**: Service worker caching for offline usage
+- **App-like experience**: Fullscreen mode, custom icons, splash screens
+- **Update notifications**: Automatic update detection and prompts
+
+### Enabling PWA Features
+
+To enable the PWA install prompt and functionality:
+
+1. Open `src/app/layout.tsx`
+2. Uncomment the PWAManager import:
+   ```tsx
+   import { PWAManager } from '@/components/pwa/PWAManager';
+   ```
+3. Uncomment the PWAManager component:
+   ```tsx
+   <PWAManager />
+   ```
+
+The PWA will then show an install prompt to users and provide the full Progressive Web App experience.
+
+### PWA Configuration
+
+The PWA settings are configured in:
+- `public/manifest.json` - App metadata, icons, theme colors
+- `public/sw.js` - Service worker for offline caching
+- `src/components/pwa/PWAManager.tsx` - Install prompt UI and update handling
 
 ## Building and Deployment
 

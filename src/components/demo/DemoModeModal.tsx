@@ -400,52 +400,70 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
                       </div>
                     </div>
                     
-                    <div>
-                      <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        CustomGPT.ai API Key
-                      </label>
-                      <div className="relative">
-                        <Input
-                          id="apiKey"
-                          type={showApiKey ? 'text' : 'password'}
-                          value={apiKeyInput}
-                          onChange={(e) => {
-                            setApiKeyInput(e.target.value);
-                            setError(null);
-                          }}
-                          placeholder="Enter your API key..."
-                          className={cn(
-                            "pr-10",
-                            error && "border-red-500 focus:ring-red-500"
-                          )}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowApiKey(!showApiKey)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                        >
-                          {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
+                    {/* Step 1: First, get your API key */}
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-sm font-medium text-blue-600 dark:text-blue-400">
+                          1
+                        </div>
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          First, get your API key
+                        </h4>
                       </div>
-                      {error && (
-                        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-start gap-2">
-                      <Info className="h-4 w-4 text-blue-500 mt-0.5" />
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Don&apos;t have an API Key? Create{' '}
+                      <div className="ml-11 space-y-1">
                         <a 
-                          href="https://app.customgpt.ai/" 
+                          href="https://app.customgpt.ai/register?utm_source=starterkit.customgpt.ai" 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                          className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 text-sm"
                         >
-                          one now
+                          Visit CustomGPT.ai Dashboard
                           <ExternalLink className="h-3 w-3" />
                         </a>
-                      </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          (7-day free trial available)
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Step 2: Second, enter your API Key */}
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-sm font-medium text-blue-600 dark:text-blue-400">
+                          2
+                        </div>
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          Second, enter your API Key
+                        </h4>
+                      </div>
+                      <div className="ml-11 space-y-3">
+                        <div className="relative">
+                          <Input
+                            id="apiKey"
+                            type={showApiKey ? 'text' : 'password'}
+                            value={apiKeyInput}
+                            onChange={(e) => {
+                              setApiKeyInput(e.target.value);
+                              setError(null);
+                            }}
+                            placeholder="Enter your API key..."
+                            className={cn(
+                              "pr-10",
+                              error && "border-red-500 focus:ring-red-500"
+                            )}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowApiKey(!showApiKey)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                          >
+                            {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        {error && (
+                          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                        )}
+                      </div>
                     </div>
                     
                     {/* Voice Capability Toggle */}

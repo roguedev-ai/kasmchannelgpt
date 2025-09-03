@@ -10,6 +10,12 @@ export const metadata: Metadata = {
     description: 'Build production-ready RAG interfaces in minutes, not months',
     type: 'website',
   },
+  alternates: {
+    types: {
+      'application/json+oembed': `/api/oembed?url=${encodeURIComponent('https://starterkit.customgpt.ai/landing')}&format=json`,
+      'text/xml+oembed': `/api/oembed?url=${encodeURIComponent('https://starterkit.customgpt.ai/landing')}&format=xml`,
+    },
+  },
 }
 
 export default function Landing() {

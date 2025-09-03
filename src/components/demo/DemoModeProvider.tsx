@@ -148,6 +148,24 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
   // Skip the modal for the landing page
   const isLandingPage = pathname === '/landing';
   
+  // Detect if we're in an iframe
+  const [isEmbedded, setIsEmbedded] = useState(false);
+  
+  useEffect(() => {
+    // Check if we're embedded in an iframe
+    try {
+      const embedded = window.self !== window.top;
+      setIsEmbedded(embedded);
+      if (embedded) {
+        console.log('[DemoModeProvider] Site is embedded in iframe - modal will be skipped');
+      }
+    } catch (e) {
+      // Cross-origin iframe, assume we're embedded
+      setIsEmbedded(true);
+      console.log('[DemoModeProvider] Cross-origin embed detected - modal will be skipped');
+    }
+  }, []);
+  
   // Failsafe to prevent infinite loading
   useEffect(() => {
     const failsafeTimer = setTimeout(() => {
@@ -246,9 +264,33 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
 
   // Check for server-side API keys on startup
   useEffect(() => {
-    console.log('[DemoModeProvider] useEffect running, deploymentMode:', deploymentMode, 'isCheckingKeys:', isCheckingKeys);
+    console.log('[DemoModeProvider] useEffect running, deploymentMode:', deploymentMode, 'isCheckingKeys:', isCheckingKeys, 'isEmbedded:', isEmbedded);
     
-    if (typeof window !== 'undefined' && deploymentMode === null) {
+    // If embedded, automatically use free trial mode
+    if (isEmbedded && deploymentMode === null) {
+      console.log('[DemoModeProvider] Embedded mode detected - auto-starting free trial');
+      
+      // Set up free trial mode
+      localStorage.setItem('customgpt.deploymentMode', 'demo');
+      localStorage.setItem('customgpt.freeTrialMode', 'true');
+      
+      // Start free trial session
+      const sessionData = {
+        startTime: Date.now(),
+        projectCount: 0,
+        conversationCount: 0,
+        messageCount: 0,
+        sessionId: `trial_${Date.now()}_${Math.random().toString(36).substring(7)}`
+      };
+      
+      sessionStorage.setItem('customgpt.freeTrialSession', JSON.stringify(sessionData));
+      setDeploymentMode('demo');
+      setIsFreeTrialMode(true);
+      setIsCheckingKeys(false);
+      return;
+    }
+    
+    if (typeof window !== 'undefined' && deploymentMode === null && !isEmbedded) {
       // Check if this is the true first load (no deployment mode and no first load handled)
       const firstLoadHandled = sessionStorage.getItem('customgpt.firstLoadHandled');
       
@@ -348,7 +390,7 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
       // Already have a deployment mode, no need to check
       setIsCheckingKeys(false);
     }
-  }, [deploymentMode]);
+  }, [deploymentMode, isEmbedded]);
   
   useEffect(() => {
     // Only initialize demo store if in demo mode
@@ -479,18 +521,19 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
           isDemoMode, 
           isAuthenticated, 
           isCheckingKeys,
-          serverHasKeys 
+          serverHasKeys,
+          isEmbedded 
         });
         
-        // Show loading while checking for server API keys (skip for landing page)
-        if (isCheckingKeys && !isLandingPage) {
+        // Show loading while checking for server API keys (skip for landing page or embeds)
+        if (isCheckingKeys && !isLandingPage && !isEmbedded) {
           console.log('[DemoModeProvider] Checking server API keys - showing loading');
           return <LoadingScreen />;
         }
         
-        // Skip modal for landing page
-        if (isLandingPage) {
-          console.log('[DemoModeProvider] Landing page - skipping modal');
+        // Skip modal for landing page or embedded content
+        if (isLandingPage || isEmbedded) {
+          console.log('[DemoModeProvider] Landing page or embedded - skipping modal');
           return children;
         }
         

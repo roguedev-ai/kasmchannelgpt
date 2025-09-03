@@ -171,7 +171,7 @@ export function UseCasesSection() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               <div className="text-center">
-                <div className="text-3xl font-bold text-customgpt-primary mb-1">500+</div>
+                <div className="text-3xl font-bold text-customgpt-primary mb-1">1000+</div>
                 <div className="text-landing-text-secondary text-sm">Active Deployments</div>
               </div>
               <div className="text-center">
