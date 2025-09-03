@@ -86,6 +86,37 @@ function HomeContent() {
   
   // Get runtime demo mode status from context
   const { isRuntimeDemoMode, deploymentMode, isInitialized } = useDemoModeContext();
+  
+  // Check if embedded and handle refresh if needed
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const isEmbedded = window.self !== window.top;
+        if (isEmbedded) {
+          // Only refresh once per session
+          if (!sessionStorage.getItem('customgpt.embeddedRefreshed')) {
+            console.log('[HomeContent] Embedded mode detected, triggering refresh for proper initialization');
+            sessionStorage.setItem('customgpt.embeddedRefreshed', 'true');
+            setTimeout(() => {
+              window.location.reload();
+            }, 100);
+          }
+        } else {
+          // Clear the flag when not embedded
+          sessionStorage.removeItem('customgpt.embeddedRefreshed');
+        }
+      } catch (e) {
+        // Cross-origin iframe
+        if (!sessionStorage.getItem('customgpt.embeddedRefreshed')) {
+          console.log('[HomeContent] Cross-origin embed detected, triggering refresh');
+          sessionStorage.setItem('customgpt.embeddedRefreshed', 'true');
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // Wait for context to initialize
