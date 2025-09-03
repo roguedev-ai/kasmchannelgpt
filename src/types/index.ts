@@ -1049,7 +1049,7 @@ export interface ConversationStore {
   deleteConversation: (conversationId: string | number) => Promise<void>;
   
   /** Update conversation details (e.g., rename) */
-  updateConversation: (conversationId: number, sessionId: string, data: { name: string }) => Promise<void>;
+  updateConversation: (projectId: number, sessionId: string, data: { name: string }) => Promise<void>;
   
   /** Ensure a conversation exists (create if needed) before sending a message */
   ensureConversation: (projectId: number, firstMessage?: string) => Promise<Conversation>;

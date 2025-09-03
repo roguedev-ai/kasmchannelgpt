@@ -113,7 +113,7 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
   // Set up speech manager when modal opens
   useEffect(() => {
     if (isOpen && projectId) {
-      console.log('🔧 [VOICE-MODAL] Setting up speech manager');
+      console.log('🔧 [VOICE-MODAL] Setting up speech manager with projectId:', projectId);
       speechManager.setProjectId(projectId);
       
       // Apply voice settings to speech manager
@@ -170,7 +170,7 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
             
             // Immediately update the title to ensure it's set correctly
             try {
-              await updateConversation(conversation.id, conversation.session_id, { name: 'Voice Conversation' });
+              await updateConversation(conversation.project_id, conversation.session_id, { name: 'Voice Conversation' });
               console.log('📝 [VOICE-MODAL] Set initial voice conversation title');
             } catch (error) {
               console.error('❌ [VOICE-MODAL] Failed to set initial title:', error);
@@ -317,7 +317,7 @@ function VoiceModalContent({ isOpen, onClose, projectId, projectName }: VoiceMod
                 
                 console.log('📝 [VOICE-MODAL] Setting voice conversation title:', voiceTitle);
                 try {
-                  await updateConversation(targetConversation.id, targetConversation.session_id, { name: voiceTitle });
+                  await updateConversation(targetConversation.project_id, targetConversation.session_id, { name: voiceTitle });
                 } catch (error) {
                   console.error('❌ [VOICE-MODAL] Failed to update conversation title:', error);
                 }

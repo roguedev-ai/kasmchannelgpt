@@ -184,8 +184,10 @@ class SpeechManager {
 
     const formData = new FormData();
     formData.append("audio", blob, "audio.wav");
+    console.log('📤 [SPEECH-MANAGER] Sending project_id:', this.projectId);
     formData.append("project_id", this.projectId);
     if (this.sessionId) {
+      console.log('📤 [SPEECH-MANAGER] Sending session_id:', this.sessionId);
       formData.append("session_id", this.sessionId);
     }
     
@@ -550,6 +552,11 @@ class SpeechManager {
         // Remove duplicates based on content and role
         index === self.findIndex(m => m.content === msg.content && m.role === msg.role)
       )
+      .filter(msg => 
+        // Filter out placeholder messages that shouldn't be sent to the API
+        !msg.content.includes('🎤 Processing voice input') && 
+        !msg.content.includes('Processing voice input...')
+      )
       .map(msg => ({
         role: msg.role,
         content: msg.content
@@ -558,7 +565,8 @@ class SpeechManager {
     this.conversationThusFar = cleanedMessages;
     this.debug("Conversation history loaded", {
       messageCount: this.conversationThusFar.length,
-      originalCount: messages.length
+      originalCount: messages.length,
+      filtered: messages.length - cleanedMessages.length
     });
   }
 

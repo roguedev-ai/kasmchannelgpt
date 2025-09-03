@@ -247,7 +247,7 @@ const Navbar = () => {
           <div className="hidden lg:block">
             <Link
               href="https://app.customgpt.ai/register?utm_source=starterkit_navbar"
-              className="px-4 xl:px-8 py-2 xl:py-3 text-sm xl:text-base bg-gray-200 rounded-4xl cursor-pointer text-white bg-gradient-to-r from-customgpt-primary to-customgpt-secondary transition-colors duration-300 hover:from-customgpt-secondary hover:to-customgpt-primary whitespace-nowrap"
+              className="px-4 xl:px-8 py-2 xl:py-3 text-sm xl:text-base bg-gray-200 rounded-full cursor-pointer text-white bg-gradient-to-r from-customgpt-primary to-customgpt-secondary transition-colors duration-300 hover:from-customgpt-secondary hover:to-customgpt-primary whitespace-nowrap"
             >
               Try for free
             </Link>
@@ -299,7 +299,7 @@ const Navbar = () => {
             <div className="pt-4 border-t border-gray-200 mt-4">
               <Link
                 href="https://app.customgpt.ai/register?utm_source=starterkit_navbar"
-                className="block w-full text-center px-6 py-3 bg-gray-200 rounded-2xl cursor-pointer text-white bg-gradient-to-r from-customgpt-primary to-customgpt-secondary transition-colors duration-300 hover:from-customgpt-secondary hover:to-customgpt-primary"
+                className="block w-full text-center px-6 py-3 bg-gray-200 rounded-full cursor-pointer text-white bg-gradient-to-r from-customgpt-primary to-customgpt-secondary transition-colors duration-300 hover:from-customgpt-secondary hover:to-customgpt-primary"
                 onClick={() => setMobileOpen(false)}
               >
                 Try for free

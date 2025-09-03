@@ -6,7 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPersonaSystemPrompt } from '@/store/voice-settings';
+// Removed getPersonaSystemPrompt import - CustomGPT doesn't use system messages
+import { getStreamHeaders } from '@/lib/api/headers';
 
 // Enable streaming for this route
 export const runtime = 'nodejs';
@@ -122,31 +123,10 @@ export async function POST(request: NextRequest) {
           const conversation = conversationHeader ? 
             JSON.parse(Buffer.from(conversationHeader, 'base64').toString()) : [];
           
-          // Build messages array with proper persona handling
-          const messages = [];
-          
-          // Check if we need to add a system message for persona
-          const hasSystemMessage = conversation.some((msg: any) => msg.role === 'system');
-          
-          // Only add persona system message if there isn't one already
-          if (!hasSystemMessage && persona) {
-            messages.push({
-              role: 'system',
-              content: getPersonaPrompt(persona)
-            });
-          }
-          
-          // Add conversation history
-          messages.push(...conversation);
-          
-          // Add current user message
-          messages.push({ role: 'user', content: transcript });
-
-          
           // Step 3: Stream response with parallel TTS generation
           // Get demo CustomGPT API key if in demo mode
           const demoCustomGptKey = deploymentMode === 'demo' ? request.headers.get('X-CustomGPT-API-Key') || undefined : undefined;
-          const chatStream = await streamChatResponse(messages, projectId, deploymentMode, demoCustomGptKey);
+          const chatStream = await streamChatResponse(transcript, projectId, sessionId, deploymentMode, demoCustomGptKey);
           let fullResponse = '';
           let chunkBuffer = '';
           const CHUNK_SIZE = 150; // Optimal size for natural speech breaks
@@ -298,22 +278,37 @@ async function transcribeAudio(audioFile: File, openAIKey?: string): Promise<str
 }
 
 /**
- * Stream chat response from CustomGPT or OpenAI
+ * Stream chat response from CustomGPT
  */
-async function* streamChatResponse(messages: any[], projectId: string, deploymentMode?: string, demoApiKey?: string): AsyncGenerator<string> {
-  // Get CustomGPT API key based on deployment mode
+async function* streamChatResponse(transcript: string, projectId: string, sessionId: string | null, deploymentMode?: string, demoApiKey?: string): AsyncGenerator<string> {
+  // Get CustomGPT API key - using the same logic as proxy handler
   let customGptApiKey: string | undefined;
   
-  if (deploymentMode === 'demo' && demoApiKey) {
-    customGptApiKey = demoApiKey;
+  if (deploymentMode === 'demo') {
+    // Check if it's free trial mode (no demoApiKey provided)
+    if (!demoApiKey) {
+      // Use the demo-only API key for free trial
+      customGptApiKey = process.env.CUSTOMGPT_API_KEY_DEMO_USE_ONLY;
+    } else {
+      // Use the user-provided demo API key
+      customGptApiKey = demoApiKey;
+    }
   } else {
+    // Production mode - use regular API key
     customGptApiKey = process.env.CUSTOMGPT_API_KEY;
   }
   
   if (!customGptApiKey) {
     const errorMessage = deploymentMode === 'demo'
       ? 'CustomGPT API key is required. Please add it in demo settings.'
-      : 'CUSTOMGPT_API_KEY not configured';
+      : 'CUSTOMGPT_API_KEY not configured in environment';
+    console.error('❌ [STREAMING-VOICE] API Key error:', errorMessage);
+    console.error('❌ [STREAMING-VOICE] Deployment mode:', deploymentMode);
+    console.error('❌ [STREAMING-VOICE] Demo API key provided:', !!demoApiKey);
+    console.error('❌ [STREAMING-VOICE] ENV keys available:', {
+      CUSTOMGPT_API_KEY: !!process.env.CUSTOMGPT_API_KEY,
+      CUSTOMGPT_API_KEY_DEMO_USE_ONLY: !!process.env.CUSTOMGPT_API_KEY_DEMO_USE_ONLY
+    });
     throw new Error(errorMessage);
   }
 
@@ -322,27 +317,70 @@ async function* streamChatResponse(messages: any[], projectId: string, deploymen
   }
 
   try {
-    // Use the correct CustomGPT endpoint
-    const response = await fetch(`https://app.customgpt.ai/api/v1/projects/${projectId}/chat/completions`, {
-      method: 'POST',
+    // Use the stream headers from the headers utility
+    const headers = getStreamHeaders(customGptApiKey);
+    
+    // Use CustomGPT's native format
+    const requestBody = {
+      prompt: transcript,
+      stream: true
+    };
+    
+    // Generate a session ID if not provided
+    const conversationSessionId = sessionId || `voice-${Date.now()}`;
+    
+    console.log('🔍 [STREAMING-VOICE] Making request to CustomGPT:', {
+      url: `https://app.customgpt.ai/api/v1/projects/${projectId}/conversations/${conversationSessionId}/messages`,
+      projectId,
+      sessionId: conversationSessionId,
       headers: {
-        'Authorization': `Bearer ${customGptApiKey}`,
-        'Content-Type': 'application/json',
+        ...headers,
+        Authorization: headers.Authorization ? `Bearer ${headers.Authorization.substring(7, 15)}...` : 'missing'
       },
-      body: JSON.stringify({
-        messages,
-        stream: true,
-        lang: 'en',
-        is_inline_citation: false
-        // Note: chatbot_model is not supported by the voice API
-        // The agent's configured model will be used automatically
-      }),
+      body: requestBody
+    });
+    
+    // Use the correct CustomGPT messages endpoint
+    const response = await fetch(`https://app.customgpt.ai/api/v1/projects/${projectId}/conversations/${conversationSessionId}/messages`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ [STREAMING-VOICE] CustomGPT API error:', response.status, errorText);
-      throw new Error(`CustomGPT API error: ${response.status}`);
+      console.error('❌ [STREAMING-VOICE] Request details:', {
+        url: `https://app.customgpt.ai/api/v1/projects/${projectId}/conversations/${conversationSessionId}/messages`,
+        projectId,
+        sessionId: conversationSessionId,
+        deploymentMode,
+        hasApiKey: !!customGptApiKey,
+        apiKeyLength: customGptApiKey?.length
+      });
+      
+      // Log the actual request being sent for debugging
+      console.error('❌ [STREAMING-VOICE] Full request body:', JSON.stringify(requestBody, null, 2));
+      
+      // Try to parse error for more details
+      let errorDetails = errorText;
+      try {
+        const parsed = JSON.parse(errorText);
+        errorDetails = parsed.message || parsed.error || errorText;
+        
+        // Log parsed error details
+        console.error('❌ [STREAMING-VOICE] Parsed error:', parsed);
+      } catch (e) {
+        // Keep original error text if not JSON
+      }
+      
+      // Special handling for 500 errors
+      if (response.status === 500) {
+        console.error('❌ [STREAMING-VOICE] Server error - this might be due to invalid message format or content');
+        errorDetails = 'Server error - please try again with a different message';
+      }
+      
+      throw new Error(`CustomGPT API error: ${response.status} - ${errorDetails}`);
     }
 
     if (!response.body) {
@@ -351,27 +389,34 @@ async function* streamChatResponse(messages: any[], projectId: string, deploymen
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
+    let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || ''; // Keep incomplete line in buffer
 
       for (const line of lines) {
+        if (line.trim() === '') continue;
+        
         if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') return;
-
+          const data = line.slice(6).trim();
+          
           try {
             const parsed = JSON.parse(data);
-            // CustomGPT uses the same format as OpenAI for streaming
-            if (parsed.choices?.[0]?.delta?.content) {
-              yield parsed.choices[0].delta.content;
+            
+            // Handle CustomGPT's native streaming format
+            if (parsed.status === 'progress' && parsed.message !== undefined) {
+              yield parsed.message;
+            } else if (parsed.status === 'complete') {
+              // Stream is complete
+              return;
             }
           } catch (e) {
-            // Ignore parsing errors
+            console.log('Failed to parse SSE data:', data);
           }
         }
       }
@@ -487,10 +532,4 @@ export async function GET(request: NextRequest) {
   });
 }
 
-/**
- * Get persona-specific system prompt
- */
-function getPersonaPrompt(persona: string): string {
-  // Use the proper persona prompts from voice-settings
-  return getPersonaSystemPrompt(persona as any);
-}
+// Removed getPersonaPrompt function - CustomGPT doesn't use system messages for personas

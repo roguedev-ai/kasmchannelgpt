@@ -302,19 +302,19 @@ export const useConversationStore = create<ConversationStore>()(
         }
       },
 
-      updateConversation: async (conversationId: number, sessionId: string, data: { name: string }) => {
+      updateConversation: async (projectId: number, sessionId: string, data: { name: string }) => {
         set({ loading: true, error: null });
         
         try {
           const client = getClient();
-          const response = await client.updateConversation(conversationId, sessionId, data);
+          const response = await client.updateConversation(projectId, sessionId, data);
           const updatedConversation = response.data;
           
           set(state => ({ 
             allConversations: state.allConversations.map(c => 
-              c.id === conversationId ? updatedConversation : c
+              c.session_id === sessionId ? updatedConversation : c
             ),
-            currentConversation: state.currentConversation?.id === conversationId 
+            currentConversation: state.currentConversation?.session_id === sessionId 
               ? updatedConversation 
               : state.currentConversation,
             loading: false,
