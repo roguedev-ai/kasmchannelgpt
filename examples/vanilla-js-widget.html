@@ -8,17 +8,17 @@
     <!-- 
         IMPORTANT: Include widget files (choose one option)
         
-        Option 1: Local files (after running npm run build:widget)
+        Option 1: GitHub-hosted CDN (recommended)
     -->
-    <script src="../dist/widget/vendors.js"></script>
-    <script src="../dist/widget/customgpt-widget.js"></script>
-    <link rel="stylesheet" href="../dist/widget/customgpt-widget.css">
+    <script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"></script>
     
     <!-- 
-        Option 2: CDN (when available)
-        <script src="https://cdn.customgpt.ai/widget/latest/vendors.js"></script>
-        <script src="https://cdn.customgpt.ai/widget/latest/customgpt-widget.js"></script>
-        <link rel="stylesheet" href="https://cdn.customgpt.ai/widget/latest/customgpt-widget.css">
+        Option 2: Local files (only if you've made changes and built locally)
+        <script src="../dist/widget/customgpt-widget.js"></script>
+        
+        Note: If you make changes to the widget and build locally, you need to 
+        copy the dist folder to your project. Using our hosted version won't 
+        include your local changes.
     -->
     
     <style>
@@ -258,10 +258,8 @@ const supportWidget = CustomGPTWidget.init({
             <p>Load the widget from CDN for easy integration.</p>
             
             <div class="code-block">
-&lt;!-- Include from CDN (vendors.js must be loaded first!) --&gt;
-&lt;script src="https://cdn.customgpt.ai/widget/latest/vendors.js"&gt;&lt;/script&gt;
-&lt;script src="https://cdn.customgpt.ai/widget/latest/customgpt-widget.js"&gt;&lt;/script&gt;
-&lt;link rel="stylesheet" href="https://cdn.customgpt.ai/widget/latest/customgpt-widget.css"&gt;
+&lt;!-- Include from GitHub-hosted CDN --&gt;
+&lt;script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"&gt;&lt;/script&gt;
 
 &lt;!-- Initialize widget --&gt;
 &lt;script&gt;
@@ -274,7 +272,7 @@ const supportWidget = CustomGPTWidget.init({
             </div>
             
             <div class="warning">
-                <strong>Note:</strong> Replace CDN URLs with actual CustomGPT CDN endpoints when available.
+                <strong>Note:</strong> If you make changes to the widget and build locally, you need to copy the dist folder to your project. Using our GitHub-hosted version won't include your local changes.
             </div>
         </div>
     </div>

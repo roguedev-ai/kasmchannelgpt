@@ -106,7 +106,7 @@
 <body>
     <div class="container">
         <h1>CustomGPT Widget Quick Start</h1>
-        <p class="subtitle">Test the CustomGPT chat widget with your agent</p>
+        <p class="subtitle">Test the CustomGPT.ai chat widget with your agent</p>
         
         <div id="setup-form">
             <div class="form-group">
@@ -154,9 +154,9 @@
         </div>
     </div>
     
-    <!-- Try to load from CDN first -->
-    <script src="https://cdn.jsdelivr.net/gh/customgpt/customgpt-ui@main/dist/widget/customgpt-widget.js"></script>
-    <!-- Fallback to local if CDN fails -->
+    <!-- Load from GitHub-hosted CDN -->
+    <script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"></script>
+    <!-- Fallback to local if GitHub CDN fails -->
     <script>
         if (typeof CustomGPTWidget === 'undefined') {
             const localScript = document.createElement('script');
@@ -237,9 +237,9 @@
             let code = '';
             
             if (widgetType === 'embedded') {
-                code = `<!-- Embedded CustomGPT Chat Widget -->
+                code = `<!-- Embedded CustomGPT.ai Chat Widget -->
 <div id="customgpt-chat" style="width: 400px; height: 600px;"></div>
-<script src="https://cdn.jsdelivr.net/gh/customgpt/customgpt-ui@main/dist/widget/customgpt-widget.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"></script>
 <script>
   CustomGPTWidget.init({
     agentId: ${agentId},
@@ -251,8 +251,8 @@
   });
 </script>`;
             } else {
-                code = `<!-- Floating CustomGPT Chat Button -->
-<script src="https://cdn.jsdelivr.net/gh/customgpt/customgpt-ui@main/dist/widget/customgpt-widget.js"></script>
+                code = `<!-- Floating CustomGPT.ai Chat Button -->
+<script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"></script>
 <script>
   CustomGPTWidget.init({
     agentId: ${agentId},

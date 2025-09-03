@@ -8,9 +8,9 @@
  * IMPORTANT: You must load the widget JavaScript files before using this component!
  * 
  * Option 1 - In your HTML (before React app):
- * <script src="/path/to/dist/widget/vendors.js"></script>
- * <script src="/path/to/dist/widget/customgpt-widget.js"></script>
- * <link rel="stylesheet" href="/path/to/dist/widget/customgpt-widget.css">
+ * <script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/vendors.js"></script>
+ * <script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"></script>
+ * <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.css">
  * 
  * Option 2 - CDN (when available):
  * <script src="https://cdn.customgpt.ai/widget/latest/vendors.js"></script>
@@ -21,6 +21,9 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+
+// GitHub CDN base path for widget files
+const CDN_BASE = 'https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget';
 
 // Helper function to load scripts dynamically
 const loadScript = (src) => {
@@ -59,9 +62,9 @@ const SimplifiedFloatingButton = ({
   onMessage, // Add message callback
   onConversationChange, // Add conversation change callback
   // Add these props to specify file locations
-  vendorsPath = '/dist/widget/vendors.js',
-  widgetPath = '/dist/widget/customgpt-widget.js',
-  cssPath = '/dist/widget/customgpt-widget.css',
+  vendorsPath = `${CDN_BASE}/vendors.js`,
+  widgetPath = `${CDN_BASE}/customgpt-widget.js`,
+  cssPath = `${CDN_BASE}/customgpt-widget.css`,
   autoLoad = false, // Set to true to automatically load scripts
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -253,14 +256,14 @@ export default SimplifiedFloatingButton;
 <SimplifiedFloatingButton
   agentId="123"
   agentName="Support Assistant"
-  apiBaseUrl="/api/customgpt-proxy" // Your backend proxy
+  apiBaseUrl="/api/proxy" // Your backend proxy
   position="bottom-right"
   maxConversations={5}
   enableConversationManagement={true}
   autoLoad={true}
-  vendorsPath="/dist/widget/vendors.js"
-  widgetPath="/dist/widget/customgpt-widget.js"
-  cssPath="/dist/widget/customgpt-widget.css"
+  vendorsPath={`${CDN_BASE}/vendors.js`}
+  widgetPath={`${CDN_BASE}/customgpt-widget.js`}
+  cssPath={`${CDN_BASE}/customgpt-widget.css`}
   onMessage={(message) => console.log('New message:', message)}
   onConversationChange={(conv) => console.log('Switched to:', conv)}
 />

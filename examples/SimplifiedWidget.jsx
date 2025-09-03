@@ -7,9 +7,9 @@
  * IMPORTANT: You must load the widget JavaScript files before using this component!
  * 
  * Option 1 - In your HTML (before React app):
- * <script src="/path/to/dist/widget/vendors.js"></script>
- * <script src="/path/to/dist/widget/customgpt-widget.js"></script>
- * <link rel="stylesheet" href="/path/to/dist/widget/customgpt-widget.css">
+ * <script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/vendors.js"></script>
+ * <script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"></script>
+ * <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.css">
  * 
  * Option 2 - CDN (when available):
  * <script src="https://cdn.customgpt.ai/widget/latest/vendors.js"></script>
@@ -20,6 +20,9 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
+
+// GitHub CDN base path for widget files
+const CDN_BASE = 'https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget';
 
 // Helper function to load scripts dynamically
 const loadScript = (src) => {
@@ -53,9 +56,9 @@ const SimplifiedCustomGPTWidget = ({
   onConversationChange,
   theme = 'light', // Add theme support
   // Add these props to specify file locations
-  vendorsPath = '/dist/widget/vendors.js',
-  widgetPath = '/dist/widget/customgpt-widget.js',
-  cssPath = '/dist/widget/customgpt-widget.css',
+  vendorsPath = `${CDN_BASE}/vendors.js`,
+  widgetPath = `${CDN_BASE}/customgpt-widget.js`,
+  cssPath = `${CDN_BASE}/customgpt-widget.css`,
   autoLoad = false, // Set to true to automatically load scripts
 }) => {
   const containerRef = useRef(null);
@@ -161,58 +164,223 @@ const SimplifiedCustomGPTWidget = ({
 
 export default SimplifiedCustomGPTWidget;
 
-// Example usage:
+// ==========================================
+// 📖 USAGE EXAMPLES - ALL FRAMEWORKS
+// ==========================================
+
 /*
-// Option 1: With scripts already loaded in HTML (your current pattern)
-<SimplifiedCustomGPTWidget
-  agentId="123"
-  agentName="Support Bot"
-  apiKey="cgpt_your_api_key_here"
-  maxConversations={5}
-  enableConversationManagement={true}
-  onMessage={(message) => console.log('New message:', message)}
-  onConversationChange={(conv) => console.log('Changed to:', conv)}
-/>
+// ========================================== 
+// ✅ PRODUCTION - SECURE DEPLOYMENT PATTERNS
+// ==========================================
 
-// Option 2: With backend proxy (most secure)
-<SimplifiedCustomGPTWidget
-  agentId="123"
-  agentName="Support Bot"
-  apiBaseUrl="/api/customgpt-proxy" // Your backend proxy
-  maxConversations={5}
-  enableConversationManagement={true}
-  autoLoad={true}
-  vendorsPath="/dist/widget/vendors.js"
-  widgetPath="/dist/widget/customgpt-widget.js"
-  cssPath="/dist/widget/customgpt-widget.css"
-  onMessage={(message) => console.log('New message:', message)}
-  onConversationChange={(conv) => console.log('Changed to:', conv)}
-/>
+// 🚀 REACT (Create React App) - Universal Proxy Server
+// Environment: .env.local
+// REACT_APP_CUSTOMGPT_AGENT_ID=78913
+// REACT_APP_CUSTOMGPT_AGENT_NAME=Support Assistant
+// REACT_APP_API_PROXY_URL=http://localhost:3001/api/proxy
 
-// Option 3: With environment variables (your exact current pattern)
+import SimplifiedCustomGPTWidget from './SimplifiedWidget';
+
+function App() {
+  return (
+    <div className="App">
+      <SimplifiedCustomGPTWidget
+        agentId={process.env.REACT_APP_CUSTOMGPT_AGENT_ID}
+        agentName={process.env.REACT_APP_CUSTOMGPT_AGENT_NAME}
+        apiBaseUrl={process.env.REACT_APP_API_PROXY_URL}
+        theme="light"
+        maxConversations={5}
+        enableConversationManagement={true}
+        onMessage={(msg) => console.log('New message:', msg)}
+        onConversationChange={(conv) => console.log('Conversation changed:', conv)}
+      />
+    </div>
+  );
+}
+
+// 🚀 NEXT.JS - Built-in API Routes
+// Environment: .env.local
+// CUSTOMGPT_API_KEY=your_secret_key (server-side)
+// NEXT_PUBLIC_CUSTOMGPT_AGENT_ID=78913
+// NEXT_PUBLIC_CUSTOMGPT_AGENT_NAME=Support Assistant
+
+import SimplifiedCustomGPTWidget from '../components/SimplifiedWidget';
+
+export default function ChatPage() {
+  return (
+    <main>
+      <h1>Customer Support</h1>
+      <SimplifiedCustomGPTWidget
+        agentId={process.env.NEXT_PUBLIC_CUSTOMGPT_AGENT_ID}
+        agentName={process.env.NEXT_PUBLIC_CUSTOMGPT_AGENT_NAME}
+        apiBaseUrl="/api/proxy" // Next.js API route handles proxy
+        theme="dark"
+        maxConversations={10}
+        enableConversationManagement={true}
+        onMessage={(msg) => console.log('Message:', msg)}
+        onConversationChange={(conv) => console.log('Conversation:', conv)}
+      />
+    </main>
+  );
+}
+
+// 🔧 VUE.JS - Universal Proxy Server
+// Environment: .env
+// VITE_CUSTOMGPT_AGENT_ID=78913
+// VITE_CUSTOMGPT_AGENT_NAME=Support Assistant
+// VITE_API_PROXY_URL=http://localhost:3001/api/proxy
+
+// In Vue component:
+// <template>
+//   <div id="chat-widget" ref="widgetContainer"></div>
+// </template>
+// 
+// <script>
+// import { onMounted, ref } from 'vue';
+// 
+// export default {
+//   setup() {
+//     const widgetContainer = ref(null);
+// 
+//     onMounted(() => {
+//       if (window.CustomGPTWidget) {
+//         window.CustomGPTWidget.init({
+//           agentId: import.meta.env.VITE_CUSTOMGPT_AGENT_ID,
+//           agentName: import.meta.env.VITE_CUSTOMGPT_AGENT_NAME,
+//           apiBaseUrl: import.meta.env.VITE_API_PROXY_URL,
+//           containerId: 'chat-widget',
+//           theme: 'light',
+//           enableConversationManagement: true,
+//         });
+//       }
+//     });
+// 
+//     return { widgetContainer };
+//   }
+// };
+// </script>
+
+// 🔧 ANGULAR - Universal Proxy Server  
+// Environment: src/environments/environment.ts
+// export const environment = {
+//   production: false,
+//   customgpt: {
+//     agentId: '78913',
+//     agentName: 'Support Assistant',
+//     proxyUrl: 'http://localhost:3001/api/proxy'
+//   }
+// };
+
+// In Angular component:
+// import { Component, OnInit } from '@angular/core';
+// import { environment } from '../environments/environment';
+// 
+// @Component({
+//   selector: 'app-chat',
+//   template: '<div id="chat-widget"></div>'
+// })
+// export class ChatComponent implements OnInit {
+//   ngOnInit() {
+//     if ((window as any).CustomGPTWidget) {
+//       (window as any).CustomGPTWidget.init({
+//         agentId: environment.customgpt.agentId,
+//         agentName: environment.customgpt.agentName,
+//         apiBaseUrl: environment.customgpt.proxyUrl,
+//         containerId: 'chat-widget',
+//         theme: 'light',
+//         enableConversationManagement: true,
+//         onMessage: (msg: any) => console.log('Message:', msg)
+//       });
+//     }
+//   }
+// }
+
+// 🔧 SVELTE - Universal Proxy Server
+// Environment: .env
+// VITE_CUSTOMGPT_AGENT_ID=78913
+// VITE_CUSTOMGPT_AGENT_NAME=Support Assistant  
+// VITE_API_PROXY_URL=http://localhost:3001/api/proxy
+
+// In Svelte component:
+// <script>
+//   import { onMount } from 'svelte';
+//   import { VITE_CUSTOMGPT_AGENT_ID, VITE_API_PROXY_URL } from '$env/static/public';
+// 
+//   onMount(() => {
+//     if (window.CustomGPTWidget) {
+//       window.CustomGPTWidget.init({
+//         agentId: VITE_CUSTOMGPT_AGENT_ID,
+//         apiBaseUrl: VITE_API_PROXY_URL,
+//         containerId: 'chat-widget',
+//         theme: 'light',
+//         enableConversationManagement: true,
+//       });
+//     }
+//   });
+// </script>
+// 
+// <div id="chat-widget"></div>
+
+// 🔧 CROSS-FRAMEWORK Helper with Environment Detection
+function createSecureChatWidget(containerId, options = {}) {
+  // Auto-detect environment variables across frameworks
+  const agentId = 
+    process.env.REACT_APP_CUSTOMGPT_AGENT_ID ||        // React
+    process.env.NEXT_PUBLIC_CUSTOMGPT_AGENT_ID ||      // Next.js
+    import.meta.env.VITE_CUSTOMGPT_AGENT_ID ||         // Vue/Vite
+    '78913'; // Fallback
+
+  const apiBaseUrl = 
+    process.env.REACT_APP_API_PROXY_URL ||             // React
+    '/api/proxy' ||                                // Next.js
+    import.meta.env.VITE_API_PROXY_URL ||              // Vue/Vite
+    'http://localhost:3001/api/proxy';             // Fallback
+
+  if (!agentId) {
+    console.error('❌ CustomGPT Agent ID not found. Please set environment variables.');
+    return null;
+  }
+
+  return (
+    <SimplifiedCustomGPTWidget
+      agentId={agentId}
+      apiBaseUrl={apiBaseUrl}
+      containerId={containerId}
+      theme={options.theme || 'light'}
+      maxConversations={options.maxConversations || 5}
+      enableConversationManagement={options.enableConversationManagement || true}
+      onMessage={options.onMessage}
+      onConversationChange={options.onConversationChange}
+      {...options}
+    />
+  );
+}
+
+// ==========================================
+// ⚠️ DEVELOPMENT ONLY - DIRECT API MODE
+// ==========================================
+
+// 🔧 DEVELOPMENT/TESTING - Direct API Key (NOT for production)
 <SimplifiedCustomGPTWidget
-  apiKey={customFields?.CUSTOMGPT_API_KEY as string}
-  agentId={customFields?.CUSTOMGPT_AGENT_ID as string}
-  agentName={customFields?.CUSTOMGPT_AGENT_NAME as string}
-  maxConversations={5}
-  enableConversationManagement={true}
+  agentId="78913"
+  agentName="Support Bot"
+  apiKey="cgpt_your_api_key_here" // ⚠️ ONLY for development/internal tools!
   theme="light"
-  onMessage={(message) => console.log('New message:', message)}
-  onConversationChange={(conv) => console.log('Switched to:', conv)}
+  maxConversations={5}
+  enableConversationManagement={false}
+  onMessage={(msg) => console.log('Dev message:', msg)}
+  onConversationChange={(conv) => console.log('Dev conversation:', conv)}
 />
 
-// Option 4: With automatic script loading from your dist folder
-<SimplifiedCustomGPTWidget
-  agentId="123"
-  agentName="Support Bot"
-  apiKey="cgpt_your_api_key_here"
-  maxConversations={5}
-  enableConversationManagement={true}
-  autoLoad={true}
-  vendorsPath="/dist/widget/vendors.js"
-  widgetPath="/dist/widget/customgpt-widget.js"
-  cssPath="/dist/widget/customgpt-widget.css"
-  onMessage={(message) => console.log('New message:', message)}
-  onConversationChange={(conv) => console.log('Changed to:', conv)}
-/>
+// 🔧 STATIC HTML - Direct API (Internal tools only)
+// <script>
+//   CustomGPTWidget.init({
+//     agentId: '78913',
+//     apiKey: 'your_api_key_here', // ⚠️ ONLY for internal use!
+//     containerId: 'chat-container',
+//     theme: 'dark',
+//     enableConversationManagement: true,
+//     onMessage: (msg) => console.log('Message:', msg)
+//   });
+// </script>
 */

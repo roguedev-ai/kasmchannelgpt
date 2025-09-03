@@ -45,7 +45,7 @@ import { Card } from '@/components/ui/card';
 import { SimpleSelect } from '@/components/ui/simple-select';
 import { cn } from '@/lib/utils';
 import type { CustomerIntelligenceItem, CustomerIntelligenceResponse } from '@/types';
-import { format, subDays, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -133,11 +133,21 @@ export const CustomerIntelligenceTab: React.FC<CustomerIntelligenceTabProps> = (
       setLoading(true);
       setError(null);
       
-      const response = await proxyClient.getCustomerIntelligence(agentId, page, 100);
+      // Format dates for API (YYYY-MM-DD format)
+      const startDate = selectedFilters.dateRange.start 
+        ? format(selectedFilters.dateRange.start, 'yyyy-MM-dd')
+        : undefined;
+      const endDate = selectedFilters.dateRange.end 
+        ? format(selectedFilters.dateRange.end, 'yyyy-MM-dd') 
+        : undefined;
+      
+      const response = await proxyClient.getCustomerIntelligence(agentId, page, 100, startDate, endDate);
       
       logger.info('CUSTOMER_INTELLIGENCE', 'Data fetched', {
         agentId,
         page,
+        startDate,
+        endDate,
         total: response.data.total
       });
       
@@ -165,6 +175,15 @@ export const CustomerIntelligenceTab: React.FC<CustomerIntelligenceTabProps> = (
   useEffect(() => {
     fetchData(currentPage);
   }, [agentId, currentPage]);
+
+  // Reset to page 1 when date range changes
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      fetchData(1);
+    }
+  }, [selectedFilters.dateRange.start, selectedFilters.dateRange.end]);
 
   const handleRefresh = () => {
     fetchData(currentPage);
@@ -287,17 +306,8 @@ export const CustomerIntelligenceTab: React.FC<CustomerIntelligenceTabProps> = (
         (selectedFilters.contentSource === 'all' || item.content_source === selectedFilters.contentSource) &&
         (selectedFilters.location === '' || item.user_location?.toLowerCase().includes(selectedFilters.location.toLowerCase()));
       
-      // Date range filter
-      let matchesDateRange = true;
-      if (selectedFilters.dateRange.start && selectedFilters.dateRange.end) {
-        const itemDate = new Date(item.created_at);
-        matchesDateRange = isWithinInterval(itemDate, {
-          start: selectedFilters.dateRange.start,
-          end: selectedFilters.dateRange.end
-        });
-      }
-      
-      return matchesSearch && matchesFilters && matchesDateRange;
+      // Note: Date range filtering is now handled by the API
+      return matchesSearch && matchesFilters;
     });
   }, [data, searchQuery, selectedFilters]);
 

@@ -4,6 +4,9 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 
+// GitHub CDN base path for widget files
+const CDN_BASE = 'https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget';
+
 // Method 1: Backend Proxy Setup (Recommended)
 export function ProxyBasedChatWidget({ agentId }) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -19,7 +22,7 @@ export function ProxyBasedChatWidget({ agentId }) {
         if (window.CustomGPTWidget) {
           window.CustomGPTWidget.init({
             agentId: parseInt(agentId),
-            apiBaseUrl: '/api/customgpt-proxy', // Your backend proxy endpoint
+            apiBaseUrl: '/api/proxy', // Your backend proxy endpoint
             containerId: 'proxy-chat-widget',
             mode: 'embedded',
             theme: 'light',
@@ -334,7 +337,7 @@ export function StandaloneChatDemo() {
         <h3>Backend Proxy Setup Example (Node.js/Express):</h3>
         <pre style={{ backgroundColor: '#1e293b', color: '#e2e8f0', padding: '16px', borderRadius: '4px', overflow: 'auto' }}>
 {`// server.js
-app.use('/api/customgpt-proxy', async (req, res) => {
+app.use('/api/proxy', async (req, res) => {
   const apiPath = req.path;
   const response = await fetch(\`https://app.customgpt.ai/api/v1\${apiPath}\`, {
     method: req.method,
@@ -377,7 +380,7 @@ async function loadWidgetAssets() {
   // Load CSS
   const cssLink = document.createElement('link');
   cssLink.rel = 'stylesheet';
-  cssLink.href = '/customgpt-widget.css'; // Adjust path as needed
+  cssLink.href = `${CDN_BASE}/customgpt-widget.css`;
   document.head.appendChild(cssLink);
 
   // Load scripts
@@ -392,8 +395,8 @@ async function loadWidgetAssets() {
   };
 
   // Load in correct order
-  await loadScript('/vendors.js');
-  await loadScript('/customgpt-widget.js');
+  await loadScript(`${CDN_BASE}/vendors.js`);
+  await loadScript(`${CDN_BASE}/customgpt-widget.js`);
 }
 
 // CSS styles (add to your CSS file)

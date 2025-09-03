@@ -1,304 +1,327 @@
-# CustomGPT Widget Examples
+# CustomGPT.ai Widget Examples
 
-This directory contains examples showing how to integrate the CustomGPT widget in various scenarios.
+Complete examples and setup guides for integrating CustomGPT.ai widgets into any web application.
 
-## 🚨 Security Note
+## 🚀 Quick Start 
 
-The widget supports two modes:
-- **Proxy Mode** (Default): API keys are handled server-side for maximum security
-- **Direct Mode**: API key is provided client-side for standalone deployments (use with caution)
+### Development/Demo (2 Minutes)
 
-## Example Files
+**For testing and internal tools only:**
 
-### 🚀 Quick Start
-- `quick-start.html` - Minimal setup to get started (proxy mode)
-- `simplified-demo.html` - Basic demo with common features
+```html
+<!-- Add this to your HTML -->
+<div id="my-chat" style="width: 400px; height: 600px;"></div>
+<script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"></script>
+<script>
+  CustomGPTWidget.init({
+    agentId: 'YOUR_AGENT_ID',        // Get from CustomGPT.ai dashboard
+    apiKey: 'YOUR_API_KEY',          // ⚠️ ONLY for development/demos!
+    containerId: 'my-chat'
+  });
+</script>
+```
 
-### 🔒 Secure Integration (Recommended)
-- `iframe-embed-example.html` - Complete iframe integration with security isolation
-- `widget-example.html` - Direct widget embedding (proxy mode)
-- `widget-with-logo.html` - Widget with custom branding
+### Production (Secure)
 
-### 🔑 Direct API Integration
-- `widget-direct-api.html` - Direct API mode (no proxy needed)
-- `vanilla-js-widget.html` - Complete JavaScript example with all features
+**For public websites - requires server setup:**
+
+```html
+<!-- Frontend code -->
+<div id="my-chat" style="width: 400px; height: 600px;"></div>
+<script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"></script>
+<script>
+  CustomGPTWidget.init({
+    agentId: 'YOUR_AGENT_ID',
+    apiBaseUrl: '/api/proxy',        // Your secure proxy endpoint
+    containerId: 'my-chat'
+  });
+</script>
+```
+
+**Want a floating button?** Just change the mode:
+
+```javascript
+CustomGPTWidget.init({
+  agentId: 'YOUR_AGENT_ID',
+  apiKey: 'YOUR_API_KEY',  // or apiBaseUrl for production
+  mode: 'floating',
+  position: 'bottom-right'
+});
+```
+
+## 📁 Available Examples
+
+### 🎯 Getting Started
+- **`quick-start.html`** - Interactive demo with live configuration and code generation
 
 ### ⚛️ React Integration
-- `react-integration.jsx` - Full React component integration
-- `react-widget.jsx` - React widget component patterns
-- `react-floating-button.jsx` - Floating button implementation
-- `react-standalone-example.jsx` - Standalone React app example
+- **`SimplifiedWidget.jsx`** - React component wrapper for embedded widgets
+- **`SimplifiedFloatingButton.jsx`** - React component wrapper for floating chat buttons
+- **`react-standalone-example.jsx`** - Complete React integration guide with all patterns
 
-### 📦 Helper Components
-- `SimplifiedWidget.jsx` - Simplified React wrapper component
-- `SimplifiedFloatingButton.jsx` - Simplified floating button component
+### 🌐 Vanilla JavaScript  
+- **`vanilla-js-widget.html`** - Multiple widget examples for non-React applications
+- **`widget-direct-api.html`** - Direct API integration for internal tools and static sites
 
+### 🔒 Secure Integration
+- **`iframe-embed-example.html`** - Maximum security with complete CSS/JS isolation
+- **`universal-customgpt-proxy.js`** - Production-ready proxy server for secure API key handling
+- **`nextjs-api-route.js`** - Next.js API route for built-in proxy functionality
 
-## Integration Methods
+### 📚 Setup Guides
+- **`env-setup-guide.md`** - Environment variables and security best practices
+- **`proxy-package.json`** - Package.json for the universal proxy server
 
-### Method 1: Iframe Embed (Recommended)
+## 🎯 Choose Your Integration Method
+
+### Method 1: CDN (Recommended for Testing)
+
+**Use Case**: Quick prototypes, demos, static websites
 
 ```html
-<!-- Include the embed script -->
-<script src="/dist/iframe-embed.js"></script>
-
+<script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"></script>
 <script>
-  // Initialize embedded widget
-  const widget = CustomGPTEmbed.init({
-    agentId: 123,
-    mode: 'embedded',
-    containerId: 'chat-container',
-    iframeSrc: 'https://your-domain.com/widget/',
-    theme: 'light'
+  CustomGPTWidget.init({
+    agentId: 'YOUR_AGENT_ID',
+    apiKey: 'YOUR_API_KEY', // ⚠️ Only for development/internal tools
+    containerId: 'chat-container'
   });
 </script>
 ```
 
-**Pros:**
-- Complete style isolation
-- Cross-domain compatible
-- Most secure option
-- No CSS conflicts
+### Method 2: React with Universal Proxy (Production)
 
-### Method 2: Direct Widget (Proxy Mode)
+**Use Case**: React applications requiring secure API key handling
 
-```html
-<!-- Include widget files -->
-<script src="/dist/widget/customgpt-widget.js"></script>
-
-<div id="chat-widget"></div>
-<script>
-  const widget = CustomGPTWidget.init({
-    agentId: 123,
-    mode: 'embedded',
-    containerId: 'chat-widget',
-    apiUrl: 'https://your-nextjs-app.com'  // Your proxy server
-  });
-</script>
-```
-
-**Pros:**
-- Secure (API key on server)
-- Direct API access
-- More customization options
-
-### Method 3: Direct Widget (Direct API Mode)
-
-```html
-<!-- Include widget files -->
-<script src="/dist/widget/customgpt-widget.js"></script>
-
-<div id="chat-widget"></div>
-<script>
-  const widget = CustomGPTWidget.init({
-    agentId: 123,
-    apiKey: 'your-api-key',  // Direct API access
-    mode: 'embedded',
-    containerId: 'chat-widget'
-  });
-</script>
-```
-
-**Pros:**
-- No server required
-- Works on static sites
-- Simpler deployment
-
-**Cons:**
-- API key exposed in browser
-- Only use for internal/trusted environments
-
-## Key Features Demonstrated
-
-### Conversation Management
-```javascript
-// Built-in conversation management
-const widget = CustomGPTWidget.init({
-  agentId: 123,
-  mode: 'floating',
-  enableConversationManagement: true,
-  maxConversations: 10
-});
-
-// Get all conversations
-const conversations = widget.getConversations();
-
-// Switch conversation
-widget.switchConversation('conv_123');
-
-// Create new conversation
-widget.createConversation('Order Support');
-```
-
-### Session Handling
-```javascript
-// Custom session ID
-const widget = CustomGPTWidget.init({
-  agentId: 123,
-  sessionId: 'user_12345',
-  isolateConversations: true  // Isolate per page
-});
-```
-
-### Event Handling
-```javascript
-const widget = CustomGPTWidget.init({
-  agentId: 123,
-  onOpen: () => console.log('Widget opened'),
-  onClose: () => console.log('Widget closed'),
-  onMessage: (msg) => console.log('New message:', msg),
-  onConversationChange: (conv) => console.log('Switched to:', conv)
-});
-```
-
-## React Integration Best Practices
-
-### Using Hooks
 ```jsx
-import { useEffect, useRef } from 'react';
+// Component
+<SimplifiedWidget
+  agentId={process.env.REACT_APP_CUSTOMGPT_AGENT_ID}
+  agentName={process.env.REACT_APP_CUSTOMGPT_AGENT_NAME}
+  apiBaseUrl="http://localhost:3001/api/proxy"
+/>
+```
 
-function useCustomGPTWidget(config) {
-  const widgetRef = useRef(null);
+```bash
+# Setup
+npm install express cors dotenv
+node universal-customgpt-proxy.js  # Runs on port 3001
+```
 
-  useEffect(() => {
-    const widget = window.CustomGPTWidget?.init(config);
-    widgetRef.current = widget;
+### Method 3: Next.js with Built-in Proxy (Production)
 
-    return () => {
-      if (widget) {
-        widget.destroy();
-      }
-    };
-  }, []);
+**Use Case**: Next.js applications with built-in API routes
 
-  return widgetRef.current;
-}
+```jsx
+// Component
+<SimplifiedWidget
+  agentId={process.env.NEXT_PUBLIC_CUSTOMGPT_AGENT_ID}
+  agentName={process.env.NEXT_PUBLIC_CUSTOMGPT_AGENT_NAME}
+  apiBaseUrl="/api/proxy"
+/>
+```
 
-// Usage
-function Chat() {
-  const widget = useCustomGPTWidget({
-    agentId: 123,
-    containerId: 'my-chat',
-    mode: 'embedded'
-  });
-
-  return <div id="my-chat" style={{ height: '600px' }} />;
+```javascript
+// pages/api/proxy/projects/[projectId]/conversations.js
+export default function handler(req, res) {
+  // Proxy logic with server-side API key
 }
 ```
 
-### Loading Scripts Dynamically
-```jsx
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = resolve;
-    script.onerror = reject;
-    document.body.appendChild(script);
-  });
-}
+### Method 4: Iframe Embed (Maximum Security)
 
-// In your component
-useEffect(() => {
-  async function loadWidget() {
-    try {
-      await loadScript('/dist/widget/customgpt-widget.js');
-      // Widget is now available
-    } catch (error) {
-      console.error('Failed to load widget:', error);
-    }
-  }
+**Use Case**: Third-party sites, strict CSP requirements
+
+```html
+<iframe 
+  src="https://your-domain.com/widget/iframe.html?agentId=123"
+  width="400" 
+  height="600"
+  frameborder="0">
+</iframe>
+```
+
+## 🔧 Configuration Options
+
+### Basic Configuration
+
+```javascript
+CustomGPTWidget.init({
+  agentId: 'YOUR_AGENT_ID',           // Required: Your CustomGPT.ai agent ID
+  mode: 'embedded',                   // 'embedded' | 'floating'
+  containerId: 'chat-container',      // Required for embedded mode
+  position: 'bottom-right',           // For floating mode
+  theme: 'light',                     // 'light' | 'dark'
+  width: '400px',
+  height: '600px'
+});
+```
+
+### Advanced Configuration
+
+```javascript
+CustomGPTWidget.init({
+  agentId: 'YOUR_AGENT_ID',
+  agentName: 'Support Assistant',
   
-  loadWidget();
-}, []);
-```
-
-## Configuration Examples
-
-### Minimal Configuration
-```javascript
-CustomGPTWidget.init({
-  agentId: 123
-});
-```
-
-### Full Featured
-```javascript
-CustomGPTWidget.init({
-  agentId: 123,
+  // Security Options
+  apiKey: 'YOUR_API_KEY',            // Direct API (development only)
+  apiBaseUrl: '/api/proxy',          // Proxy API (production)
+  
+  // UI Options
   mode: 'floating',
+  position: 'bottom-right',
   theme: 'dark',
-  position: 'bottom-left',
-  width: '450px',
-  height: '700px',
+  width: '400px',
+  height: '600px',
+  
+  // Features
   enableConversationManagement: true,
-  maxConversations: 20,
+  maxConversations: 10,
   enableCitations: true,
   enableFeedback: true,
-  sessionId: 'custom_session_123',
-  isolateConversations: false,
-  onOpen: () => analytics.track('Chat Opened'),
-  onMessage: (msg) => analytics.track('Message Sent', msg),
-  onConversationChange: (conv) => console.log('Conversation:', conv)
+  
+  // Events
+  onOpen: () => console.log('Chat opened'),
+  onClose: () => console.log('Chat closed'),
+  onMessage: (msg) => console.log('New message:', msg),
+  onConversationChange: (conv) => console.log('Switched conversation:', conv)
 });
 ```
 
-## Security Considerations
+## 🛡️ Security & Environment Variables
 
-1. **No API Keys in Client Code**: The new architecture handles authentication server-side
-2. **Use HTTPS**: Always serve widget files over HTTPS
-3. **Configure CORS**: Set allowed origins in your server configuration
-4. **Validate Agent IDs**: Ensure agent IDs are validated server-side
-5. **Use Iframe for Isolation**: When embedding on third-party sites
+### Production Environment Setup
 
-## Troubleshooting Common Issues
+**React (.env.local)**:
+```env
+# Client-side (exposed to browser - safe)
+REACT_APP_CUSTOMGPT_AGENT_ID=78913
+REACT_APP_CUSTOMGPT_AGENT_NAME=My Assistant
+REACT_APP_API_PROXY_URL=http://localhost:3001/api/proxy
+```
+
+**Next.js (.env.local)**:
+```env
+# Server-side (secure)
+CUSTOMGPT_API_KEY=your_secret_api_key_here
+
+# Client-side (exposed to browser - safe)  
+NEXT_PUBLIC_CUSTOMGPT_AGENT_ID=78913
+NEXT_PUBLIC_CUSTOMGPT_AGENT_NAME=My Assistant
+```
+
+**Universal Proxy Server (.env)**:
+```env
+CUSTOMGPT_API_KEY=your_secret_api_key_here
+CUSTOMGPT_API_BASE_URL=https://app.customgpt.ai/api/v1
+PORT=3001
+```
+
+### Security Rules
+
+✅ **Safe to Expose (Client-side)**:
+- Agent IDs
+- Agent names  
+- UI configuration
+- Proxy URLs
+
+❌ **Never Expose (Server-side only)**:
+- API keys
+- Internal endpoints
+- Database credentials
+
+## 🚀 Quick Setup Commands
+
+### React + Universal Proxy
+
+```bash
+# 1. Setup proxy server
+mkdir customgpt-proxy && cd customgpt-proxy
+npm init -y && npm install express cors dotenv
+# Copy universal-proxy-server.js and create .env with your API key
+node server.js &
+
+# 2. Setup React app
+cd ../your-react-app
+echo "REACT_APP_CUSTOMGPT_AGENT_ID=YOUR_AGENT_ID" > .env.local
+echo "REACT_APP_API_PROXY_URL=http://localhost:3001/api/proxy" >> .env.local
+npm start
+```
+
+### Next.js Setup
+
+```bash
+# 1. Environment setup
+echo "CUSTOMGPT_API_KEY=your_secret_key" > .env.local
+echo "NEXT_PUBLIC_CUSTOMGPT_AGENT_ID=YOUR_AGENT_ID" >> .env.local
+
+# 2. Add API route
+mkdir -p pages/api/proxy/projects
+# Copy API route files for widget endpoints
+
+npm run dev
+```
+
+## 📱 Framework Support
+
+| Framework | Direct API | Proxy Required | Setup Complexity |
+|-----------|------------|----------------|------------------|
+| **HTML/JS** | ✅ Yes | ❌ No | ⭐ Easy |
+| **React** | ✅ Yes | ✅ Recommended | ⭐⭐ Medium |
+| **Next.js** | ✅ Yes | ✅ Built-in | ⭐⭐ Medium |
+| **Vue.js** | ✅ Yes | ✅ External proxy | ⭐⭐ Medium |
+| **Angular** | ✅ Yes | ✅ External proxy | ⭐⭐⭐ Advanced |
+| **Svelte** | ✅ Yes | ✅ External proxy | ⭐⭐ Medium |
+
+## 🔍 Troubleshooting
 
 ### Widget Not Loading
+
 ```javascript
-// Check if widget is available
+// Check if widget loaded
 if (typeof CustomGPTWidget === 'undefined') {
-  console.error('Widget script not loaded');
-  return;
+  console.error('Widget not loaded - check script src');
 }
 
 // Enable debug mode
 window.CUSTOMGPT_DEBUG = true;
 ```
 
-### Conversation Persistence
+### Environment Variables Not Working
+
+**React**: Variables need `REACT_APP_` prefix and app restart
+**Next.js**: Client variables need `NEXT_PUBLIC_` prefix
+**Check**: `console.log(process.env.REACT_APP_YOUR_VARIABLE)`
+
+### API Connection Issues
+
+1. Verify agent ID in CustomGPT.ai dashboard
+2. Check API key is correct and active
+3. Ensure proxy server is running (if using proxy mode)
+4. Check browser console for CORS errors
+
+### Clear Conversation Data
+
 ```javascript
-// Check localStorage
-console.log(localStorage.getItem('customgpt_conversations'));
-
-// Clear if needed
+// Clear stored conversations
 localStorage.removeItem('customgpt_conversations');
+localStorage.removeItem('customgpt_sessions');
 ```
 
-### Style Conflicts
-```css
-/* Use iframe mode or add CSS specificity */
-#customgpt-widget * {
-  all: initial;
-  font-family: inherit;
-}
-```
+## 📚 Additional Resources
 
+- [CustomGPT.ai Dashboard](https://app.customgpt.ai) - Manage your agents and get API keys
+- [Main Documentation](../README.md) - Complete project documentation and deployment guides
+- [API Documentation](https://docs.customgpt.ai) - CustomGPT.ai API reference
+- [Widget Configuration](https://docs.customgpt.ai/widget) - Complete widget API documentation
 
-## Next Steps
+## 🆘 Getting Help
 
-1. Start with `quick-start.html` for the fastest setup
-2. Choose your integration method:
-   - **Most Secure**: Use `iframe-embed-example.html`
-   - **Most Flexible**: Use `widget-example.html` (proxy mode)
-   - **No Server**: Use `widget-direct-api.html` (API key required)
-   - **React App**: Use `react-integration.jsx` or simplified components
-3. Replace the agent ID with your own
-4. Configure your server (if using proxy mode)
-5. Deploy and test
+- **Issues**: [GitHub Issues](https://github.com/Poll-The-People/customgpt-starter-kit/issues)
+- **Email**: support@customgpt.ai
+- **Documentation**: [docs.customgpt.ai](https://docs.customgpt.ai)
 
-## File Organization
+---
 
-- **Main examples**: Essential integration patterns
-- **Archive folder**: Legacy and duplicate examples (kept for reference)
-
-For more details, see the main [README.md](../README.md).
+**🎉 Ready to get started?** Begin with `quick-start.html` to test your agent, then choose the integration method that fits your project!

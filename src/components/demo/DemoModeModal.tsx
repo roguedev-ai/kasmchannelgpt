@@ -321,7 +321,7 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                          Instant Playground
+                          Instant Playground with Sample Data
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                           Try now - no signup needed
@@ -392,7 +392,7 @@ export function DemoModeModal({ onClose, hideFreeTrial = false, canClose = true 
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                          Use Your API Key
+                          Use Playground with Your Data
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                           Load your projects & data

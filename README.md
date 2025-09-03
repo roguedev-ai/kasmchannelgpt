@@ -1,8 +1,24 @@
 <div align="center">
   <img src="logo.png" alt="CustomGPT.ai" width="100" height="100" />
-  <h1>CustomGPT.ai API Starter Kit (beta)</h1>
+  <h1>CustomGPT.ai API Starter Kit</h1>
   <p><strong>A modern, secure chat interface for CustomGPT.ai's RAG API with multiple deployment options including embedded widgets, floating buttons, and standalone applications.</strong></p>
 </div>
+
+## 🚀 Try It Now - Live Playground
+
+**Start here!** Experience CustomGPT.ai UI without any setup:
+
+### 🎮 [**Launch Playground →**](https://starterkit.customgpt.ai/)
+
+**Perfect for:**
+- Testing CustomGPT.ai with your own agents
+- Exploring all features (voice chat, file uploads, citations)
+- Trying before you build
+- Demos and presentations
+
+Simply enter your CustomGPT.ai API key and agent ID to get started instantly!
+
+---
 
 ## Screenshots
 
@@ -10,24 +26,24 @@
   <table>
     <tr>
       <td align="center">
-        <img src="public/img/customgpt-main.jpeg" alt="CustomGPT Main Interface" width="400" />
+        <img src="public/img/customgpt-main.jpeg" alt="CustomGPT.ai Main Interface" width="400" />
         <br />
         <em>Main Chat Interface</em>
       </td>
       <td align="center">
-        <img src="public/img/customgpt-voice.jpeg" alt="CustomGPT Voice Feature" width="400" />
+        <img src="public/img/customgpt-voice.jpeg" alt="CustomGPT.ai Voice Feature" width="400" />
         <br />
         <em>Voice Chat Feature</em>
       </td>
     </tr>
     <tr>
       <td align="center">
-        <img src="public/img/customgpt-settings.jpeg" alt="CustomGPT Settings" width="400" />
+        <img src="public/img/customgpt-settings.jpeg" alt="CustomGPT.ai Settings" width="400" />
         <br />
         <em>Agent Settings</em>
       </td>
       <td align="center">
-        <img src="public/img/customgpt-voice-settings.jpeg" alt="CustomGPT Voice Settings" width="400" />
+        <img src="public/img/customgpt-voice-settings.jpeg" alt="CustomGPT.ai Voice Settings" width="400" />
         <br />
         <em>Voice Settings</em>
       </td>
@@ -41,7 +57,7 @@
 
 <div align="center">
   <a href="https://youtu.be/aBhsh_ea_WU">
-    <img src="https://img.youtube.com/vi/aBhsh_ea_WU/maxresdefault.jpg" alt="CustomGPT UI Demo Video" width="600" />
+    <img src="https://img.youtube.com/vi/aBhsh_ea_WU/maxresdefault.jpg" alt="CustomGPT.ai UI Demo Video" width="600" />
   </a>
   
   <p>🎥 <a href="https://youtu.be/aBhsh_ea_WU">Watch the demo video on YouTube</a></p>
@@ -49,20 +65,15 @@
 
 ## Table of Contents
 
+- [🚀 Try It Now - Live Playground](#-try-it-now---live-playground)
+- [🏠 Run Locally](#-run-locally)
+- [🧩 Widget Integration](#-widget-integration)
 - [Features](#features)
 - [Security](#security)
-- [Quick Start](#quick-start)
-- [Demo Mode](#demo-mode)
-- [Installation](#installation)
-- [Widget Integration](#widget-integration)
-  - [Iframe Embed (Recommended)](#iframe-embed-recommended)
-  - [Direct Widget](#direct-widget)
-  - [React Integration](#react-integration)
 - [Configuration Options](#configuration-options)
 - [Building and Deployment](#building-and-deployment)
-- [Development](#development)
-- [API Proxy Setup](#api-proxy-setup)
 - [Examples](#examples)
+- [Related Projects](#related-projects)
 - [Troubleshooting](#troubleshooting)
 
 ## Features
@@ -75,7 +86,7 @@
 - 📎 **Rich Media Support**: File uploads, citations, and markdown rendering
 - 📱 **Responsive Design**: Works on desktop, tablet, and mobile
 - ⚡ **Optimized Performance**: Lazy loading and efficient bundling
-- 🏢 **Multi-Agent Support**: Switch between different CustomGPT agents
+- 🏢 **Multi-Agent Support**: Switch between different CustomGPT.ai agents
 - 🎭 **Demo Mode**: Try the app without server setup using your own API keys
 - 🎤 **Voice Features**: Speech-to-text and voice chat capabilities (requires OpenAI API key)
 
@@ -88,130 +99,41 @@ This project implements several security best practices:
 - **No Client Exposure**: API keys are never sent to or stored in the browser
 - **Environment Variables**: Sensitive configuration is kept in `.env.local`
 
-## Quick Start
+## 🏠 Run Locally
 
-### Option 1: Iframe Embed (Most Secure & Lightweight)
-
-```html
-<!-- Include the embed script -->
-<script src="https://your-domain.com/iframe-embed.js"></script>
-
-<script>
-  // Initialize the widget
-  const widget = CustomGPTEmbed.init({
-    agentId: 123,  // Your agent ID
-    mode: 'floating', // or 'embedded'
-    iframeSrc: 'https://your-domain.com/widget/', // Your hosted iframe app
-    position: 'bottom-right',
-    theme: 'light'
-  });
-</script>
-```
-
-### Option 2: Direct Widget
-
-```html
-<!-- For embedded mode -->
-<div id="my-widget-container"></div>
-<script src="https://your-domain.com/customgpt-widget.js"></script>
-<script>
-  CustomGPTWidget.init({
-    agentId: 123,
-    mode: 'embedded',
-    containerId: 'my-widget-container'
-  });
-</script>
-```
-
-## Demo Mode
-
-Demo mode allows you to try CustomGPT UI without setting up a server or adding API keys to environment files. Perfect for testing and evaluation!
-
-### How to Use Demo Mode
-
-1. **Build and run the app**:
-```bash
-# Start development server
-npm run dev
-
-# Or build for production
-npm run build
-npm start
-```
-
-2. **Select Demo Mode**: On first visit, you'll see a deployment mode selection screen:
-   - Choose "Demo Mode" to try the app with your own API keys
-   - Choose "Production Mode" to use server-side API keys
-
-3. **Enter Your API Keys**:
-   - **CustomGPT API Key** (Required): Get from [CustomGPT Dashboard](https://app.customgpt.ai)
-   - **OpenAI API Key** (Optional): Required only for voice features
-
-### Demo Mode Features
-
-✅ **What Works in Demo Mode**:
-- Full chat functionality with your CustomGPT agents
-- Multi-conversation support
-- File uploads and citations
-- All UI customization options
-- Voice chat and speech-to-text (with OpenAI key)
-- Real-time message streaming
-- Agent switching
-
-❌ **Limitations**:
-- API keys are stored in browser (localStorage)
-- Keys need to be re-entered if browser data is cleared
-- Not recommended for production use
-- Some enterprise features may be limited
-
-### Security Considerations
-
-While demo mode is secure for testing, note that:
-- API keys are stored in the browser's localStorage
-- Keys are sent via secure headers to the proxy endpoints
-- For production use, always use server-side environment variables
-
-### Voice Features in Demo Mode
-
-To use voice features (speech-to-text, voice chat) in demo mode:
-
-1. Enable voice features in the demo configuration
-2. Add your OpenAI API key
-3. The key will be securely passed to voice endpoints
-4. Voice features include:
-   - Speech-to-text transcription
-   - Real-time voice conversations
-   - Multiple voice options and personas
-
-## Installation
+Want to customize or develop? Run the project locally:
 
 ### Prerequisites
 
 - Node.js 18.x or higher
 - npm or pnpm
-- CustomGPT API key
+- CustomGPT.ai API key from [CustomGPT.ai Dashboard](https://app.customgpt.ai)
 
-### Local Development Setup
+### Setup Steps
 
-1. Clone the repository:
+1. **Clone the repository:**
+
 ```bash
-git clone https://github.com/customgpt/customgpt-ui.git
-cd customgpt-ui
+git clone https://github.com/Poll-The-People/customgpt-starter-kit.git
+cd customgpt-starter-kit
 ```
 
-2. Install dependencies:
+2. **Install dependencies:**
+
 ```bash
 npm install
 # or
 pnpm install
 ```
 
-3. Create environment file:
+3. **Create environment file:**
+
 ```bash
 cp .env.example .env.local
 ```
 
-4. Add your API keys to `.env.local`:
+4. **Add your API keys to `.env.local`:**
+
 ```env
 # Required - Server-side only (never exposed to client)
 CUSTOMGPT_API_KEY=your-api-key-here
@@ -223,79 +145,127 @@ OPENAI_API_KEY=your-openai-api-key-here
 CUSTOMGPT_API_BASE_URL=https://app.customgpt.ai/api/v1
 ```
 
-5. Start development server:
+5. **Start development server:**
+
 ```bash
 npm run dev
 ```
 
 The app will be available at `http://localhost:3000`
 
-## Widget Integration
+### Demo Mode
 
-### Iframe Embed (Recommended)
+If you don't want to add API keys to environment files, you can use **Demo Mode**:
 
-The iframe embed provides the best isolation and security:
+1. Start the app without API keys in `.env.local`
+2. On first visit, select "Demo Mode"
+3. Enter your API keys in the UI
+4. Keys are stored securely in browser localStorage
 
-```javascript
-const widget = CustomGPTEmbed.init({
-  agentId: 123,              // Required: Your agent ID
-  mode: 'floating',          // 'floating' or 'embedded'
-  theme: 'light',            // 'light' or 'dark'
-  position: 'bottom-right',  // For floating mode
-  width: '400px',           
-  height: '600px',
-  enableCitations: true,
-  enableFeedback: true,
-  iframeSrc: 'https://your-domain.com/widget/', // Your hosted iframe app
-  
-  // Callbacks
-  onReady: () => console.log('Widget ready'),
-  onMessage: (data) => console.log('New message:', data),
-  onError: (error) => console.error('Widget error:', error)
-});
+**Demo Mode Features:**
+- ✅ Full chat functionality with your CustomGPT.ai agents
+- ✅ Multi-conversation support
+- ✅ File uploads and citations
+- ✅ Voice chat (with OpenAI key)
+- ⚠️ API keys stored in browser (not recommended for production)
 
-// Methods
-widget.open();      // Open the widget
-widget.close();     // Close the widget
-widget.toggle();    // Toggle open/closed
-widget.destroy();   // Remove widget
+## 🧩 Widget Integration
+
+Add CustomGPT.ai chat to **any website** with these options:
+
+### Option 1: 🌟 CDN (Fastest - 30 seconds!)
+
+**Zero setup required** - just copy and paste:
+
+```html
+<!-- Embedded Chat Widget -->
+<div id="my-chat" style="width: 400px; height: 600px;"></div>
+<script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"></script>
+<script>
+  CustomGPTWidget.init({
+    agentId: YOUR_AGENT_ID,  // Get from CustomGPT.ai dashboard
+    containerId: 'my-chat'
+  });
+</script>
 ```
 
-### Direct Widget
-
-For direct integration into your page:
+**Want a floating button?** Just change to:
 
 ```javascript
-const widget = CustomGPTWidget.init({
-  agentId: 123,
-  mode: 'embedded',
-  containerId: 'chat-container',
-  theme: 'light',
-  enableCitations: true,
-  enableFeedback: true
+CustomGPTWidget.init({
+  agentId: YOUR_AGENT_ID,
+  mode: 'floating',
+  position: 'bottom-right'
 });
 ```
 
-### React Integration
+**✅ CDN Benefits:**
+- **No build process** - Use immediately  
+- **Always latest version** - Auto-updated
+- **No hosting required** - Perfect for testing
+- **Works everywhere** - Any website, any framework
 
-**For standalone API key setup, see**: [React Standalone Guide](./docs/integrations/react-standalone.md)
+### Option 2: 🏢 Self-Hosted (For Custom Modifications)
+
+When you need to modify the widget source:
+
+```bash
+# Build the widget locally
+npm run build:widget
+
+# Host the dist/widget/ files on your server
+# Then use your own URL:
+```
+
+```html
+<script src="https://your-domain.com/dist/widget/customgpt-widget.js"></script>
+<script>
+  CustomGPTWidget.init({
+    agentId: 123,
+    containerId: 'chat-widget'
+  });
+</script>
+```
+
+### Option 3: 🔒 Iframe Embed (Maximum Security)
+
+For enterprise security requirements:
+
+```html
+<script src="https://your-domain.com/iframe-embed.js"></script>
+<script>
+  const widget = CustomGPTEmbed.init({
+    agentId: 123,
+    mode: 'floating',
+    iframeSrc: 'https://your-domain.com/widget/',
+    position: 'bottom-right'
+  });
+</script>
+```
+
+**Security Benefits:**
+- Complete style isolation
+- CSP compliance
+- Cross-domain support
+- No CSS/JS conflicts
+
+### ⚛️ React Integration
+
+**Quick React Hook using GitHub CDN:**
 
 ```jsx
 import { useEffect, useRef } from 'react';
 
-function ChatWidget({ apiKey, agentId }) {
+function ChatWidget({ agentId }) {
   const widgetRef = useRef(null);
 
   useEffect(() => {
-    // Load widget script first
+    // Load widget from CDN
     const script = document.createElement('script');
-    script.src = 'https://your-domain.com/customgpt-widget.js';
+    script.src = 'https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js';
     script.onload = () => {
       const widget = window.CustomGPTWidget.init({
         agentId: agentId,
-        apiKey: apiKey, // For standalone usage
-        // OR use proxy:
-        // apiBaseUrl: '/api/customgpt-proxy',
         containerId: 'my-chat',
         mode: 'embedded'
       });
@@ -303,15 +273,27 @@ function ChatWidget({ apiKey, agentId }) {
     };
     document.body.appendChild(script);
 
-    return () => {
-      if (widgetRef.current) {
-        widgetRef.current.destroy();
-      }
-    };
-  }, [apiKey, agentId]);
+    return () => widgetRef.current?.destroy();
+  }, [agentId]);
 
   return <div id="my-chat" style={{ height: '600px' }} />;
 }
+
+// Usage
+<ChatWidget agentId={123} />
+```
+
+**Or use our pre-built React components:**
+
+```jsx
+// See examples/SimplifiedWidget.jsx and examples/SimplifiedFloatingButton.jsx
+import SimplifiedWidget from './examples/SimplifiedWidget';
+
+<SimplifiedWidget 
+  agentId={123}
+  enableConversationManagement={true}
+  theme="dark"
+/>
 ```
 
 ## Configuration Options
@@ -320,7 +302,7 @@ function ChatWidget({ apiKey, agentId }) {
 
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
-| `agentId` | number/string | Yes | Your CustomGPT agent ID |
+| `agentId` | number/string | Yes | Your CustomGPT.ai agent ID |
 | `mode` | string | No | 'embedded', 'floating', or 'fullscreen' |
 | `theme` | string | No | 'light' or 'dark' (default: 'light') |
 
@@ -413,6 +395,7 @@ docker-compose --profile dev up dev
 ```
 
 **Setup**:
+
 1. Copy environment file: `cp .env.docker.example .env`
 2. Add your API keys:
    - `CUSTOMGPT_API_KEY=your-api-key-here`
@@ -428,7 +411,7 @@ docker-compose --profile dev up dev
 
 #### 2. Vercel (For Next.js App)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/customgpt/customgpt-ui)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Poll-The-People/customgpt-starter-kit)
 
 1. Click the deploy button
 2. Add environment variables:
@@ -462,41 +445,85 @@ docker run -p 8080:80 customgpt-ui:widget
 docker run -p 8081:80 customgpt-ui:iframe
 ```
 
-## API Proxy Setup
+## Examples & Integration Guide
 
-The application uses Next.js API routes as a proxy to securely handle API authentication:
+The `examples/` directory contains **complete widget integration examples** for every framework and use case.
 
-### Proxy Endpoints
+**📖 [View Complete Examples Guide →](examples/README.md)**
 
-All API calls go through `/api/proxy/*` which adds the API key server-side:
+### 🚀 Quick Integration Options
 
-- `/api/proxy/agents` - Agent management
-- `/api/proxy/conversations` - Conversation handling  
-- `/api/proxy/messages` - Message operations
-- `/api/proxy/sources` - Source management
-
-### Environment Variables
-
-```env
-# Required - Your CustomGPT API key (server-side only)
-CUSTOMGPT_API_KEY=your-api-key-here
-
-# Optional - For voice features (speech-to-text, voice chat)
-OPENAI_API_KEY=your-openai-api-key-here
-
-# Optional - Custom API base URL
-CUSTOMGPT_API_BASE_URL=https://app.customgpt.ai/api/v1
-
-# Optional - Allowed origins for CORS
-ALLOWED_ORIGINS=https://yourdomain.com,https://anotherdomain.com
+**Development/Demo Setup**:
+```html
+<script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"></script>
+<script>
+  CustomGPTWidget.init({
+    agentId: 'YOUR_AGENT_ID',
+    apiKey: 'YOUR_API_KEY',  // ⚠️ Development only
+    containerId: 'chat-container'
+  });
+</script>
 ```
+
+**React Production Setup**:
+```jsx
+<SimplifiedWidget
+  agentId={process.env.REACT_APP_CUSTOMGPT_AGENT_ID}
+  apiBaseUrl="http://localhost:3001/api/customgpt"
+/>
+```
+
+**Next.js Production Setup**:
+```jsx
+<SimplifiedWidget
+  agentId={process.env.NEXT_PUBLIC_CUSTOMGPT_AGENT_ID}
+  apiBaseUrl="/api/customgpt"
+/>
+```
+
+### 📁 Available Examples
+
+- **`quick-start.html`** - Interactive demo and testing tool
+- **React Components** - `SimplifiedWidget.jsx`, `SimplifiedFloatingButton.jsx`
+- **Vanilla JavaScript** - `vanilla-js-widget.html`, `widget-direct-api.html`
+- **Security-First** - `iframe-embed-example.html`
+- **Server Setup** - `universal-proxy-server.js`, `nextjs-api-route.js`
+- **Setup Guides** - Environment variables, security best practices
+
+**🔗 [Complete Examples Documentation →](examples/README.md)**
+
+## Related Projects
+
+### 🤖 Social Media & Platform Integrations
+
+**[CustomGPT.ai Integrations](https://github.com/Poll-The-People/customgpt-integrations)**
+- Deploy CustomGPT.ai bots on WhatsApp, Discord, Slack, Telegram, and more
+- Pre-built bot integrations for popular messaging platforms
+- Use your CustomGPT.ai agent's knowledge base across all platforms
+- Multiple free hosting options included
+
+### 📚 API Usage & Examples
+
+**[CustomGPT.ai Cookbook](https://github.com/Poll-The-People/customgpt-cookbook)**
+- Comprehensive API usage examples and guides
+- Python SDK and CLI tools
+- Code samples for common integration patterns
+- OpenAPI specifications and testing utilities
+
+### 🔍 RAG Resources
+
+**[Awesome RAG](https://github.com/Poll-The-People/awesome-rag)**
+- Curated list of Retrieval-Augmented Generation resources
+- Tools, papers, benchmarks, and tutorials
+- Vector databases, embedding models, and RAG architectures
+- Everything you need to understand and implement RAG systems
 
 ## Development
 
 ### Project Structure
 
 ```
-customgpt-ui/
+customgpt-starter-kit/
 ├── app/                  # Next.js app directory
 │   └── api/             
 │       └── proxy/       # Secure API proxy routes
@@ -536,24 +563,34 @@ npm run build:all
 3. State management in `src/store/`
 4. Widget-specific code in `src/widget/`
 
-## Examples
+### API Proxy Setup
 
-See the `examples/` directory for integration examples:
+The application uses Next.js API routes as a proxy to securely handle API authentication:
 
-### React Examples
-- **`react-standalone-example.jsx`** - Complete standalone React demo with all API key methods
-- **`react-integration.jsx`** - Updated React component with API key support  
-- **`react-floating-button.jsx`** - Custom floating button implementation
+#### Proxy Endpoints
 
-### HTML Examples
-- **`iframe-embed-example.html`** - Iframe embedding
-- **`widget-example.html`** - Direct widget embedding
-- **`quick-start.html`** - Minimal setup
+All API calls go through `/api/proxy/*` which adds the API key server-side:
 
-### Documentation
-- **`docs/integrations/react-standalone.md`** - Comprehensive React integration guide
-- **`docs/integrations/react.md`** - Basic React integration
-- **`docs/integrations/nextjs.md`** - Next.js specific setup
+- `/api/proxy/agents` - Agent management
+- `/api/proxy/conversations` - Conversation handling  
+- `/api/proxy/messages` - Message operations
+- `/api/proxy/sources` - Source management
+
+#### Environment Variables
+
+```env
+# Required - Your CustomGPT.ai API key (server-side only)
+CUSTOMGPT_API_KEY=your-api-key-here
+
+# Optional - For voice features (speech-to-text, voice chat)
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional - Custom API base URL
+CUSTOMGPT_API_BASE_URL=https://app.customgpt.ai/api/v1
+
+# Optional - Allowed origins for CORS
+ALLOWED_ORIGINS=https://yourdomain.com,https://anotherdomain.com
+```
 
 ## Troubleshooting
 
@@ -585,7 +622,7 @@ See the `examples/` directory for integration examples:
    - Ensure OpenAI API key is configured
    - Verify browser supports Web Speech API
 2. **Voice chat errors**: 
-   - Both CustomGPT and OpenAI keys are required
+   - Both CustomGPT.ai and OpenAI keys are required
    - Check browser console for specific errors
 
 ### Styling Issues
@@ -597,8 +634,8 @@ See the `examples/` directory for integration examples:
 
 ## Support
 
-- Issues: [GitHub Issues](https://github.com/customgpt/customgpt-ui/issues)
-- Documentation: [CustomGPT Docs](https://docs.customgpt.ai)
+- Issues: [GitHub Issues](https://github.com/Poll-The-People/customgpt-starter-kit/issues)
+- Documentation: [CustomGPT.ai Docs](https://docs.customgpt.ai)
 - Email: support@customgpt.ai
 
 ## License

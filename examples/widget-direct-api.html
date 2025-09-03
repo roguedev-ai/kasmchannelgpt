@@ -227,8 +227,12 @@ const widget = CustomGPTWidget.init({<br>
     </div>
   </div>
 
-  <!-- Include the widget script -->
-  <script src="../dist/widget/customgpt-widget.js"></script>
+  <!-- Include the widget script from GitHub CDN -->
+  <script src="https://cdn.jsdelivr.net/gh/Poll-The-People/customgpt-starter-kit@main/dist/widget/customgpt-widget.js"></script>
+  
+  <!-- Note: If you make changes to the widget and build locally, you need to 
+       copy the dist folder to your project. Using our hosted version won't 
+       include your local changes. -->
 
   <script>
     // Replace with your actual API key and agent ID

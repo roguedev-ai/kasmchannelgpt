@@ -808,9 +808,24 @@ export class ProxyCustomGPTClient {
   async getCustomerIntelligence(
     projectId: number,
     page: number = 1,
-    limit: number = 100
+    limit: number = 100,
+    startDate?: string,
+    endDate?: string
   ): Promise<CustomerIntelligenceResponse> {
-    return this.request(`/projects/${projectId}/reports/intelligence?page=${page}&limit=${limit}`);
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString()
+    });
+    
+    if (startDate) {
+      params.append('start_date', startDate);
+    }
+    
+    if (endDate) {
+      params.append('end_date', endDate);
+    }
+    
+    return this.request(`/projects/${projectId}/reports/intelligence?${params.toString()}`);
   }
 
   // User
