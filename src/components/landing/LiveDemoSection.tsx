@@ -106,7 +106,7 @@ export function LiveDemoSection() {
   
   return (
     <section className="py-20 bg-landing-surface border-t border-b border-landing-surface-light">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={`mx-auto px-4 sm:px-6 lg:px-8 ${activeMode === 'widget' ? 'max-w-[90rem]' : 'max-w-7xl'}`}>
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-landing-text mb-4">
@@ -137,7 +137,7 @@ export function LiveDemoSection() {
         
         {/* Demo Content */}
         <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl border border-landing-surface-light">
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
+          <div className={`grid gap-8 items-center ${activeMode === 'widget' ? 'lg:grid-cols-[1fr,2fr]' : 'lg:grid-cols-2'}`}>
             {/* Demo Features */}
             <div className="space-y-6">
               <div>

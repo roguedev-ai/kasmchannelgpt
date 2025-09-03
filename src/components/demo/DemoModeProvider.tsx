@@ -141,29 +141,74 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
     validateSession 
   } = useDemoStore();
   
+  const [isMounted, setIsMounted] = useState(false);
   const [isCheckingKeys, setIsCheckingKeys] = useState(true);
   const [serverHasKeys, setServerHasKeys] = useState(false);
   const [isFreeTrialMode, setIsFreeTrialMode] = useState(false);
+  const [isEmbedded, setIsEmbedded] = useState(false);
   
   // Skip the modal for the landing page
   const isLandingPage = pathname === '/landing';
   
-  // Detect if we're in an iframe
-  const [isEmbedded, setIsEmbedded] = useState(false);
-  
+  // Set mounted state after hydration
   useEffect(() => {
-    // Check if we're embedded in an iframe
-    try {
-      const embedded = window.self !== window.top;
-      setIsEmbedded(embedded);
-      if (embedded) {
-        console.log('[DemoModeProvider] Site is embedded in iframe - modal will be skipped');
+    setIsMounted(true);
+  }, []);
+  
+  // Detect if we're in an iframe and immediately set up free trial mode
+  useEffect(() => {
+    const checkIfEmbedded = () => {
+      try {
+        const embedded = window.self !== window.top;
+        setIsEmbedded(embedded);
+        if (embedded) {
+          console.log('[DemoModeProvider] Site is embedded in iframe - auto-starting free trial');
+          
+          // Immediately set up free trial mode for embedded contexts
+          localStorage.setItem('customgpt.deploymentMode', 'demo');
+          localStorage.setItem('customgpt.freeTrialMode', 'true');
+          
+          // Start free trial session
+          const sessionData = {
+            startTime: Date.now(),
+            projectCount: 0,
+            conversationCount: 0,
+            messageCount: 0,
+            sessionId: `trial_${Date.now()}_${Math.random().toString(36).substring(7)}`
+          };
+          
+          sessionStorage.setItem('customgpt.freeTrialSession', JSON.stringify(sessionData));
+          setDeploymentMode('demo');
+          setIsFreeTrialMode(true);
+          setIsCheckingKeys(false); // Skip API checking when embedded
+        }
+        return embedded;
+      } catch (e) {
+        // Cross-origin iframe, assume we're embedded
+        console.log('[DemoModeProvider] Cross-origin embed detected - auto-starting free trial');
+        setIsEmbedded(true);
+        
+        // Set up free trial mode for cross-origin embeds too
+        localStorage.setItem('customgpt.deploymentMode', 'demo');
+        localStorage.setItem('customgpt.freeTrialMode', 'true');
+        
+        const sessionData = {
+          startTime: Date.now(),
+          projectCount: 0,
+          conversationCount: 0,
+          messageCount: 0,
+          sessionId: `trial_${Date.now()}_${Math.random().toString(36).substring(7)}`
+        };
+        
+        sessionStorage.setItem('customgpt.freeTrialSession', JSON.stringify(sessionData));
+        setDeploymentMode('demo');
+        setIsFreeTrialMode(true);
+        setIsCheckingKeys(false); // Skip API checking when embedded
+        return true;
       }
-    } catch (e) {
-      // Cross-origin iframe, assume we're embedded
-      setIsEmbedded(true);
-      console.log('[DemoModeProvider] Cross-origin embed detected - modal will be skipped');
-    }
+    };
+    
+    checkIfEmbedded();
   }, []);
   
   // Failsafe to prevent infinite loading
@@ -210,20 +255,18 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
     return false;
   });
   
-  // Initialize deploymentMode synchronously to avoid race conditions
-  const [deploymentMode, setDeploymentMode] = useState<string | null>(() => {
-    if (typeof window !== 'undefined') {
-      // Check if we're in a refresh scenario
-      const isRefreshing = sessionStorage.getItem('customgpt.isRefreshing');
-      if (isRefreshing === 'true') {
-        // Clear the flag and return null to force API check
-        sessionStorage.removeItem('customgpt.isRefreshing');
-        return null;
+  // Initialize deploymentMode - handle SSR by deferring to useEffect
+  const [deploymentMode, setDeploymentMode] = useState<string | null>(null);
+  
+  // Initialize deployment mode from localStorage after mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !deploymentMode) {
+      const storedMode = localStorage.getItem('customgpt.deploymentMode');
+      if (storedMode) {
+        setDeploymentMode(storedMode);
       }
-      return localStorage.getItem('customgpt.deploymentMode');
     }
-    return null;
-  });
+  }, []);
   
   // Initialize free trial mode and check for expired sessions
   useEffect(() => {
@@ -266,27 +309,8 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
   useEffect(() => {
     console.log('[DemoModeProvider] useEffect running, deploymentMode:', deploymentMode, 'isCheckingKeys:', isCheckingKeys, 'isEmbedded:', isEmbedded);
     
-    // If embedded, automatically use free trial mode
-    if (isEmbedded && deploymentMode === null) {
-      console.log('[DemoModeProvider] Embedded mode detected - auto-starting free trial');
-      
-      // Set up free trial mode
-      localStorage.setItem('customgpt.deploymentMode', 'demo');
-      localStorage.setItem('customgpt.freeTrialMode', 'true');
-      
-      // Start free trial session
-      const sessionData = {
-        startTime: Date.now(),
-        projectCount: 0,
-        conversationCount: 0,
-        messageCount: 0,
-        sessionId: `trial_${Date.now()}_${Math.random().toString(36).substring(7)}`
-      };
-      
-      sessionStorage.setItem('customgpt.freeTrialSession', JSON.stringify(sessionData));
-      setDeploymentMode('demo');
-      setIsFreeTrialMode(true);
-      setIsCheckingKeys(false);
+    // Skip if embedded - already handled in the iframe detection useEffect
+    if (isEmbedded) {
       return;
     }
     
@@ -516,6 +540,11 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
   return (
     <DemoModeContextProvider>
       {(() => {
+        // During SSR or before mount, always render children to avoid hydration mismatch
+        if (!isMounted) {
+          return children;
+        }
+        
         console.log('[DemoModeProvider] Rendering with:', { 
           deploymentMode, 
           isDemoMode, 
