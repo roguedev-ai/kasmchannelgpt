@@ -162,13 +162,47 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
         const embedded = window.self !== window.top;
         setIsEmbedded(embedded);
         if (embedded) {
-          console.log('[DemoModeProvider] Site is embedded in iframe - auto-starting free trial');
+          console.log('[DemoModeProvider] Site is embedded in iframe');
           
-          // Immediately set up free trial mode for embedded contexts
+          // Only set up free trial if we don't already have a deployment mode
+          const existingMode = localStorage.getItem('customgpt.deploymentMode');
+          if (!existingMode) {
+            console.log('[DemoModeProvider] No existing deployment mode - auto-starting free trial');
+            
+            // Immediately set up free trial mode for embedded contexts
+            localStorage.setItem('customgpt.deploymentMode', 'demo');
+            localStorage.setItem('customgpt.freeTrialMode', 'true');
+            
+            // Start free trial session
+            const sessionData = {
+              startTime: Date.now(),
+              projectCount: 0,
+              conversationCount: 0,
+              messageCount: 0,
+              sessionId: `trial_${Date.now()}_${Math.random().toString(36).substring(7)}`
+            };
+            
+            sessionStorage.setItem('customgpt.freeTrialSession', JSON.stringify(sessionData));
+            setDeploymentMode('demo');
+            setIsFreeTrialMode(true);
+          }
+          setIsCheckingKeys(false); // Skip API checking when embedded
+        }
+        return embedded;
+      } catch (e) {
+        // Cross-origin iframe, assume we're embedded
+        console.log('[DemoModeProvider] Cross-origin embed detected');
+        setIsEmbedded(true);
+        
+        // Only set up free trial if we don't already have a deployment mode
+        const existingMode = localStorage.getItem('customgpt.deploymentMode');
+        if (!existingMode) {
+          console.log('[DemoModeProvider] No existing deployment mode - auto-starting free trial');
+          
+          // Set up free trial mode for cross-origin embeds too
           localStorage.setItem('customgpt.deploymentMode', 'demo');
           localStorage.setItem('customgpt.freeTrialMode', 'true');
           
-          // Start free trial session
           const sessionData = {
             startTime: Date.now(),
             projectCount: 0,
@@ -180,29 +214,7 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
           sessionStorage.setItem('customgpt.freeTrialSession', JSON.stringify(sessionData));
           setDeploymentMode('demo');
           setIsFreeTrialMode(true);
-          setIsCheckingKeys(false); // Skip API checking when embedded
         }
-        return embedded;
-      } catch (e) {
-        // Cross-origin iframe, assume we're embedded
-        console.log('[DemoModeProvider] Cross-origin embed detected - auto-starting free trial');
-        setIsEmbedded(true);
-        
-        // Set up free trial mode for cross-origin embeds too
-        localStorage.setItem('customgpt.deploymentMode', 'demo');
-        localStorage.setItem('customgpt.freeTrialMode', 'true');
-        
-        const sessionData = {
-          startTime: Date.now(),
-          projectCount: 0,
-          conversationCount: 0,
-          messageCount: 0,
-          sessionId: `trial_${Date.now()}_${Math.random().toString(36).substring(7)}`
-        };
-        
-        sessionStorage.setItem('customgpt.freeTrialSession', JSON.stringify(sessionData));
-        setDeploymentMode('demo');
-        setIsFreeTrialMode(true);
         setIsCheckingKeys(false); // Skip API checking when embedded
         return true;
       }
@@ -263,7 +275,13 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
     if (typeof window !== 'undefined' && !deploymentMode) {
       const storedMode = localStorage.getItem('customgpt.deploymentMode');
       if (storedMode) {
+        console.log('[DemoModeProvider] Restoring deployment mode from localStorage:', storedMode);
         setDeploymentMode(storedMode);
+        // Also restore free trial mode if it was set
+        const freeTrialFlag = localStorage.getItem('customgpt.freeTrialMode');
+        if (freeTrialFlag === 'true') {
+          setIsFreeTrialMode(true);
+        }
       }
     }
   }, []);
