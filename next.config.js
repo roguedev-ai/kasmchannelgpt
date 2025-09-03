@@ -48,6 +48,19 @@ const nextConfig = {
   async headers() {
     return [
       {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'ALLOWALL',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors 'self' https://customgpt.ai https://*.customgpt.ai http://localhost:* http://127.0.0.1:*",
+          },
+        ],
+      },
+      {
         source: '/(.*\\.onnx|.*\\.wasm)',
         headers: [
           {

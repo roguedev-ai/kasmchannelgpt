@@ -101,7 +101,7 @@ const botIntegrations = [
 
 export function BotIntegrationsSection() {
   const [activeBot, setActiveBot] = useState('slack')
-  const [viewMode, setViewMode] = useState<'screenshot' | 'video' | 'demo'>('screenshot')
+  const [viewMode, setViewMode] = useState<'screenshot' | 'video'>('screenshot')
   
   const currentBot = botIntegrations.find(bot => bot.id === activeBot) || botIntegrations[0]
   
@@ -177,18 +177,15 @@ export function BotIntegrationsSection() {
               </div>
             </div>
             
-            {/* Action Buttons */}
-            <div className="flex gap-4">
-              <button className="bg-gradient-to-r from-customgpt-primary to-customgpt-secondary text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-customgpt-primary/25 hover:-translate-y-0.5 transition-all duration-200">
-                View Demo
-              </button>
+            {/* Action Button */}
+            <div>
               <a 
                 href={currentBot.githubUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="bg-white border-2 border-customgpt-primary text-customgpt-primary px-6 py-3 rounded-lg font-semibold hover:bg-customgpt-primary hover:text-white hover:-translate-y-0.5 transition-all duration-200 inline-flex items-center gap-2"
+                className="bg-gradient-to-r from-customgpt-primary to-customgpt-secondary text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-customgpt-primary/25 hover:-translate-y-0.5 transition-all duration-200 inline-flex items-center gap-2"
               >
-                <GitHubIcon size={16} /> Deploy Guide
+                <GitHubIcon size={16} /> View Deploy Guide
               </a>
             </div>
           </div>
@@ -197,7 +194,7 @@ export function BotIntegrationsSection() {
           <div className="bg-white rounded-2xl p-6 border border-landing-surface-light shadow-xl">
             {/* Media Tabs */}
             <div className="flex gap-2 mb-6">
-              {(['screenshot', 'video', 'demo'] as const).map((mode) => (
+              {(['screenshot', 'video'] as const).map((mode) => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
@@ -207,8 +204,7 @@ export function BotIntegrationsSection() {
                       : 'bg-landing-surface text-landing-text hover:bg-customgpt-primary/10'
                   }`}
                 >
-                  {mode === 'screenshot' ? 'Screenshot' :
-                   mode === 'video' ? 'Video' : 'Live Demo'}
+                  {mode === 'screenshot' ? 'Screenshot' : 'Video'}
                 </button>
               ))}
             </div>
@@ -222,14 +218,6 @@ export function BotIntegrationsSection() {
                     title={`${currentBot.name} Demo`}
                     className="w-full"
                   />
-                </div>
-              ) : viewMode === 'demo' ? (
-                <div className="text-center">
-                  <div className="text-4xl mb-4">
-                    <currentBot.icon size={40} className="text-customgpt-primary mx-auto" />
-                  </div>
-                  <p className="text-landing-text-secondary font-medium">Interactive Demo</p>
-                  <p className="text-sm text-landing-text-secondary mt-1">Live {currentBot.name} integration</p>
                 </div>
               ) : (
                 <div className="w-full h-full">

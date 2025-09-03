@@ -173,10 +173,20 @@ export function LiveDemoSection() {
                     <p className="lg:hidden">↓ Try the floating chatbot demo below!</p>
                     <p className="mt-1">Click the chat bubble to open the chatbot window.</p>
                   </div>
+                ) : activeMode === 'mobile' ? (
+                  <div className="text-sm text-landing-text-secondary">
+                    <p>Progressive Web App with native mobile experience.</p>
+                    <p className="mt-1">Install the dashboard on your device for app-like functionality.</p>
+                  </div>
+                ) : activeMode === 'voice' ? (
+                  <div className="text-sm text-landing-text-secondary">
+                    <p>Experience voice-to-voice conversations with 6 AI personalities.</p>
+                    <p className="mt-1">Available in the full dashboard with OpenAI API key.</p>
+                  </div>
                 ) : (
-                  <button className="bg-gradient-to-r from-customgpt-primary to-customgpt-secondary text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-customgpt-primary/25 hover:-translate-y-0.5 transition-all duration-200">
+                  <a href="/" className="inline-block bg-gradient-to-r from-customgpt-primary to-customgpt-secondary text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-customgpt-primary/25 hover:-translate-y-0.5 transition-all duration-200">
                     Launch {currentMode.label} Demo →
-                  </button>
+                  </a>
                 )}
               </div>
             </div>

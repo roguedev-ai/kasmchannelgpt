@@ -113,40 +113,40 @@ export function StatsSection() {
           <h3 className="text-2xl font-bold text-white text-center mb-8">
             Developer Resources
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {/* Cookbook */}
-            <a href="https://github.com/Poll-The-People/customgpt-cookbook" target="_blank" rel="noopener noreferrer" className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 hover:scale-105 transition-all duration-300">
-              <GitHubIcon size={32} className="text-white mb-3" />
-              <h4 className="text-lg font-semibold text-white mb-2">Cookbook</h4>
-              <p className="text-white/80 text-sm">Examples and recipes for common use cases</p>
+            <a href="https://github.com/Poll-The-People/customgpt-cookbook" target="_blank" rel="noopener noreferrer" className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:bg-white/20 hover:scale-105 transition-all duration-300">
+              <GitHubIcon size={28} className="text-white mb-2 sm:mb-3" />
+              <h4 className="text-base sm:text-lg font-semibold text-white mb-1 sm:mb-2">Cookbook</h4>
+              <p className="text-white/80 text-xs sm:text-sm">Examples and recipes for common use cases</p>
             </a>
             
             {/* Office Hours */}
-            <a href="https://lu.ma/customgpt" target="_blank" rel="noopener noreferrer" className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 hover:scale-105 transition-all duration-300">
-              <CalendarIcon size={32} className="text-white mb-3" />
-              <h4 className="text-lg font-semibold text-white mb-2">Office Hours</h4>
-              <p className="text-white/80 text-sm">Join our weekly developer sessions</p>
+            <a href="https://lu.ma/customgpt" target="_blank" rel="noopener noreferrer" className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:bg-white/20 hover:scale-105 transition-all duration-300">
+              <CalendarIcon size={28} className="text-white mb-2 sm:mb-3" />
+              <h4 className="text-base sm:text-lg font-semibold text-white mb-1 sm:mb-2">Office Hours</h4>
+              <p className="text-white/80 text-xs sm:text-sm">Join our weekly developer sessions</p>
             </a>
             
             {/* OpenAI Compatibility */}
-            <a href="https://docs.customgpt.ai/reference/customgptai-openai-sdk-compatibility#/" target="_blank" rel="noopener noreferrer" className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 hover:scale-105 transition-all duration-300">
-              <PlugIcon size={32} className="text-white mb-3" />
-              <h4 className="text-lg font-semibold text-white mb-2">OpenAI SDK</h4>
-              <p className="text-white/80 text-sm">Drop-in OpenAI compatibility docs</p>
+            <a href="https://docs.customgpt.ai/reference/customgptai-openai-sdk-compatibility#/" target="_blank" rel="noopener noreferrer" className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:bg-white/20 hover:scale-105 transition-all duration-300">
+              <PlugIcon size={28} className="text-white mb-2 sm:mb-3" />
+              <h4 className="text-base sm:text-lg font-semibold text-white mb-1 sm:mb-2">OpenAI SDK</h4>
+              <p className="text-white/80 text-xs sm:text-sm">Drop-in OpenAI compatibility docs</p>
             </a>
             
             {/* MCP Docs */}
-            <a href="https://docs.customgpt.ai/reference/customgptai-mcp-support#/" target="_blank" rel="noopener noreferrer" className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 hover:scale-105 transition-all duration-300">
-              <WrenchIcon size={32} className="text-white mb-3" />
-              <h4 className="text-lg font-semibold text-white mb-2">MCP Support</h4>
-              <p className="text-white/80 text-sm">Model Context Protocol integration</p>
+            <a href="https://docs.customgpt.ai/reference/customgptai-mcp-support#/" target="_blank" rel="noopener noreferrer" className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:bg-white/20 hover:scale-105 transition-all duration-300">
+              <WrenchIcon size={28} className="text-white mb-2 sm:mb-3" />
+              <h4 className="text-base sm:text-lg font-semibold text-white mb-1 sm:mb-2">MCP Support</h4>
+              <p className="text-white/80 text-xs sm:text-sm">Model Context Protocol integration</p>
             </a>
             
             {/* YouTube Channel */}
-            <a href="https://www.youtube.com/playlist?list=PLqm0evVmDZ_0_w2GubDwNU2gLPKMAthZj" target="_blank" rel="noopener noreferrer" className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 hover:scale-105 transition-all duration-300">
-              <VideoIcon size={32} className="text-white mb-3" />
-              <h4 className="text-lg font-semibold text-white mb-2">Video Tutorials</h4>
-              <p className="text-white/80 text-sm">Step-by-step implementation guides</p>
+            <a href="https://www.youtube.com/playlist?list=PLqm0evVmDZ_0_w2GubDwNU2gLPKMAthZj" target="_blank" rel="noopener noreferrer" className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:bg-white/20 hover:scale-105 transition-all duration-300">
+              <VideoIcon size={28} className="text-white mb-2 sm:mb-3" />
+              <h4 className="text-base sm:text-lg font-semibold text-white mb-1 sm:mb-2">Video Tutorials</h4>
+              <p className="text-white/80 text-xs sm:text-sm">Step-by-step implementation guides</p>
             </a>
             
             {/* Postman Collection */}

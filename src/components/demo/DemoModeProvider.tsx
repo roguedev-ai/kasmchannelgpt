@@ -8,6 +8,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useDemoStore } from '@/store/demo';
 import { DemoModeScreen } from './DemoModeScreen';
 import { DemoModeModal } from './DemoModeModal';
@@ -130,6 +131,7 @@ function LoadingScreen() {
 }
 
 export function DemoModeProvider({ children }: DemoModeProviderProps) {
+  const pathname = usePathname();
   const { 
     isDemoMode, 
     isAuthenticated, 
@@ -142,6 +144,9 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
   const [isCheckingKeys, setIsCheckingKeys] = useState(true);
   const [serverHasKeys, setServerHasKeys] = useState(false);
   const [isFreeTrialMode, setIsFreeTrialMode] = useState(false);
+  
+  // Skip the modal for the landing page
+  const isLandingPage = pathname === '/landing';
   
   // Failsafe to prevent infinite loading
   useEffect(() => {
@@ -477,10 +482,16 @@ export function DemoModeProvider({ children }: DemoModeProviderProps) {
           serverHasKeys 
         });
         
-        // Show loading while checking for server API keys
-        if (isCheckingKeys) {
+        // Show loading while checking for server API keys (skip for landing page)
+        if (isCheckingKeys && !isLandingPage) {
           console.log('[DemoModeProvider] Checking server API keys - showing loading');
           return <LoadingScreen />;
+        }
+        
+        // Skip modal for landing page
+        if (isLandingPage) {
+          console.log('[DemoModeProvider] Landing page - skipping modal');
+          return children;
         }
         
         // No deployment mode selected - show modal over background UI

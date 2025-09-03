@@ -35,8 +35,7 @@ OPENAI_API_KEY=sk-...`,
     details: [
       'OpenAI Whisper integration',
       '6 voice personalities',
-      'Real-time transcription',
-      'Natural speech synthesis'
+      'Real-time transcription'
     ]
   },
   {
@@ -49,56 +48,51 @@ OPENAI_API_KEY=sk-...`,
     details: [
       'Vercel deployment',
       'Docker support',
-      'Railway integration',
-      'Static hosting ready'
+      'Railway integration'
     ]
   },
   {
     title: 'Secure by Default',
-    description: 'API keys stay server-side with proxy architecture',
+    description: 'API keys stay server-side',
     size: 'small', // spans 1x1
     icon: ShieldIcon,
     details: [
       'Server-side API keys',
       'Proxy architecture',
-      'CORS handling',
-      'Environment isolation'
+      'CORS handling'
     ]
   },
   {
     title: 'PWA Ready',
-    description: 'Installable on mobile and desktop devices',
+    description: 'Installable on all devices',
     size: 'small', // spans 1x1
     icon: MobileIcon,
     details: [
       'Progressive Web App',
       'Offline capability',
-      'Home screen install',
-      'Native app feel'
+      'Home screen install'
     ]
   },
   {
     title: 'Real-time Streaming',
-    description: 'SSE with proper cleanup and error boundaries',
+    description: 'SSE with error boundaries',
     size: 'small', // spans 1x1
     icon: LightningIcon,
     details: [
       'Server-sent events',
-      'Automatic reconnection',
-      'Error boundaries',
-      'Stream cleanup'
+      'Auto reconnection',
+      'Error boundaries'
     ]
   },
   {
     title: 'TypeScript',
-    description: 'Full type safety across the entire codebase',
+    description: 'Full type safety',
     size: 'small', // spans 1x1
     icon: TypeScriptIcon,
     details: [
       'End-to-end typing',
       'IDE autocomplete',
-      'Runtime safety',
-      'Developer experience'
+      'Runtime safety'
     ]
   }
 ]
@@ -118,42 +112,58 @@ export function FeaturesSection() {
         </div>
         
         {/* Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           {features.map((feature, index) => (
             <div
               key={index}
-              className={`group relative bg-landing-surface border border-landing-surface-light rounded-2xl p-6 hover:border-customgpt-primary hover:shadow-xl transition-all duration-300 ${
+              className={`group relative bg-landing-surface border border-landing-surface-light rounded-xl sm:rounded-2xl hover:border-customgpt-primary hover:shadow-xl transition-all duration-300 ${
                 feature.size === 'large' 
-                  ? 'md:col-span-2 md:row-span-2' 
+                  ? 'col-span-2 md:col-span-2 md:row-span-2 p-4 sm:p-6' 
                   : feature.size === 'medium'
-                  ? 'md:col-span-2'
-                  : ''
+                  ? 'col-span-2 md:col-span-2 p-3 sm:p-4 lg:p-6'
+                  : 'col-span-1 p-3 sm:p-4'
               }`}
             >
               {/* Feature Header */}
-              <div className="flex items-start gap-4 mb-4">
-                <div className="text-3xl flex-shrink-0">
-                  <feature.icon size={32} className="text-customgpt-primary" />
+              {feature.size === 'small' ? (
+                <div className="space-y-2 mb-3">
+                  <div className="flex items-center justify-center">
+                    <feature.icon size={32} className="text-customgpt-primary" />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="font-bold text-base text-landing-text group-hover:text-customgpt-primary transition-colors mb-1">
+                      {feature.title}
+                    </h3>
+                    <p className="text-xs text-landing-text-secondary leading-snug">
+                      {feature.description}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-landing-text mb-2 group-hover:text-customgpt-primary transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p className="text-landing-text-secondary text-sm leading-relaxed">
-                    {feature.description}
-                  </p>
+              ) : (
+                <div className={`flex items-start gap-3 ${feature.size === 'medium' ? 'mb-3' : 'mb-4'}`}>
+                  <div className="flex-shrink-0 text-3xl">
+                    <feature.icon size={32} className="text-customgpt-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xl font-bold text-landing-text mb-2 group-hover:text-customgpt-primary transition-colors">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm text-landing-text-secondary leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
               
               {/* Feature Content */}
-              <div className="space-y-4">
+              <div className={feature.size === 'small' ? 'space-y-3' : 'space-y-4'}>
                 {/* Code Preview for applicable features */}
                 {feature.code && (
-                  <div className="bg-black rounded-lg p-4 font-mono text-sm">
+                  <div className="bg-black rounded-lg p-3 font-mono text-xs">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                      <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
                     </div>
                     <div className="text-landing-terminal-green whitespace-pre-line">
                       {feature.code}
@@ -163,28 +173,35 @@ export function FeaturesSection() {
                 
                 {/* Preview for large feature */}
                 {feature.size === 'large' && feature.preview && (
-                  <div className="bg-white border border-landing-surface-light rounded-xl p-6 text-center min-h-[200px] flex items-center justify-center">
-                    <div className="text-landing-text-secondary">
-                      <div className="text-4xl mb-2">
-                        <feature.icon size={40} className="text-customgpt-primary" />
-                      </div>
-                      <p className="font-medium">{feature.preview}</p>
-                    </div>
+                  <div className="bg-white border border-landing-surface-light rounded-xl overflow-hidden">
+                    <img 
+                      src="/images/integrations/Chat Interface.png"
+                      alt="Chat Interface Preview"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 )}
                 
-                {/* Feature Details */}
-                <div className="space-y-2">
-                  {feature.details.slice(0, feature.size === 'large' ? 5 : 3).map((detail, detailIndex) => (
-                    <div key={detailIndex} className="flex items-center gap-3 text-sm text-landing-text-secondary">
-                      <div className="w-1.5 h-1.5 bg-customgpt-primary rounded-full flex-shrink-0"></div>
+                {/* Feature Details - Only show for non-small cards on mobile */}
+                <div className={`space-y-2 ${feature.size === 'small' ? 'hidden sm:block' : ''}`}>
+                  {feature.details.slice(0, feature.size === 'small' ? 3 : feature.size === 'large' ? 5 : 3).map((detail, detailIndex) => (
+                    <div key={detailIndex} className={`flex items-center gap-2 text-landing-text-secondary ${
+                      feature.size === 'small' ? 'text-xs' : 'text-sm'
+                    }`}>
+                      <div className={`bg-customgpt-primary rounded-full flex-shrink-0 ${
+                        feature.size === 'small' ? 'w-1 h-1' : 'w-1.5 h-1.5'
+                      }`}></div>
                       <span>{detail}</span>
                     </div>
                   ))}
-                  {feature.details.length > (feature.size === 'large' ? 5 : 3) && (
-                    <div className="flex items-center gap-3 text-sm text-customgpt-primary">
-                      <div className="w-1.5 h-1.5 bg-customgpt-primary rounded-full flex-shrink-0"></div>
-                      <span>+{feature.details.length - (feature.size === 'large' ? 5 : 3)} more features</span>
+                  {feature.details.length > (feature.size === 'small' ? 3 : feature.size === 'large' ? 5 : 3) && (
+                    <div className={`flex items-center gap-2 text-customgpt-primary ${
+                      feature.size === 'small' ? 'text-xs' : 'text-sm'
+                    }`}>
+                      <div className={`bg-customgpt-primary rounded-full flex-shrink-0 ${
+                        feature.size === 'small' ? 'w-1 h-1' : 'w-1.5 h-1.5'
+                      }`}></div>
+                      <span>+{feature.details.length - (feature.size === 'small' ? 3 : feature.size === 'large' ? 5 : 3)} more</span>
                     </div>
                   )}
                 </div>
@@ -207,12 +224,12 @@ export function FeaturesSection() {
               Start building your CustomGPT.ai interface today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-gradient-to-r from-customgpt-primary to-customgpt-secondary text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-customgpt-primary/25 hover:-translate-y-0.5 transition-all duration-200">
+              <a href="https://github.com/Poll-The-People/customgpt-starter-kit" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-customgpt-primary to-customgpt-secondary text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-customgpt-primary/25 hover:-translate-y-0.5 transition-all duration-200">
                 Download Starter Kit
-              </button>
-              <button className="bg-white border-2 border-customgpt-primary text-customgpt-primary px-8 py-3 rounded-lg font-semibold hover:bg-customgpt-primary hover:text-white hover:-translate-y-0.5 transition-all duration-200">
+              </a>
+              <a href="https://docs.customgpt.ai/reference/full-fledged-chat-ui-with-project-settings" target="_blank" rel="noopener noreferrer" className="bg-white border-2 border-customgpt-primary text-customgpt-primary px-8 py-3 rounded-lg font-semibold hover:bg-customgpt-primary hover:text-white hover:-translate-y-0.5 transition-all duration-200">
                 View Documentation
-              </button>
+              </a>
             </div>
           </div>
         </div>

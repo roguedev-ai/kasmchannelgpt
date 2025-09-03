@@ -40,13 +40,13 @@ export function HeroSection() {
         
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-          <a href="/" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-customgpt-primary to-customgpt-secondary text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-customgpt-primary/25 hover:-translate-y-0.5 transition-all duration-200 text-lg">
+          <a href="/" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-customgpt-primary to-customgpt-secondary text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-customgpt-primary/25 hover:-translate-y-0.5 transition-all duration-200 text-lg">
             <RocketIcon size={20} /> Try Live Demo
           </a>
-          <a href="https://github.com/Poll-The-People/customgpt-starter-kit" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-4 bg-white border-2 border-customgpt-primary text-customgpt-primary font-semibold rounded-lg hover:bg-customgpt-primary hover:text-white hover:-translate-y-0.5 transition-all duration-200 text-lg">
+          <a href="https://github.com/Poll-The-People/customgpt-starter-kit" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border-2 border-customgpt-primary text-customgpt-primary font-semibold rounded-lg hover:bg-customgpt-primary hover:text-white hover:-translate-y-0.5 transition-all duration-200 text-lg">
             <GitHubIcon size={20} /> View on GitHub
           </a>
-          <a href="https://www.youtube.com/playlist?list=PLqm0evVmDZ_0_w2GubDwNU2gLPKMAthZj" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-4 bg-white border-2 border-customgpt-secondary text-customgpt-secondary font-semibold rounded-lg hover:bg-customgpt-secondary hover:text-white hover:-translate-y-0.5 transition-all duration-200 text-lg">
+          <a href="https://www.youtube.com/playlist?list=PLqm0evVmDZ_0_w2GubDwNU2gLPKMAthZj" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border-2 border-customgpt-secondary text-customgpt-secondary font-semibold rounded-lg hover:bg-customgpt-secondary hover:text-white hover:-translate-y-0.5 transition-all duration-200 text-lg">
             <VideoIcon size={20} /> Watch Tutorial
           </a>
         </div>
