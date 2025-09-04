@@ -224,10 +224,10 @@ export function FeaturesSection() {
               Start building your CustomGPT.ai interface today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="https://github.com/Poll-The-People/customgpt-starter-kit" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-customgpt-primary to-customgpt-secondary text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-customgpt-primary/25 hover:-translate-y-0.5 transition-all duration-200">
+              <a href="https://github.com/Poll-The-People/customgpt-starter-kit?utm_source=starterkit.customgpt.ai" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-customgpt-primary to-customgpt-secondary text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-customgpt-primary/25 hover:-translate-y-0.5 transition-all duration-200">
                 Download Starter Kit
               </a>
-              <a href="https://docs.customgpt.ai/reference/full-fledged-chat-ui-with-project-settings" target="_blank" rel="noopener noreferrer" className="bg-white border-2 border-customgpt-primary text-customgpt-primary px-8 py-3 rounded-lg font-semibold hover:bg-customgpt-primary hover:text-white hover:-translate-y-0.5 transition-all duration-200">
+              <a href="https://docs.customgpt.ai/reference/full-fledged-chat-ui-with-project-settings?utm_source=starterkit.customgpt.ai" target="_blank" rel="noopener noreferrer" className="bg-white border-2 border-customgpt-primary text-customgpt-primary px-8 py-3 rounded-lg font-semibold hover:bg-customgpt-primary hover:text-white hover:-translate-y-0.5 transition-all duration-200">
                 View Documentation
               </a>
             </div>

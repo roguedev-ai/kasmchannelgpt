@@ -35,7 +35,7 @@ const botIntegrations = [
     screenshot: '/images/integrations/customgpt_slack.jpeg',
     command: 'cd integrations/slack && npm run deploy',
     gradient: 'from-purple-500 to-indigo-600',
-    githubUrl: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Slack-Bot'
+    githubUrl: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Slack-Bot?utm_source=starterkit.customgpt.ai'
   },
   {
     id: 'discord',
@@ -55,7 +55,7 @@ const botIntegrations = [
     screenshot: '/images/integrations/customgpt_discord.jpeg',
     command: 'cd integrations/discord && npm run deploy',
     gradient: 'from-indigo-500 to-purple-600',
-    githubUrl: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Discord-Bot'
+    githubUrl: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Discord-Bot?utm_source=starterkit.customgpt.ai'
   },
   {
     id: 'whatsapp',
@@ -75,7 +75,7 @@ const botIntegrations = [
     screenshot: '/images/integrations/customgpt_whatsapp.jpeg',
     command: 'cd integrations/whatsapp && npm run deploy',
     gradient: 'from-green-500 to-emerald-600',
-    githubUrl: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Whatsapp-Bot'
+    githubUrl: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Whatsapp-Bot?utm_source=starterkit.customgpt.ai'
   },
   {
     id: 'telegram',
@@ -95,7 +95,7 @@ const botIntegrations = [
     screenshot: '/images/integrations/customgpt_telegram.jpeg',
     command: 'cd integrations/telegram && npm run deploy',
     gradient: 'from-blue-500 to-cyan-600',
-    githubUrl: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Telegram-Bot'
+    githubUrl: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Telegram-Bot?utm_source=starterkit.customgpt.ai'
   }
 ]
 
@@ -263,15 +263,15 @@ export function BotIntegrationsSection() {
           </h3>
           <div className="grid grid-cols-3 md:grid-cols-5 gap-6">
             {[
-              { name: 'Slack', icon: SlackIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Slack-Bot' },
-              { name: 'Discord', icon: DiscordIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Discord-Bot' },
-              { name: 'WhatsApp', icon: WhatsAppIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Whatsapp-Bot' },
-              { name: 'Telegram', icon: TelegramIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Telegram-Bot' },
-              { name: 'Facebook', icon: FacebookIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Facebook%20Messenger-Bot' },
-              { name: 'Instagram', icon: InstagramIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Instagram%20Chat%20Bot' },
-              { name: 'MS Teams', icon: MSTeamsIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/MS%20Teams' },
-              { name: 'Google Chat', icon: GoogleChatIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Google%20Chat-Bot' },
-              { name: 'Rocket.Chat', icon: RocketChatIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Rocket%20Chat%20Bot' }
+              { name: 'Slack', icon: SlackIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Slack-Bot?utm_source=starterkit.customgpt.ai' },
+              { name: 'Discord', icon: DiscordIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Discord-Bot?utm_source=starterkit.customgpt.ai' },
+              { name: 'WhatsApp', icon: WhatsAppIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Whatsapp-Bot?utm_source=starterkit.customgpt.ai' },
+              { name: 'Telegram', icon: TelegramIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Telegram-Bot?utm_source=starterkit.customgpt.ai' },
+              { name: 'Facebook', icon: FacebookIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Facebook%20Messenger-Bot?utm_source=starterkit.customgpt.ai' },
+              { name: 'Instagram', icon: InstagramIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Instagram%20Chat%20Bot?utm_source=starterkit.customgpt.ai' },
+              { name: 'MS Teams', icon: MSTeamsIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/MS%20Teams?utm_source=starterkit.customgpt.ai' },
+              { name: 'Google Chat', icon: GoogleChatIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Google%20Chat-Bot?utm_source=starterkit.customgpt.ai' },
+              { name: 'Rocket.Chat', icon: RocketChatIcon, url: 'https://github.com/Poll-The-People/customgpt-integrations/tree/main/Rocket%20Chat%20Bot?utm_source=starterkit.customgpt.ai' }
             ].map((platform, index) => (
               <a
                 key={index}

@@ -7,7 +7,7 @@ interface TerminalProps {
 
 export function Terminal({ 
   commands = [
-    "$ git clone https://github.com/Poll-The-People/customgpt-starter-kit",
+    "$ git clone https://github.com/Poll-The-People/customgpt-starter-kit?utm_source=starterkit.customgpt.ai",
     "$ cd customgpt-starter-kit", 
     "$ npm install && npm run dev",
     "",

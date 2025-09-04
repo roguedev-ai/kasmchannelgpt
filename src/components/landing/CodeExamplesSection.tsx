@@ -244,7 +244,7 @@ export function CodeExamplesSection() {
         {/* View More Examples Link */}
         <div className="mt-8 text-center">
           <a 
-            href="https://github.com/Poll-The-People/customgpt-starter-kit/tree/main/examples"
+            href="https://github.com/Poll-The-People/customgpt-starter-kit/tree/main/examples?utm_source=starterkit.customgpt.ai"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-customgpt-primary hover:text-customgpt-secondary font-medium transition-colors"
@@ -267,10 +267,10 @@ export function CodeExamplesSection() {
               plus video tutorials and live examples.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="https://docs.customgpt.ai/reference/full-fledged-chat-ui-with-project-settings" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-customgpt-primary to-customgpt-secondary text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-customgpt-primary/25 hover:-translate-y-0.5 transition-all duration-200">
+              <a href="https://docs.customgpt.ai/reference/full-fledged-chat-ui-with-project-settings?utm_source=starterkit.customgpt.ai" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-customgpt-primary to-customgpt-secondary text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-customgpt-primary/25 hover:-translate-y-0.5 transition-all duration-200">
                 View Documentation
               </a>
-              <a href="https://www.youtube.com/playlist?list=PLqm0evVmDZ_2ErSA69P4o68h5ZdYDF0jF" target="_blank" rel="noopener noreferrer" className="bg-white border-2 border-customgpt-primary text-customgpt-primary px-8 py-3 rounded-lg font-semibold hover:bg-customgpt-primary hover:text-white hover:-translate-y-0.5 transition-all duration-200">
+              <a href="https://www.youtube.com/playlist?list=PLqm0evVmDZ_2ErSA69P4o68h5ZdYDF0jF&utm_source=starterkit.customgpt.ai" target="_blank" rel="noopener noreferrer" className="bg-white border-2 border-customgpt-primary text-customgpt-primary px-8 py-3 rounded-lg font-semibold hover:bg-customgpt-primary hover:text-white hover:-translate-y-0.5 transition-all duration-200">
                 Watch Tutorials
               </a>
             </div>

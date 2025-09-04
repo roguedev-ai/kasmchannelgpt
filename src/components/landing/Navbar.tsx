@@ -32,11 +32,11 @@ const Navbar = () => {
             items: [
               {
                 label: "Customer Service",
-                href: "https://customgpt.ai/solution/customer-service?utm_source=starterkit_page",
+                href: "https://customgpt.ai/solution/customer-service?utm_source=starterkit.customgpt.ai",
               },
               {
                 label: "Engagement Analytics",
-                href: "https://customgpt.ai/use-case-lead-generation?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case-lead-generation?utm_source=starterkit.customgpt.ai",
               },
             ],
           },
@@ -45,11 +45,11 @@ const Navbar = () => {
             items: [
               {
                 label: "Research Assistance",
-                href: "https://customgpt.ai/use-case-topic-research?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case-topic-research?utm_source=starterkit.customgpt.ai",
               },
               {
                 label: "Site Search",
-                href: "https://customgpt.ai/use-case/site-search?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/site-search?utm_source=starterkit.customgpt.ai",
               },
             ],
           },
@@ -58,15 +58,15 @@ const Navbar = () => {
             items: [
               {
                 label: "Onboarding & Training",
-                href: "https://customgpt.ai/use-case/onboarding-and-training?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/onboarding-and-training?utm_source=starterkit.customgpt.ai",
               },
               {
                 label: "Internal Search Tool",
-                href: "https://customgpt.ai/use-case/internal-search?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/internal-search?utm_source=starterkit.customgpt.ai",
               },
               {
                 label: "Competitive Analysis",
-                href: "https://customgpt.ai/use-case/competitive-analysis?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/competitive-analysis?utm_source=starterkit.customgpt.ai",
               },
             ],
           },
@@ -84,11 +84,11 @@ const Navbar = () => {
           {
             category: "Professional Services",
             items: [
-              { label: "Law", href: "https://customgpt.ai/use-case/legal?utm_source=starterkit_page" },
-              { label: "Tax", href: "https://customgpt.ai/use-case/tax?utm_source=starterkit_page" },
+              { label: "Law", href: "https://customgpt.ai/use-case/legal?utm_source=starterkit.customgpt.ai" },
+              { label: "Tax", href: "https://customgpt.ai/use-case/tax?utm_source=starterkit.customgpt.ai" },
               {
                 label: "Insurance",
-                href: "https://customgpt.ai/use-case/insurance?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/insurance?utm_source=starterkit.customgpt.ai",
               },
             ],
           },
@@ -97,11 +97,11 @@ const Navbar = () => {
             items: [
               {
                 label: "Startups & SaaS",
-                href: "https://customgpt.ai/use-case/startup?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/startup?utm_source=starterkit.customgpt.ai",
               },
               {
                 label: "Information Technology",
-                href: "https://customgpt.ai/use-case/it-and-helpdesks?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/it-and-helpdesks?utm_source=starterkit.customgpt.ai",
               },
             ],
           },
@@ -110,11 +110,11 @@ const Navbar = () => {
             items: [
               {
                 label: "Education",
-                href: "https://customgpt.ai/use-case/education?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/education?utm_source=starterkit.customgpt.ai",
               },
               {
                 label: "Government",
-                href: "https://customgpt.ai/use-case/government?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/government?utm_source=starterkit.customgpt.ai",
               },
             ],
           },
@@ -123,11 +123,11 @@ const Navbar = () => {
             items: [
               {
                 label: "Industrial Automation",
-                href: "https://customgpt.ai/use-case/industrial?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/industrial?utm_source=starterkit.customgpt.ai",
               },
               {
                 label: "Manufacturing",
-                href: "https://customgpt.ai/use-case/manufacturing?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/manufacturing?utm_source=starterkit.customgpt.ai",
               },
             ],
           },
@@ -136,11 +136,11 @@ const Navbar = () => {
             items: [
               {
                 label: "Pharmaceuticals",
-                href: "https://customgpt.ai/use-case/pharma?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/pharma?utm_source=starterkit.customgpt.ai",
               },
               {
                 label: "Biotechnology",
-                href: "https://customgpt.ai/use-case/biotech?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/biotech?utm_source=starterkit.customgpt.ai",
               },
             ],
           },
@@ -149,40 +149,40 @@ const Navbar = () => {
             items: [
               {
                 label: "Retail & E-commerce",
-                href: "https://customgpt.ai/use-case/ecommerce?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/ecommerce?utm_source=starterkit.customgpt.ai",
               },
               {
                 label: "Finance & Banking",
-                href: "https://customgpt.ai/use-case/finance-and-banking?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/finance-and-banking?utm_source=starterkit.customgpt.ai",
               },
               {
                 label: "Healthcare",
-                href: "https://customgpt.ai/use-case/healthcare?utm_source=starterkit_page",
+                href: "https://customgpt.ai/use-case/healthcare?utm_source=starterkit.customgpt.ai",
               },
             ],
           },
         ],
       },
     },
-    { label: "Pricing", href: "https://customgpt.ai/pricing?utm_source=starterkit_page" },
+    { label: "Pricing", href: "https://customgpt.ai/pricing?utm_source=starterkit.customgpt.ai" },
 
     {
       label: "Resources",
       dropdown: {
         type: "simple",
         items: [
-          { label: "Case Studies", href: "https://customgpt.ai/customers?utm_source=starterkit_page" },
-          { label: "FAQs", href: "https://customgpt.ai/faq?utm_source=starterkit_page" },
+          { label: "Case Studies", href: "https://customgpt.ai/customers?utm_source=starterkit.customgpt.ai" },
+          { label: "FAQs", href: "https://customgpt.ai/faq?utm_source=starterkit.customgpt.ai" },
           {
             label: "Partner Directory",
-            href: "https://customgpt.ai/partner-directory",
+            href: "https://customgpt.ai/partner-directory?utm_source=starterkit.customgpt.ai",
           },
-          { label: "Blog", href: "https://customgpt.ai/blog" },
-          { label: "Security & Trust", href: "https://customgpt.ai/security?utm_source=starterkit_page" },
-          { label: "GDPR", href: "https://customgpt.ai/gdpr-compliance?utm_source=starterkit_page" },
-          { label: "Documentation", href: "https://docs.customgpt.ai?utm_source=starterkit_page" },
-          { label: "Free Tools", href: "https://customgpt.ai/free-tools?utm_source=starterkit_page" },
-          { label: "API", href: "https://customgpt.ai/api?utm_source=starterkit_page" },
+          { label: "Blog", href: "https://customgpt.ai/blog?utm_source=starterkit.customgpt.ai" },
+          { label: "Security & Trust", href: "https://customgpt.ai/security?utm_source=starterkit.customgpt.ai" },
+          { label: "GDPR", href: "https://customgpt.ai/gdpr-compliance?utm_source=starterkit.customgpt.ai" },
+          { label: "Documentation", href: "https://docs.customgpt.ai?utm_source=starterkit.customgpt.ai" },
+          { label: "Free Tools", href: "https://customgpt.ai/free-tools?utm_source=starterkit.customgpt.ai" },
+          { label: "API", href: "https://customgpt.ai/api?utm_source=starterkit.customgpt.ai" },
         ],
       },
     },
@@ -191,21 +191,21 @@ const Navbar = () => {
       dropdown: {
         type: "simple",
         items: [
-          { label: "About Us", href: "https://customgpt.ai/about-us?utm_source=starterkit_page" },
-          { label: "Testimonials", href: "https://customgpt.ai/testimonials?utm_source=starterkit_page" },
-          { label: "Affiliate Program", href: "https://customgpt.ai/partners?utm_source=starterkit_page" },
-          { label: "Contact Us", href: "https://customgpt.ai/contact-us?utm_source=starterkit_page" },
+          { label: "About Us", href: "https://customgpt.ai/about-us?utm_source=starterkit.customgpt.ai" },
+          { label: "Testimonials", href: "https://customgpt.ai/testimonials?utm_source=starterkit.customgpt.ai" },
+          { label: "Affiliate Program", href: "https://customgpt.ai/partners?utm_source=starterkit.customgpt.ai" },
+          { label: "Contact Us", href: "https://customgpt.ai/contact-us?utm_source=starterkit.customgpt.ai" },
         ],
       },
     },
 
     {
       label: "Enterprise",
-      href: "https://customgpt.ai/enterprise-solutions-customgpt?utm_source=comparison_blog_navbar",
+      href: "https://customgpt.ai/enterprise-solutions-customgpt?utm_source=starterkit.customgpt.ai",
     },
     {
       label: "Login",
-      href: "https://app.customgpt.ai?utm_source=comparison_blog_navbar",
+      href: "https://app.customgpt.ai?utm_source=starterkit.customgpt.ai",
     },
   ];
 
@@ -246,7 +246,9 @@ const Navbar = () => {
           {/* Right Button */}
           <div className="hidden lg:block">
             <Link
-              href="https://app.customgpt.ai/register?utm_source=starterkit_navbar"
+              href="https://app.customgpt.ai/register?utm_source=starterkit.customgpt.ai"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-4 xl:px-8 py-2 xl:py-3 text-sm xl:text-base bg-gray-200 rounded-full cursor-pointer text-white bg-gradient-to-r from-customgpt-primary to-customgpt-secondary transition-colors duration-300 hover:from-customgpt-secondary hover:to-customgpt-primary whitespace-nowrap"
             >
               Try for free
@@ -298,7 +300,9 @@ const Navbar = () => {
             )}
             <div className="pt-4 border-t border-gray-200 mt-4">
               <Link
-                href="https://app.customgpt.ai/register?utm_source=starterkit_navbar"
+                href="https://app.customgpt.ai/register?utm_source=starterkit.customgpt.ai"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="block w-full text-center px-6 py-3 bg-gray-200 rounded-full cursor-pointer text-white bg-gradient-to-r from-customgpt-primary to-customgpt-secondary transition-colors duration-300 hover:from-customgpt-secondary hover:to-customgpt-primary"
                 onClick={() => setMobileOpen(false)}
               >
