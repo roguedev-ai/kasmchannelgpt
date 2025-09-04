@@ -214,7 +214,12 @@ export function BotIntegrationsSection() {
               {viewMode === 'video' ? (
                 <div className="w-full">
                   <YouTubeEmbed 
-                    videoId="dQw4w9WgXcQ" // Replace with actual demo video IDs
+                    videoId={
+                      currentBot.id === 'slack' ? 'ESZxuiFFCPQ' :
+                      currentBot.id === 'discord' ? 'pVjQpesZLRw' :
+                      currentBot.id === 'telegram' ? 'WUwSy7nsP4o' :
+                      'dQw4w9WgXcQ' // Fallback for WhatsApp
+                    }
                     title={`${currentBot.name} Demo`}
                     className="w-full"
                   />
