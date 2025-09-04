@@ -84,11 +84,11 @@
 ## Demo Video
 
 <div align="center">
-  <a href="https://youtu.be/uW7eTGPXYLs">
-    <img src="https://img.youtube.com/vi/aBhsh_ea_WU/maxresdefault.jpg" alt="CustomGPT.ai UI Demo Video" width="600" />
+  <a href="https://www.youtube.com/watch?v=uW7eTGPXYLs">
+    <img src="https://img.youtube.com/vi/uW7eTGPXYLs/maxresdefault.jpg" alt="CustomGPT.ai UI Demo Video" width="600" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
   </a>
   
-  <p>🎥 <a href="https://youtu.be/uW7eTGPXYLs">Watch the demo video on YouTube</a></p>
+  <p>🎥 <a href="https://www.youtube.com/watch?v=uW7eTGPXYLs">Watch the full demo video on YouTube</a></p>
 </div>
 
 ## Table of Contents
