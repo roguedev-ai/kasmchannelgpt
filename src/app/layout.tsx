@@ -1,4 +1,4 @@
-/**
+/*
  * Root Layout Component
  * 
  * This is the main layout wrapper for the entire Next.js application.
@@ -13,11 +13,11 @@
  * 2. Metadata: Update title and description for your brand
  * 3. Global styles: Modify globals.css for theme customization
  * 4. Add providers here (e.g., theme providers, analytics)
- * 
+ *
  * @example
  * // To add a theme provider:
  * import { ThemeProvider } from '@/components/theme-provider'
- * 
+ *
  * // Wrap children with:
  * <ThemeProvider>
  *   {children}
@@ -29,6 +29,7 @@ import { Inter } from "next/font/google";
 import { Toaster } from 'sonner';
 // import { PWAManager } from '@/components/pwa/PWAManager'; // Disabled - Uncomment to enable PWA install prompts
 import { DemoModeProvider } from '@/components/demo/DemoModeProvider';
+import { PostHogProvider } from '@/components/PostHogProvider';
 import "./globals.css";
 
 /**
@@ -185,25 +186,27 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {/* Add global providers here */}
-        <DemoModeProvider>
-          {children}
-          {/* PWA Manager for install prompts and updates - DISABLED 
-              Uncomment the line below to enable PWA install prompts
-              <PWAManager />
-          */}
-          {/* Global toast notifications with close button */}
-          <Toaster 
-            position="top-center" 
-            closeButton
-            richColors
-            gap={8}
-            toastOptions={{
-              style: {
-                marginTop: '8px'
-              }
-            }}
-          />
-        </DemoModeProvider>
+        <PostHogProvider>
+          <DemoModeProvider>
+            {children}
+            {/* PWA Manager for install prompts and updates - DISABLED 
+                Uncomment the line below to enable PWA install prompts
+                <PWAManager />
+            */}
+            {/* Global toast notifications with close button */}
+            <Toaster 
+              position="top-center" 
+              closeButton
+              richColors
+              gap={8}
+              toastOptions={{
+                style: {
+                  marginTop: '8px'
+                }
+              }}
+            />
+          </DemoModeProvider>
+        </PostHogProvider>
       </body>
     </html>
   );
