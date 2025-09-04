@@ -2,21 +2,49 @@
   <img src="logo.png" alt="CustomGPT.ai" width="100" height="100" />
   <h1>CustomGPT.ai API Starter Kit</h1>
   <p><strong>A modern, secure chat interface for CustomGPT.ai's RAG API with multiple deployment options including embedded widgets, floating buttons, and standalone applications.</strong></p>
+  
+  <br />
+  
+  <a href="https://starterkit.customgpt.ai/" target="_blank">
+    <img src="https://img.shields.io/badge/🎮_Live_Demo-Try_it_Now-4CAF50?style=for-the-badge&labelColor=1a1a1a" alt="Live Demo" height="40" />
+  </a>
+  <a href="https://starterkit.customgpt.ai/" target="_blank">
+    <img src="https://img.shields.io/badge/🚀_Playground-starterkit.customgpt.ai-2196F3?style=for-the-badge&labelColor=1a1a1a" alt="Playground" height="40" />
+  </a>
+  
+  <br /><br />
+  
+  <a href="https://starterkit.customgpt.ai/" target="_blank">
+    <img src="public/img/customgpt-main.jpeg" alt="CustomGPT.ai Starter Kit Live Demo" width="600" style="border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" />
+  </a>
+  
+  <p><em>↑ Click the image to try the live demo at <a href="https://starterkit.customgpt.ai/">starterkit.customgpt.ai</a></em></p>
 </div>
 
-## 🚀 Try It Now - Live Playground
+## 🌐 Live Demo Available
 
-**Start here!** Experience CustomGPT.ai UI without any setup:
-
-### 🎮 [**Launch Playground →**](https://starterkit.customgpt.ai/)
-
-**Perfect for:**
-- Testing CustomGPT.ai with your own agents
-- Exploring all features (voice chat, file uploads, citations)
-- Trying before you build
-- Demos and presentations
-
-Simply enter your CustomGPT.ai API key and agent ID to get started instantly!
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <h3>🎮 Try the Live Demo</h3>
+        <p>Experience the full-featured CustomGPT.ai interface instantly</p>
+        <a href="https://starterkit.customgpt.ai/" target="_blank">
+          <img src="https://img.shields.io/badge/Visit-starterkit.customgpt.ai-blue?style=for-the-badge&logo=react&logoColor=white" alt="Visit Demo" />
+        </a>
+        <br /><br />
+        <strong>No installation required!</strong>
+        <ul align="left">
+          <li>✅ Test with your own CustomGPT.ai agents</li>
+          <li>✅ Explore voice chat & file uploads</li>
+          <li>✅ See citations in action</li>
+          <li>✅ Perfect for demos & presentations</li>
+        </ul>
+        <p><em>Just enter your API key and agent ID to start</em></p>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ---
 
@@ -56,11 +84,11 @@ Simply enter your CustomGPT.ai API key and agent ID to get started instantly!
 ## Demo Video
 
 <div align="center">
-  <a href="https://youtu.be/aBhsh_ea_WU">
+  <a href="https://youtu.be/uW7eTGPXYLs">
     <img src="https://img.youtube.com/vi/aBhsh_ea_WU/maxresdefault.jpg" alt="CustomGPT.ai UI Demo Video" width="600" />
   </a>
   
-  <p>🎥 <a href="https://youtu.be/aBhsh_ea_WU">Watch the demo video on YouTube</a></p>
+  <p>🎥 <a href="https://youtu.be/uW7eTGPXYLs">Watch the demo video on YouTube</a></p>
 </div>
 
 ## Table of Contents
