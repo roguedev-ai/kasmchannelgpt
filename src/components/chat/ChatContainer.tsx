@@ -46,6 +46,7 @@ import { getClient } from '@/lib/api/client';
 import { VoiceModal } from '@/components/voice/VoiceModal';
 import { useBreakpoint } from '@/hooks/useMediaQuery';
 import { useDemoStore } from '@/store/demo';
+import { FreeTrialLimitModal } from '@/components/demo/FreeTrialLimitModal';
 
 /**
  * Default example prompts shown to users when starting a new conversation
@@ -239,6 +240,8 @@ interface MessageAreaProps {
   className?: string;
   /** Deployment mode - affects behavior */
   mode?: 'standalone' | 'widget' | 'floating';
+  /** Function to show free trial limit modal */
+  onShowFreeTrialLimitModal?: () => void;
 }
 
 /**
@@ -253,7 +256,7 @@ interface MessageAreaProps {
  * - Welcome message when empty
  * - Loading states with typing indicator
  */
-const MessageArea: React.FC<MessageAreaProps> = ({ className, mode = 'standalone' }) => {
+const MessageArea: React.FC<MessageAreaProps> = ({ className, mode = 'standalone', onShowFreeTrialLimitModal }) => {
   const { 
     messages, 
     streamingMessage, 
@@ -359,6 +362,10 @@ const MessageArea: React.FC<MessageAreaProps> = ({ className, mode = 'standalone
         description: 'Sending messages is not available in free trial mode. Please use your own API key to send messages.',
         duration: 5000,
       });
+      // Show modal after 3 seconds
+      setTimeout(() => {
+        onShowFreeTrialLimitModal?.();
+      }, 3000);
       return;
     }
     
@@ -737,6 +744,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   // Check if we're in free trial mode by looking at localStorage
   const [isFreeTrialMode, setIsFreeTrialMode] = React.useState(false);
   
+  // State to control FreeTrialLimitModal visibility
+  const [showFreeTrialLimitModal, setShowFreeTrialLimitModal] = React.useState(false);
+  
   React.useEffect(() => {
     if (mode === 'standalone' && typeof window !== 'undefined') {
       const freeTrialFlag = localStorage.getItem('customgpt.freeTrialMode');
@@ -842,6 +852,10 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         description: 'Sending messages is not available in free trial mode. Please use your own API key to send messages.',
         duration: 5000,
       });
+      // Show modal after 3 seconds
+      setTimeout(() => {
+        setShowFreeTrialLimitModal(true);
+      }, 3000);
       return;
     }
     
@@ -901,7 +915,11 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         onCreateConversation={handleCreateConversation}
         conversationRefreshKey={conversationRefreshKey}
       />
-      <MessageArea className="flex-1 overflow-y-auto" mode={mode} />
+      <MessageArea 
+        className="flex-1 overflow-y-auto" 
+        mode={mode} 
+        onShowFreeTrialLimitModal={() => setShowFreeTrialLimitModal(true)}
+      />
       <div className={cn(
         "mt-auto",
         isMobile && mode === 'standalone' ? "pb-[30px]" : ""
@@ -947,6 +965,13 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
           onClose={() => setIsVoiceModalOpen(false)}
           projectId={currentAgent.id.toString()}
           projectName={currentAgent.project_name}
+        />
+      )}
+      
+      {/* Free Trial Limit Modal - shown 3 seconds after toast notification */}
+      {showFreeTrialLimitModal && (
+        <FreeTrialLimitModal
+          onClose={() => setShowFreeTrialLimitModal(false)}
         />
       )}
     </div>

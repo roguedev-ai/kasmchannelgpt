@@ -15,6 +15,15 @@ import { widgetDebugger } from '@/widget/debug-utils';
 import type { AgentStore } from './agents';
 import type { ConversationStore } from './conversations';
 
+/**
+ * Remove citation references from content
+ * Removes patterns like :cit[xxx/xxx] from the message text
+ */
+function removeCitationReferences(content: string): string {
+  // Remove citation references and any extra spaces they might leave
+  return content.replace(/\s*:cit\[\d+\/\d+\]\s*/g, ' ').trim();
+}
+
 // Message Store interface - copied from original to maintain compatibility
 export interface MessageStore {
   messages: Map<string, ChatMessage[]>;
@@ -378,7 +387,9 @@ export function createMessageStore(
                       messageData = response as any;
                     }
                     
-                    finalMessage.content = messageData?.openai_response || messageData?.content || 'No response received';
+                    // Clean citation references from the response content
+                    const rawContent = messageData?.openai_response || messageData?.content || 'No response received';
+                    finalMessage.content = removeCitationReferences(rawContent);
                     finalMessage.citations = messageData?.citations || [];
                     finalMessage.status = 'sent';
                     get().addMessage(conversationId, finalMessage);
@@ -398,6 +409,8 @@ export function createMessageStore(
                 // onComplete callback
                 const finalMessage = get().streamingMessage;
                 if (finalMessage) {
+                  // Clean citation references from the final message content
+                  finalMessage.content = removeCitationReferences(finalMessage.content);
                   finalMessage.status = 'sent';
                   get().addMessage(conversationId, finalMessage);
                 }
@@ -588,7 +601,7 @@ export function createMessageStore(
         return {
           streamingMessage: {
             ...state.streamingMessage,
-            content: state.streamingMessage.content + content,
+            content: state.streamingMessage.content + content, // Append content as-is during streaming
             citations: citations || state.streamingMessage.citations,
           },
         };

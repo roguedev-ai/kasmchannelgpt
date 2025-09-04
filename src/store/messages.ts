@@ -41,6 +41,15 @@ import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
 
 /**
+ * Remove citation references from content
+ * Removes patterns like :cit[xxx/xxx] from the message text
+ */
+function removeCitationReferences(content: string): string {
+  // Remove citation references and any extra spaces they might leave
+  return content.replace(/\s*:cit\[\d+\/\d+\]\s*/g, ' ').trim();
+}
+
+/**
  * Local storage configuration
  * Provides offline access and caching for better UX
  */
@@ -444,7 +453,9 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
                     messageData = response as any;
                   }
                   
-                  finalMessage.content = messageData?.openai_response || messageData?.content || 'No response received';
+                  // Clean citation references from the response content
+                  const rawContent = messageData?.openai_response || messageData?.content || 'No response received';
+                  finalMessage.content = removeCitationReferences(rawContent);
                   
                   // Fetch citation details if needed
                   if (messageData?.citations && Array.isArray(messageData.citations) && messageData.citations.length > 0) {
@@ -542,6 +553,9 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
               const finalMessage = get().streamingMessage;
               if (finalMessage) {
                 finalMessage.status = 'sent';
+                
+                // Clean citation references from the final message content
+                finalMessage.content = removeCitationReferences(finalMessage.content);
                 
                 // Clear streaming state FIRST to prevent duplication
                 set({ 
@@ -782,7 +796,7 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
       return {
         streamingMessage: {
           ...state.streamingMessage,
-          content: state.streamingMessage.content + content, // Append content
+          content: state.streamingMessage.content + content, // Append content as-is during streaming
           citations: citations || state.streamingMessage.citations, // Update citations if provided
         },
       };
