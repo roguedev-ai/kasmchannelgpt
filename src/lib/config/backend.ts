@@ -24,6 +24,9 @@ const env = {
   CHUNK_SIZE: parseInt(process.env.CHUNK_SIZE || '1000', 10),
   CHUNK_OVERLAP: parseInt(process.env.CHUNK_OVERLAP || '200', 10),
   EMBEDDING_DIMENSION: parseInt(process.env.EMBEDDING_DIMENSION || '1536', 10),
+
+  // Database
+  DATABASE_PATH: process.env.DATABASE_PATH || './data/rag-platform.db',
 };
 
 // Validate required environment variables
@@ -65,4 +68,7 @@ export const backendConfig = {
   chunkSize: env.CHUNK_SIZE,
   chunkOverlap: env.CHUNK_OVERLAP,
   embeddingDimension: env.EMBEDDING_DIMENSION,
+
+  // Database
+  databasePath: env.DATABASE_PATH,
 } as const;
