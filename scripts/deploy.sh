@@ -60,13 +60,77 @@ check_node() {
 
 # Setup environment
 setup_env() {
-    log_info "Checking environment..."
+    log_info "Setting up environment variables..."
+    
     if [ ! -f .env.local ]; then
-        log_error ".env.local not found"
-        log_info "Copy .env.example to .env.local and configure it"
-        exit 1
+        log_warn ".env.local not found. Creating from template..."
+        
+        echo ""
+        log_info "=== Environment Setup ==="
+        echo ""
+        
+        # Prompt for CustomGPT API key
+        echo "Enter your CustomGPT API key:"
+        echo "(Get it from: https://app.customgpt.ai)"
+        read -p "CustomGPT API Key: " CUSTOMGPT_KEY
+        
+        if [ -z "$CUSTOMGPT_KEY" ]; then
+            log_error "CustomGPT API key is required"
+            exit 1
+        fi
+        
+        # Auto-generate JWT secret (secure random)
+        log_info "Generating secure JWT secret..."
+        JWT_SECRET=$(openssl rand -base64 32)
+        log_info "✓ JWT secret generated (32 bytes)"
+        
+        # Prompt for database path (optional)
+        read -p "Database path [./data/rag-platform.db]: " DB_PATH
+        DB_PATH=${DB_PATH:-./data/rag-platform.db}
+        
+        # Create data directory if needed
+        DB_DIR=$(dirname "$DB_PATH")
+        mkdir -p "$DB_DIR"
+        log_info "✓ Database directory created: $DB_DIR"
+        
+        # Create .env.local
+        cat > .env.local << EOF
+# Backend Configuration
+JWT_SECRET=${JWT_SECRET}
+CUSTOMGPT_API_KEY=${CUSTOMGPT_KEY}
+QDRANT_URL=http://localhost:6333
+DATABASE_PATH=${DB_PATH}
+
+# Frontend Configuration
+NEXT_PUBLIC_USE_MOCK_API=false
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+EOF
+        
+        log_info "✓ .env.local created successfully"
+        
+        echo ""
+        log_info "=== Configuration Summary ==="
+        echo "  JWT Secret: ********* (auto-generated)"
+        echo "  CustomGPT API Key: ${CUSTOMGPT_KEY:0:10}..."
+        echo "  Qdrant URL: http://localhost:6333"
+        echo "  Database: $DB_PATH"
+        echo ""
+        
+    else
+        log_info ".env.local already exists"
+        
+        # Check if required variables are set
+        if ! grep -q "JWT_SECRET=" .env.local || ! grep -q "CUSTOMGPT_API_KEY=" .env.local; then
+            log_warn "Missing required environment variables in .env.local"
+            read -p "Recreate .env.local? (y/n): " RECREATE
+            
+            if [ "$RECREATE" = "y" ] || [ "$RECREATE" = "Y" ]; then
+                rm .env.local
+                setup_env  # Recursive call to recreate
+                return
+            fi
+        fi
     fi
-    log_info "✓ Environment configured"
 }
 
 # Install dependencies
