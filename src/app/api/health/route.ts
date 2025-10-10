@@ -1,24 +1,62 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { qdrantClient } from '../../../lib/rag/qdrant-client';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Basic health check
-    const healthCheck = {
-      status: 'healthy',
+    // Check Qdrant health
+    const qdrantHealthy = await qdrantClient.healthCheck();
+    
+    // Check environment variables
+    const envHealthy = !!(
+      process.env.JWT_SECRET &&
+      process.env.CUSTOMGPT_API_KEY &&
+      process.env.QDRANT_URL &&
+      process.env.OPENAI_API_KEY
+    );
+    
+    const allHealthy = qdrantHealthy && envHealthy;
+    
+    return NextResponse.json({
+      status: allHealthy ? 'healthy' : 'unhealthy',
+      checks: {
+        qdrant: qdrantHealthy,
+        environment: envHealthy,
+        requiredEnvVars: {
+          JWT_SECRET: !!process.env.JWT_SECRET,
+          CUSTOMGPT_API_KEY: !!process.env.CUSTOMGPT_API_KEY,
+          QDRANT_URL: !!process.env.QDRANT_URL,
+          OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
+        },
+      },
       timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV,
-      version: process.env.npm_package_version || '1.0.0',
-    };
-
-    return NextResponse.json(healthCheck, { status: 200 });
-  } catch (error) {
-    const errorCheck = {
+    }, { 
+      status: allHealthy ? 200 : 503,
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      },
+    });
+    
+  } catch (error: any) {
+    return NextResponse.json({
       status: 'unhealthy',
+      error: error.message,
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-
-    return NextResponse.json(errorCheck, { status: 503 });
+    }, { 
+      status: 503,
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      },
+    });
   }
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }

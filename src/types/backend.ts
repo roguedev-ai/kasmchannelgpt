@@ -29,6 +29,19 @@ export interface PartnerSession {
   iat: number;
 }
 
+// Login types
+export interface LoginRequest {
+  partnerId: string;
+  email: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  partnerId: string;
+  namespace: string;
+  expiresAt: string;
+}
+
 // Query types
 export interface QueryRequest {
   query: string;
