@@ -1,242 +1,214 @@
-# CustomGPT Multi-Tenant RAG Platform
+# CustomGPT RAG Platform
 
-A privacy-preserving RAG (Retrieval-Augmented Generation) system with isolated partner namespaces. This platform enables secure document management and AI-powered chat interactions while maintaining strict data isolation between different partners.
+A secure, multi-tenant RAG (Retrieval Augmented Generation) platform built with Next.js, SQLite, and Qdrant.
 
 ## Features
 
-- **JWT-based Authentication**
-  - Secure partner authentication
-  - Session management
-  - Role-based access control
+### Authentication & Authorization
+- User management with SQLite
+- JWT-based authentication
+- Role-based access (admin/partner)
+- Partner isolation
+- Audit logging
 
-- **Partner-Isolated Document Storage**
-  - Separate document namespaces per partner
-  - Secure file upload and management
-  - Document versioning and tracking
+### RAG Pipeline
+- Document processing
+- Vector embeddings (OpenAI)
+- Semantic search (Qdrant)
+- Context retrieval
+- CustomGPT integration
 
-- **Qdrant Vector Database Integration**
-  - High-performance vector similarity search
-  - Isolated vector spaces per partner
-  - Efficient document retrieval
+### Security
+- Password hashing (bcrypt)
+- Partner data isolation
+- Rate limiting
+- SSL/TLS support
+- Audit trail
 
-- **CustomGPT.ai Integration**
-  - Advanced language model capabilities
-  - Context-aware responses
-  - Customizable AI behavior
+## Quick Start
 
-- **File Upload with RAG**
-  - Document processing and chunking
-  - Automatic embedding generation
-  - Real-time search and retrieval
-
-## Tech Stack
-
-- **Frontend**
-  - Next.js 14
-  - TypeScript
-  - Tailwind CSS
-  - React Query
-
-- **Backend**
-  - Node.js
-  - Express
-  - LangChain
-  - CustomGPT.ai API
-
-- **Database**
-  - Qdrant Vector Database
-  - PostgreSQL (for metadata)
-
-- **Infrastructure**
-  - Docker
-  - Docker Compose
-  - Nginx (reverse proxy)
-
-## Prerequisites
-
-Before deploying, ensure you have:
-
-1. **System Requirements**
-   - Node.js >= 18
-   - npm >= 8
-   - Docker and Docker Compose
-   - 4GB RAM minimum
-   - 20GB free disk space
-
-2. **Required Services**
-   - Qdrant instance running (local or remote)
-   - PostgreSQL database (if using metadata storage)
-
-3. **API Keys**
-   - CustomGPT API key
-   - JWT secret (will be auto-generated if not provided)
-
-## Deployment
-
-### Quick Start
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/roguedev-ai/kasmchannelgpt.git
-   cd kasmchannelgpt
-   ```
-
-2. **Run the deployment script**
-   ```bash
-   ./scripts/deploy.sh
-   ```
-   This will:
-   - Check prerequisites
-   - Set up environment variables
-   - Install dependencies
-   - Build the application
-   - Start the server
-
-### Manual Deployment
-
-1. **Environment Setup**
-   ```bash
-   # Copy environment template
-   cp .env.example .env.local
-   
-   # Edit environment variables
-   nano .env.local
-   ```
-
-2. **Install Dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Build Application**
-   ```bash
-   npm run build
-   ```
-
-4. **Start Server**
-   ```bash
-   # Development mode
-   npm run dev
-   
-   # Production mode
-   npm start
-   ```
-
-### Docker Deployment
-
-1. **Build and start containers**
-   ```bash
-   docker-compose up -d
-   ```
-
-2. **View logs**
-   ```bash
-   docker-compose logs -f
-   ```
-
-## Deployment Scripts
-
-The project includes several utility scripts in the `scripts/` directory:
-
-### deploy.sh
-Comprehensive deployment script that:
-- Checks prerequisites (Docker, Node.js, etc.)
-- Sets up environment variables
-- Installs dependencies
-- Builds and starts the application
-
+### 1. Clone Repository
 ```bash
-./scripts/deploy.sh
-# Follow the prompts for configuration
+git clone https://github.com/your-org/customgpt-starter-kit.git
+cd customgpt-starter-kit
 ```
 
-### stop.sh
-Safely stops the application:
-- Terminates Next.js processes
-- Frees up port 3000
-- Cleans up resources
-
+### 2. Install Dependencies
 ```bash
-./scripts/stop.sh
+npm install
 ```
 
-### restart.sh
-Combines stop and deploy operations:
-- Stops existing instance
-- Deploys fresh instance
-- Preserves configuration
-
+### 3. Configure Environment
 ```bash
-./scripts/restart.sh
+cp .env.example .env.local
+
+# Edit .env.local:
+OPENAI_API_KEY=your-key
+CUSTOMGPT_API_KEY=your-key
+JWT_SECRET=min-32-chars-secret
 ```
 
-### logs.sh
-View application logs:
-- Shows Next.js logs
-- Supports PM2 logs if available
-- Shows Docker logs if running in container
-- Auto-detects environment
-
+### 4. Start Qdrant
 ```bash
-./scripts/logs.sh
+docker run -d -p 6333:6333 qdrant/qdrant
 ```
 
-### health-check.sh
-System health monitoring:
-- CPU, Memory, and Disk usage
-- Application status
-- Dependencies check
-- Service health
-- Environment validation
-
+### 5. Run Development Server
 ```bash
-./scripts/health-check.sh
+npm run dev
 ```
 
-## Monitoring
+### 6. Initialize Database
+The system will automatically:
+- Create SQLite database
+- Initialize schema
+- Create default admin:
+  * Email: admin@rag-platform.local
+  * Password: admin123
+  * ⚠️ Change these in production!
 
-1. **Application Status**
-   ```bash
-   # Check system health
-   ./scripts/health-check.sh
-   
-   # View logs
-   ./scripts/logs.sh
-   ```
+### 7. Test Setup
+```bash
+# Test database
+npx ts-node scripts/test-database.ts
 
-2. **Resource Usage**
-   - The health check script provides CPU, memory, and disk usage
-   - Monitor Qdrant metrics at http://localhost:6333/metrics
+# Test authentication
+npx ts-node scripts/test-auth.ts
 
-3. **Error Tracking**
-   - Check application logs: `.next/logs/`
-   - Check Docker logs: `docker-compose logs`
+# Test RAG pipeline
+npx ts-node scripts/test-query.ts
+```
 
-## Troubleshooting
+## Production Deployment
 
-1. **Application won't start**
-   - Check if port 3000 is in use: `lsof -i :3000`
-   - Verify environment variables: `./scripts/health-check.sh`
-   - Check logs: `./scripts/logs.sh`
+### 1. SSL Setup
+```bash
+# Install certbot
+sudo apt install certbot python3-certbot-nginx
 
-2. **Database Connection Issues**
-   - Verify Qdrant is running: `curl http://localhost:6333`
-   - Check connection string in .env.local
-   - Ensure proper network access
+# Get certificate
+sudo ./scripts/setup-ssl.sh
 
-3. **Build Failures**
-   - Clear Next.js cache: `rm -rf .next`
-   - Reinstall dependencies: `npm ci`
-   - Check Node.js version: `node --version`
+# Configure Nginx
+sudo ./scripts/deploy.sh
+# Choose 'y' when asked about Nginx
+```
+
+### 2. Security Checklist
+- [ ] Change default admin password
+- [ ] Configure SSL certificates
+- [ ] Set secure file permissions
+- [ ] Configure environment variables
+- [ ] Set up monitoring
+
+### 3. Start Server
+```bash
+npm run build
+npm run start
+```
+
+## API Endpoints
+
+### Authentication
+```typescript
+// Login
+POST /api/auth/login
+{
+  "email": "user@partner.com",
+  "password": "secure123"
+}
+
+// Response
+{
+  "token": "jwt.token.here",
+  "partnerId": "partner1",
+  "namespace": "partner_partner1",
+  "role": "partner"
+}
+```
+
+### Admin Operations
+```typescript
+// List partners
+GET /api/admin/partners
+Authorization: Bearer <admin-token>
+
+// Create partner
+POST /api/admin/partners
+Authorization: Bearer <admin-token>
+{
+  "partnerId": "partner2",
+  "email": "user@partner2.com",
+  "password": "secure456"
+}
+```
+
+### RAG Operations
+```typescript
+// Upload document
+POST /api/rag/upload
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+file: <document>
+
+// Query
+POST /api/rag/query
+Authorization: Bearer <token>
+{
+  "query": "What is RAG?",
+  "conversationId": "optional-id"
+}
+```
+
+## Documentation
+
+- [Architecture Guide](docs/ARCHITECTURE.md)
+- [Security Guide](docs/SECURITY.md)
+- [Testing Guide](docs/TESTING.md)
+
+## Development
+
+### Directory Structure
+```
+src/
+  ├── app/              # Next.js app router
+  ├── components/       # React components
+  ├── lib/             # Core libraries
+  │   ├── database/    # SQLite client
+  │   ├── isolation/   # Partner isolation
+  │   └── rag/         # RAG pipeline
+  └── types/           # TypeScript types
+
+scripts/               # Utility scripts
+docs/                 # Documentation
+```
+
+### Testing
+```bash
+# Unit tests
+npm run test
+
+# Integration tests
+npm run test:integration
+
+# E2E tests
+npm run test:e2e
+```
+
+### Scripts
+- `deploy.sh`: Production deployment
+- `setup-ssl.sh`: SSL certificate setup
+- `test-database.ts`: Database tests
+- `test-auth.ts`: Authentication tests
+- `test-query.ts`: RAG pipeline tests
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+1. Fork repository
+2. Create feature branch
+3. Commit changes
+4. Create pull request
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License - see [LICENSE](LICENSE)
