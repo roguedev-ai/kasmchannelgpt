@@ -3,9 +3,12 @@ interface Session {
   partnerId: string;
 }
 
+type SessionChangeCallback = () => void;
+
 class SessionManager {
   private readonly TOKEN_KEY = 'customgpt_token';
   private readonly PARTNER_ID_KEY = 'customgpt_partner_id';
+  private listeners: SessionChangeCallback[] = [];
   
   constructor() {
     // Initialize if in browser environment
@@ -20,6 +23,9 @@ class SessionManager {
     localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.PARTNER_ID_KEY, partnerId);
     console.log(`[Session] Stored session for partner: ${partnerId}`);
+    
+    // Notify listeners
+    this.notifyListeners();
   }
   
   getToken(): string | null {
@@ -38,10 +44,48 @@ class SessionManager {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.PARTNER_ID_KEY);
     console.log('[Session] Cleared session');
+    
+    // Notify listeners
+    this.notifyListeners();
   }
   
   hasValidSession(): boolean {
     return !!(this.getToken() && this.getPartnerId());
+  }
+
+  /**
+   * Check if user is currently authenticated
+   * @returns boolean indicating if both token and partnerId are set
+   */
+  isAuthenticated(): boolean {
+    return this.hasValidSession();
+  }
+
+  /**
+   * Subscribe to session changes
+   * @param callback Function to call when session changes
+   * @returns Cleanup function to unsubscribe
+   */
+  onSessionChange(callback: SessionChangeCallback): () => void {
+    this.listeners.push(callback);
+    return () => {
+      this.listeners = this.listeners.filter(listener => listener !== callback);
+    };
+  }
+
+  /**
+   * Get current session information
+   * @returns Object containing current token and partnerId
+   */
+  useSession(): { token: string | null; partnerId: string | null } {
+    return {
+      token: this.getToken(),
+      partnerId: this.getPartnerId()
+    };
+  }
+
+  private notifyListeners(): void {
+    this.listeners.forEach(listener => listener());
   }
 }
 
