@@ -30,6 +30,7 @@ import { Toaster } from 'sonner';
 // import { PWAManager } from '@/components/pwa/PWAManager'; // Disabled - Uncomment to enable PWA install prompts
 import { DemoModeProvider } from '@/components/demo/DemoModeProvider';
 import { PostHogProvider } from '@/components/PostHogProvider';
+import { GoogleAnalytics, GTMNoScript } from '@/components/GoogleAnalytics';
 import "./globals.css";
 
 /**
@@ -141,6 +142,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Google Analytics - GTM & GA4 */}
+        <GoogleAnalytics />
+
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -149,12 +153,12 @@ export default function RootLayout({
                 try {
                   // Get theme from cookie
                   const cookies = document.cookie.split(';');
-                  const themeCookie = cookies.find(cookie => 
+                  const themeCookie = cookies.find(cookie =>
                     cookie.trim().startsWith('customgpt-theme=')
                   );
-                  
+
                   let theme = 'light';
-                  
+
                   if (themeCookie) {
                     theme = themeCookie.split('=')[1].trim();
                   } else {
@@ -163,12 +167,12 @@ export default function RootLayout({
                     if (stored) {
                       const parsed = JSON.parse(stored);
                       theme = parsed?.state?.theme || 'light';
-                      
+
                       // Migrate to cookie
                       document.cookie = 'customgpt-theme=' + theme + '; max-age=' + (365 * 24 * 60 * 60) + '; path=/; SameSite=Lax';
                     }
                   }
-                  
+
                   // Apply theme
                   if (theme === 'dark') {
                     document.documentElement.classList.add('dark');
@@ -185,6 +189,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        {/* GTM NoScript Fallback */}
+        <noscript>
+          <GTMNoScript />
+        </noscript>
         {/* Add global providers here */}
         <PostHogProvider>
           <DemoModeProvider>

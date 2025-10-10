@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     const responseHeader = Buffer.from(JSON.stringify(newMessages)).toString('base64');
 
     // Return audio response with conversation in header
-    return new NextResponse(audioBuffer, {
+    return new NextResponse(audioBuffer as unknown as BodyInit, {
       status: 200,
       headers: {
         'Content-Type': 'audio/mpeg',

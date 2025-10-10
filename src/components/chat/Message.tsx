@@ -24,8 +24,11 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { Prism as SyntaxHighlighterComponent } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+// Type assertion to work around TypeScript issue with react-syntax-highlighter
+const SyntaxHighlighter = SyntaxHighlighterComponent as any;
 import { motion } from 'framer-motion';
 import { 
   Bot, 
