@@ -1,0 +1,46 @@
+{
+  "version": "1.0.0",
+  "applicationName": "RAG Platform",
+  "assets": {
+    "favicon": {
+      "path": "public/favicon.ico",
+      "backup": "branding/backups/favicon.ico.backup",
+      "description": "Browser tab icon (16x16, 32x32, 48x48)"
+    },
+    "logo": {
+      "path": "public/logo.png",
+      "backup": "branding/backups/logo.png.backup",
+      "description": "Main application logo (recommended: 200x50px)",
+      "usedIn": ["Header", "Navigation"]
+    },
+    "loginLogo": {
+      "path": "public/login-logo.png",
+      "backup": "branding/backups/login-logo.png.backup",
+      "description": "Login page logo (recommended: 300x100px)",
+      "usedIn": ["PartnerLogin component"]
+    },
+    "loginBackground": {
+      "path": "public/login-bg.jpg",
+      "backup": "branding/backups/login-bg.jpg.backup",
+      "description": "Login page background (optional)",
+      "usedIn": ["PartnerLogin component"]
+    },
+    "pwaIcon": {
+      "path": "public/icon-512.png",
+      "backup": "branding/backups/icon-512.png.backup",
+      "description": "PWA app icon (512x512px)",
+      "usedIn": ["manifest.json"]
+    }
+  },
+  "colors": {
+    "primary": "#3b82f6",
+    "secondary": "#8b5cf6",
+    "background": "#f9fafb",
+    "text": "#111827"
+  },
+  "metadata": {
+    "title": "RAG Platform",
+    "description": "Privacy-preserving RAG system with partner isolation",
+    "themeColor": "#3b82f6"
+  }
+}
