@@ -37,60 +37,6 @@ services:
       - "com.customgpt.description=Full Next.js application with dashboard"
 
   # ============================================
-  # Widget Only (Static Bundle)
-  # ============================================
-  widget:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: widget
-    container_name: customgpt-ui-widget
-    ports:
-      - "8080:80"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/customgpt-widget.js"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
-    networks:
-      - customgpt-network
-    labels:
-      - "com.customgpt.service=widget"
-      - "com.customgpt.description=Embeddable widget bundle for third-party sites"
-    profiles:
-      - widget
-      - all
-
-  # ============================================
-  # Iframe App (Isolated Chat Interface)
-  # ============================================
-  iframe:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: iframe
-    container_name: customgpt-ui-iframe
-    ports:
-      - "8081:80"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
-    networks:
-      - customgpt-network
-    labels:
-      - "com.customgpt.service=iframe"
-      - "com.customgpt.description=Iframe-embeddable chat interface"
-    profiles:
-      - iframe
-      - all
-
-  # ============================================
   # Development Environment
   # ============================================
   dev:
@@ -101,8 +47,6 @@ services:
     container_name: customgpt-ui-dev
     ports:
       - "3000:3000"  # Next.js dev server
-      - "8080:8080"  # Widget dev server
-      - "8081:8081"  # Iframe dev server
     environment:
       - NODE_ENV=development
       - CUSTOMGPT_API_KEY=${CUSTOMGPT_API_KEY}
@@ -115,8 +59,6 @@ services:
       - ./next.config.js:/app/next.config.js
       - ./tailwind.config.js:/app/tailwind.config.js
       - ./tsconfig.json:/app/tsconfig.json
-      - ./webpack.widget.js:/app/webpack.widget.js
-      - ./webpack.iframe.js:/app/webpack.iframe.js
     restart: unless-stopped
     networks:
       - customgpt-network

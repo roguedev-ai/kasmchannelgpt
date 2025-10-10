@@ -1,18 +1,13 @@
 {
   "name": "customgpt-ui",
   "version": "1.0.0",
-  "description": "CustomGPT.ai Chat UI - Multi-format deployment (standalone, widget, embed)",
+  "description": "CustomGPT.ai Chat UI - Partner authentication and chat interface",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "dev:https": "HTTPS=true SSL_CRT_FILE=localhost.pem SSL_KEY_FILE=localhost-key.pem next dev --experimental-https",
     "build": "next build",
     "build:standalone": "next build",
-    "build:widget": "webpack --config webpack.widget.js --mode production && node scripts/copy-widget-assets.js",
-    "build:iframe": "webpack --config webpack.iframe.js --mode production && node scripts/copy-widget-assets.js",
-    "dev:widget": "webpack serve --config webpack.widget.js --mode development",
-    "dev:iframe": "webpack serve --config webpack.iframe.js --mode development",
-    "build:all": "npm run build:standalone && npm run build:widget && npm run build:iframe",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
@@ -54,7 +49,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.28.0",
-    "@babel/plugin-proposal-class-properties": "^7.18.6",
     "@babel/preset-env": "^7.28.0",
     "@babel/preset-react": "^7.27.1",
     "@babel/preset-typescript": "^7.27.1",
@@ -66,37 +60,22 @@
     "@typescript-eslint/eslint-plugin": "^6.17.0",
     "@typescript-eslint/parser": "^6.17.0",
     "autoprefixer": "^10.4.21",
-    "babel-loader": "^9.2.1",
-    "css-loader": "^6.11.0",
-    "css-minimizer-webpack-plugin": "^7.0.2",
     "eslint": "^8.56.0",
     "eslint-config-next": "^14.0.4",
-    "html-webpack-plugin": "^5.6.3",
-    "mini-css-extract-plugin": "^2.9.2",
     "postcss": "^8.5.6",
-    "postcss-loader": "^7.3.4",
-    "style-loader": "^4.0.0",
     "tailwindcss": "^3.4.17",
-    "terser-webpack-plugin": "^5.3.14",
-    "typescript": "^5",
-    "webpack": "^5.100.2",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.2.2"
+    "typescript": "^5"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
   "keywords": [
-    "chatgpt",
-    "customgpt",
-    "ai",
     "chat",
     "ui",
     "react",
     "nextjs",
     "typescript"
   ],
-  "author": "CustomGPT.ai",
   "license": "MIT"
 }

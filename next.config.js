@@ -52,11 +52,11 @@ const nextConfig = {
         headers: [
           {
             key: 'X-Frame-Options',
-            value: 'ALLOWALL',
+            value: 'DENY',
           },
           {
             key: 'Content-Security-Policy',
-            value: "frame-ancestors 'self' https://customgpt.ai https://*.customgpt.ai http://localhost:* http://127.0.0.1:*",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.openai.com; frame-ancestors 'none';",
           },
         ],
       },
@@ -65,7 +65,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Cross-Origin-Embedder-Policy',
-            value: 'cross-origin',
+            value: 'require-corp',
           },
           {
             key: 'Cross-Origin-Opener-Policy', 
@@ -86,7 +86,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Cross-Origin-Embedder-Policy',
-            value: 'cross-origin',
+            value: 'require-corp',
           },
           {
             key: 'Cross-Origin-Opener-Policy', 
@@ -100,35 +100,20 @@ const nextConfig = {
             key: 'Content-Type',
             value: 'application/javascript',
           },
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
         ],
       },
     ];
   },
   
-  // Ensure static files are served correctly and add PostHog rewrites
+  // Ensure static files are served correctly
   async rewrites() {
     return [
       {
         source: '/_next/static/chunks/:path*',
         destination: '/:path*',
       },
-      {
-        source: '/ingest/static/:path*',
-        destination: 'https://us-assets.i.posthog.com/static/:path*',
-      },
-      {
-        source: '/ingest/:path*',
-        destination: 'https://us.i.posthog.com/:path*',
-      },
     ];
   },
-
-  // This is required to support PostHog trailing slash API requests
-  skipTrailingSlashRedirect: true,
 };
 
 module.exports = nextConfig;

@@ -1,6 +1,6 @@
-// Service Worker for CustomGPT PWA
-const CACHE_NAME = 'customgpt-v1';
-const DYNAMIC_CACHE = 'customgpt-dynamic-v1';
+// Service Worker for Partner Chat PWA
+const CACHE_NAME = 'partner-chat-v1';
+const DYNAMIC_CACHE = 'partner-chat-dynamic-v1';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -131,7 +131,7 @@ self.addEventListener('push', (event) => {
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
     vibrate: [200, 100, 200],
-    tag: 'customgpt-notification',
+    tag: 'partner-chat-notification',
     renotify: true,
     actions: [
       { action: 'open', title: 'Open Chat' },
@@ -140,7 +140,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification('CustomGPT', options)
+    self.registration.showNotification('Partner Chat', options)
   );
 });
 

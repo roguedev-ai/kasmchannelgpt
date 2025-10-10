@@ -1,65 +1,60 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
+# Testing
 /coverage
 
-# next.js
+# Next.js
 /.next/
 /out/
 
-# production
+# Production
 /build
+/dist
 
-# misc
+# Misc
 .DS_Store
 *.pem
 
-# debug
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# Local env files
 .env
-.env.local
+.env*.local
 .env.production
-.env.development
 
-# vercel
+# Vercel
 .vercel
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
-.claude
-.mcp.json
-app-debug.log
 
-/.customgpt-api-doc/
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-/.customgpt-api-sdks-main
+# Qdrant data
+qdrant_storage/
 
-/.customgpt-cookbook-main
+# Logs
+logs/
+*.log
 
-/.AIUI-main
+# Cache
+.cache/
+.npm/
 
-.AIUI-main
+# Build artifacts
+.turbo
+.webpack/
 
-AIUI-main
-
-CLAUDE.md
-
-# Webpack chunk files (build artifacts that change frequently)
-dist/**/*.chunk.js
-dist/**/*.chunk.js.map
+# Docker volumes
+docker/volumes/
