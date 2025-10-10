@@ -87,6 +87,14 @@ export class PartnerContextManager {
   }
 
   /**
+   * Get the namespace for a partner (for internal system use only)
+   * This is used by trusted internal components like the Qdrant client
+   */
+  getNamespace(partnerId: string): string {
+    return this.computeNamespace(partnerId);
+  }
+
+  /**
    * Compute the Qdrant collection name for a partner
    * This is the ONLY place namespace computation happens (security!)
    */
