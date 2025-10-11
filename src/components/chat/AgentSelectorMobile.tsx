@@ -1,27 +1,7 @@
-/**
- * Mobile Agent Selector Component
- * 
- * Mobile-optimized agent selector using a bottom sheet pattern.
- * Designed for touch interactions with large tap targets.
- * 
- * Features:
- * - Bottom sheet modal for agent selection
- * - Touch-optimized agent cards
- * - Search functionality
- * - Quick agent creation
- * - Swipe-to-close gesture support
- * - Safe area padding for modern devices
- * 
- * Usage:
- * - Triggered from mobile navigation
- * - Full-screen modal with backdrop
- * - Spring-based animations
- */
-
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bot, 
   X,
@@ -68,12 +48,6 @@ interface MobileAgentCardProps {
   onSettingsClick?: (agent: Agent) => void;
 }
 
-/**
- * Mobile Agent Card Component
- * 
- * Touch-optimized card for agent selection.
- * Features larger tap targets and clear visual feedback.
- */
 const MobileAgentCard: React.FC<MobileAgentCardProps> = ({
   agent,
   isSelected,
@@ -194,11 +168,6 @@ const MobileAgentCard: React.FC<MobileAgentCardProps> = ({
   );
 };
 
-/**
- * Agent Selector Mobile Component - Main Export
- * 
- * Mobile-optimized agent selector with bottom sheet interface.
- */
 export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
   isOpen,
   onClose,
@@ -223,7 +192,7 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
   } = useAgentStore();
   
   // Filter agents based on search query
-  const filteredAgents = agents.filter(agent =>
+  const filteredAgents = agents.filter((agent: Agent) =>
     agent.project_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     agent.id.toString().includes(searchQuery)
   );
@@ -243,29 +212,23 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
     const fetchMissingSettings = async () => {
       if (!isOpen || agents.length === 0) return;
       
-      console.log('🔍 [AgentSelector] Checking for agents needing settings fetch');
-      
       const client = getClient();
-      const agentsWithoutSettings = agents.filter(agent => 
+      const agentsWithoutSettings = agents.filter((agent: Agent) => 
         !agent.settings && !settingsFetchAttempted.current.has(agent.id)
       );
       
-      if (agentsWithoutSettings.length === 0) {
-        console.log('✅ [AgentSelector] All agents have settings or fetch already attempted');
-        return;
-      }
+      if (agentsWithoutSettings.length === 0) return;
       
       // Limit to first 5 to avoid overwhelming the API
       const agentsToFetch = agentsWithoutSettings.slice(0, 5);
-      console.log('📥 [AgentSelector] Fetching settings for agents:', agentsToFetch.map(a => a.id));
       
       // Mark these agents as attempted BEFORE fetching to prevent loops
-      agentsToFetch.forEach(agent => {
+      agentsToFetch.forEach((agent: Agent) => {
         settingsFetchAttempted.current.add(agent.id);
       });
       
       // Fetch settings in parallel for better performance
-      const settingsPromises = agentsToFetch.map(async (agent) => {
+      const settingsPromises = agentsToFetch.map(async (agent: Agent) => {
         try {
           const settingsResponse = await client.getAgentSettings(agent.id);
           if (settingsResponse && settingsResponse.data) {
@@ -281,14 +244,12 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
       const validResults = settingsResults.filter(result => result !== null);
       
       if (validResults.length > 0) {
-        console.log('✅ [AgentSelector] Updating', validResults.length, 'agents with settings');
         // Batch update all agents at once to minimize store updates
-        useAgentStore.setState(state => ({
-          agents: state.agents.map(a => {
+        useAgentStore.setState((state: any) => ({
+          agents: state.agents.map((a: Agent) => {
             const result = validResults.find(r => r!.agent.id === a.id);
             return result ? { ...a, settings: result.settings } : a;
           }),
-          // Also update current agent if it matches
           currentAgent: state.currentAgent 
             ? (() => {
                 const result = validResults.find(r => r!.agent.id === state.currentAgent!.id);
@@ -300,47 +261,33 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
     };
     
     fetchMissingSettings();
-  }, [isOpen, agents]); // Add agents dependency - the function prevents infinite loops
+  }, [isOpen, agents]);
   
-  // Removed auto-focus to prevent keyboard from automatically opening
-  
-  /**
-   * Automatically load all pages when searching
-   * This ensures search works across all projects, not just loaded ones
-   */
+  // Load all agents when searching
   useEffect(() => {
     const loadAllAgentsForSearch = async () => {
-      // Only trigger if we have a search query and there are more pages to load
       if (!searchQuery || !paginationMeta?.hasMore || loading || isLoadingAllForSearch) {
         return;
       }
 
-      console.log('🔍 [AgentSelector Mobile] Starting to load all agents for search...');
       setIsLoadingAllForSearch(true);
       
       try {
-        // Keep loading pages until we have all agents
         let attempts = 0;
-        const maxAttempts = 20; // Safety limit to prevent infinite loops
+        const maxAttempts = 20;
         
         while (attempts < maxAttempts) {
-          // Get fresh pagination state
           const currentState = useAgentStore.getState();
           if (!currentState.paginationMeta?.hasMore) {
             break;
           }
           
           attempts++;
-          console.log(`📥 [AgentSelector Mobile] Loading more agents... (attempt ${attempts})`);
-          
           await loadMoreAgents();
-          
-          // Small delay to avoid overwhelming the API
           await new Promise(resolve => setTimeout(resolve, 100));
         }
         
         const finalState = useAgentStore.getState();
-        console.log('✅ [AgentSelector Mobile] Finished loading all agents for search');
         toast.success(`Loaded all ${finalState.agents.length} projects for search`);
       } catch (error) {
         console.error('Failed to load all agents for search:', error);
@@ -350,12 +297,11 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
       }
     };
 
-    // Only run if we have a search query
     if (searchQuery) {
       loadAllAgentsForSearch();
     }
-  }, [searchQuery, paginationMeta?.hasMore, loading, loadMoreAgents]); // Include all dependencies
-  
+  }, [searchQuery, paginationMeta?.hasMore, loading, loadMoreAgents, isLoadingAllForSearch]);
+
   const handleSelectAgent = async (agent: Agent) => {
     if (isSelecting || agent.id === currentAgent?.id) {
       return;
@@ -376,23 +322,7 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
       setIsSelecting(false);
     }
   };
-  
-  const handleRefresh = async () => {
-    try {
-      await fetchAgents();
-      toast.success('Agents refreshed');
-    } catch (error) {
-      toast.error('Failed to refresh agents');
-    }
-  };
-  
-  const handleCurrentAgentSettings = () => {
-    if (currentAgent) {
-      router.push(`/projects?id=${currentAgent.id}`);
-      onClose();
-    }
-  };
-  
+
   return (
     <MobileBottomSheet
       isOpen={isOpen}
@@ -404,7 +334,7 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={handleRefresh}
+              onClick={() => fetchAgents()}
               disabled={loading}
             >
               <RefreshCw className={cn(
@@ -429,7 +359,6 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
       <div className="flex flex-col h-full">
         {/* Header with search */}
         <div className="px-6 py-4 border-b border-border">
-          
           {/* Create New Agent Button */}
           <Link href="/dashboard/projects/create" className="mb-4 block">
             <Button className="w-full mobile-btn touch-target" variant="outline">
@@ -492,7 +421,7 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
               <p className="text-muted-foreground mb-4 max-w-sm">
                 There was an error loading your agents. Please try again.
               </p>
-              <Button onClick={handleRefresh} variant="outline">
+              <Button onClick={() => fetchAgents()} variant="outline">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Try Again
               </Button>
@@ -523,7 +452,7 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
             // Agent list
             <>
               <div className="space-y-3">
-                {filteredAgents.map((agent, index) => (
+                {filteredAgents.map((agent) => (
                   <MobileAgentCard
                     key={agent.id}
                     agent={agent}
@@ -567,8 +496,6 @@ export const AgentSelectorMobile: React.FC<AgentSelectorMobileProps> = ({
             </>
           )}
         </div>
-        
-        {/* Footer removed - Create button moved to top */}
       </div>
     </MobileBottomSheet>
   );

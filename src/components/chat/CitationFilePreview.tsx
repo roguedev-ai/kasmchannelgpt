@@ -37,6 +37,7 @@ export const CitationFilePreview: React.FC<CitationFilePreviewProps> = ({
   const [contentType, setContentType] = useState<string>('text/plain');
   const [copied, setCopied] = useState(false);
 
+  // Memoize fetchFilePreview to prevent unnecessary re-renders
   const fetchFilePreview = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -83,7 +84,7 @@ export const CitationFilePreview: React.FC<CitationFilePreviewProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [citationId]);
+  }, [citationId, fileContent?.length]); // Added fileContent?.length as dependency
 
   useEffect(() => {
     if (isOpen && citationId) {

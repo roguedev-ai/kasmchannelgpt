@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { partnerContext } from '../../../../lib/isolation/partner-context';
-import { queryPipeline } from '../../../../lib/rag/query-pipeline';
-import { AuthenticationError } from '../../../../types/backend';
-import { QueryRequest } from '../../../../types/backend';
+import { QueryPipeline } from '@/lib/rag/query-pipeline';
+import { partnerContext } from '@/lib/isolation/partner-context';
+import { AgentFunction } from '@/lib/rag/agent-router';
+
+const queryPipeline = new QueryPipeline();
 
 export async function POST(request: NextRequest) {
   try {
-    // Extract and verify JWT token
     const authHeader = request.headers.get('authorization');
     const session = partnerContext.extractFromHeader(authHeader);
     
-    console.log(`[API] Query request from partner: ${session.partnerId}`);
-    
-    // Parse request body
     const body = await request.json();
-    const { query, conversationId } = body;
+    const { query, conversationId, agentFunction } = body;
     
     if (!query) {
       return NextResponse.json(
@@ -23,47 +20,38 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log(`[API] Processing query: "${query.substring(0, 50)}..."`);
-    
-    // Execute RAG query
-    const queryRequest: QueryRequest = {
-      query,
-      partnerId: session.partnerId,
-      conversationId,
-    };
-    
-    const result = await queryPipeline.query(queryRequest);
-    
-    console.log(`[API] Query successful, returned ${result.sources.length} sources`);
-    
-    return NextResponse.json(result, { status: 200 });
-    
-  } catch (error: any) {
-    console.error('[API] Query error:', error);
-    
-    // Handle specific error types
-    if (error instanceof AuthenticationError) {
+    // Validate agentFunction if provided
+    if (agentFunction && !['sales', 'support', 'technical', 'general'].includes(agentFunction)) {
       return NextResponse.json(
-        { error: 'Authentication failed', message: error.message },
-        { status: 401 }
+        { error: 'Invalid agent function' },
+        { status: 400 }
       );
     }
     
-    // Generic error
+    const queryRequest = {
+      query,
+      partnerId: session.partnerId,
+      conversationId,
+      agentFunction: agentFunction as AgentFunction | undefined,
+    };
+    
+    const result = await queryPipeline.processQuery(queryRequest);
+    
+    return NextResponse.json(result, { status: 200 });
+    
+  } catch (error) {
+    console.error('[Query API] Error:', error);
+    
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: 'Query failed', message: error.message },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
-}
-
-export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
 }

@@ -1,62 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { qdrantClient } from '../../../lib/rag/qdrant-client';
+import { NextResponse } from 'next/server';
+import { qdrantClient } from '@/lib/rag/qdrant-client';
+import { backendConfig } from '@/lib/config/backend';
 
-export async function GET(request: NextRequest) {
-  try {
-    // Check Qdrant health
-    const qdrantHealthy = await qdrantClient.healthCheck();
-    
-    // Check environment variables
-    const envHealthy = !!(
-      process.env.JWT_SECRET &&
-      process.env.CUSTOMGPT_API_KEY &&
-      process.env.QDRANT_URL &&
-      process.env.OPENAI_API_KEY
-    );
-    
-    const allHealthy = qdrantHealthy && envHealthy;
-    
-    return NextResponse.json({
-      status: allHealthy ? 'healthy' : 'unhealthy',
-      checks: {
-        qdrant: qdrantHealthy,
-        environment: envHealthy,
-        requiredEnvVars: {
-          JWT_SECRET: !!process.env.JWT_SECRET,
-          CUSTOMGPT_API_KEY: !!process.env.CUSTOMGPT_API_KEY,
-          QDRANT_URL: !!process.env.QDRANT_URL,
-          OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
-        },
-      },
-      timestamp: new Date().toISOString(),
-    }, { 
-      status: allHealthy ? 200 : 503,
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
-      },
-    });
-    
-  } catch (error: any) {
-    return NextResponse.json({
-      status: 'unhealthy',
-      error: error.message,
-      timestamp: new Date().toISOString(),
-    }, { 
-      status: 503,
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
-      },
-    });
-  }
-}
-
-export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+export async function GET() {
+  const checks = {
+    qdrant: await qdrantClient.healthCheck(),
+    environment: true,
+    requiredEnvVars: {
+      JWT_SECRET: !!backendConfig.jwtSecret,
+      CUSTOMGPT_API_KEY: !!backendConfig.customGptApiKey,
+      QDRANT_URL: !!backendConfig.qdrantUrl,
+      OPENAI_API_KEY: !!backendConfig.openaiApiKey,
     },
+  };
+
+  // System is healthy if either Qdrant is available or we're using mock data
+  const isHealthy = checks.environment && 
+    Object.values(checks.requiredEnvVars).every(Boolean);
+
+  return NextResponse.json({
+    status: isHealthy ? 'healthy' : 'unhealthy',
+    checks,
+    timestamp: new Date().toISOString(),
+    mode: checks.qdrant ? 'production' : 'mock',
+  }, {
+    status: isHealthy ? 200 : 503,
   });
 }

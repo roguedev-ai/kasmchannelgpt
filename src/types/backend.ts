@@ -1,4 +1,7 @@
-// Error types
+import { DocumentMetadata } from '../lib/rag/qdrant-client';
+import { EmbeddingProvider } from '../lib/rag/embeddings-factory';
+import { AgentFunction } from '../lib/rag/agent-router';
+
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -6,58 +9,23 @@ export class ValidationError extends Error {
   }
 }
 
-export class AuthenticationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AuthenticationError';
-  }
-}
-
-export class IsolationViolationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'IsolationViolationError';
-  }
-}
-
-// Partner session type
-export interface PartnerSession {
-  partnerId: string;
-  email: string;
-  namespace: string;
-  exp: number;
-  iat: number;
-}
-
-// Login types
-export interface LoginRequest {
-  partnerId: string;
-  email: string;
-}
-
-export interface LoginResponse {
-  token: string;
-  partnerId: string;
-  namespace: string;
-  expiresAt: string;
-}
-
-// Query types
 export interface QueryRequest {
   query: string;
   partnerId: string;
   conversationId?: string;
-}
-
-export interface DocumentSource {
-  text: string;
-  filename: string;
-  score: number;
-  chunkIndex: number;
+  agentFunction?: AgentFunction;
+  topK?: number;
 }
 
 export interface QueryResponse {
+  query: string;
+  documents: DocumentMetadata[];
   answer: string;
-  sources: DocumentSource[];
   conversationId: string;
+  metadata: {
+    provider: EmbeddingProvider;
+    dimensions: number;
+    timestamp: string;
+    agentFunction: AgentFunction;
+  };
 }

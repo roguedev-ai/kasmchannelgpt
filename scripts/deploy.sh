@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Colors for output
+# Colors for logging
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -19,101 +19,191 @@ log_warn() {
     echo -e "${YELLOW}WARN: $1${NC}"
 }
 
-# Check if Docker is running
-check_docker() {
-    log_info "Checking Docker..."
-    if ! docker info > /dev/null 2>&1; then
-        log_error "Docker is not running"
-        exit 1
-    fi
-    log_info "✓ Docker is running"
-}
-
-# Check if Qdrant is running
-check_qdrant() {
-    log_info "Checking Qdrant..."
-    if ! curl -s http://localhost:6333/health > /dev/null; then
-        log_error "Qdrant is not running"
-        log_info "Start with: docker run -d -p 6333:6333 qdrant/qdrant"
-        exit 1
-    fi
-    log_info "✓ Qdrant is running"
-}
-
-# Check Node.js version
-check_node() {
-    log_info "Checking Node.js..."
-    if ! command -v node > /dev/null; then
-        log_error "Node.js is not installed"
-        exit 1
-    fi
-    
-    local version=$(node -v | cut -d'v' -f2)
-    local major=$(echo $version | cut -d'.' -f1)
-    
-    if [ "$major" -lt 16 ]; then
-        log_error "Node.js version must be >= 16 (current: $version)"
-        exit 1
-    fi
-    log_info "✓ Node.js version $version"
-}
-
-# Setup environment
 setup_env() {
     log_info "Setting up environment variables..."
     
     if [ ! -f .env.local ]; then
-        log_warn ".env.local not found. Creating from template..."
+        log_warn ".env.local not found. Creating from configuration..."
         
         echo ""
-        log_info "=== Environment Setup ==="
+        log_info "=== Environment Configuration ==="
         echo ""
         
-        # Prompt for CustomGPT API key
-        echo "Enter your CustomGPT API key:"
-        echo "(Get it from: https://app.customgpt.ai)"
-        read -p "CustomGPT API Key: " CUSTOMGPT_KEY
+        # Generate JWT secret automatically
+        log_info "Generating secure JWT secret..."
+        JWT_SECRET=$(openssl rand -base64 32)
+        log_info "✓ JWT secret generated"
+        
+        # Prompt for database path
+        read -p "Database path [./data/rag-platform.db]: " DB_PATH
+        DB_PATH=${DB_PATH:-./data/rag-platform.db}
+        
+        # Create data directory
+        DB_DIR=$(dirname "$DB_PATH")
+        mkdir -p "$DB_DIR"
+        log_info "✓ Database directory created: $DB_DIR"
+        
+        echo ""
+        log_info "=== Embedding Provider Configuration ==="
+        echo ""
+        echo "Choose embedding provider:"
+        echo "  1. OpenAI (text-embedding-3-small, 1536 dimensions)"
+        echo "  2. Google Gemini (text-embedding-004, 768 dimensions, FREE tier)"
+        echo ""
+        read -p "Select provider (1 or 2) [1]: " EMBEDDING_CHOICE
+        EMBEDDING_CHOICE=${EMBEDDING_CHOICE:-1}
+        
+        if [ "$EMBEDDING_CHOICE" = "2" ]; then
+            EMBEDDING_PROVIDER="gemini"
+            echo ""
+            log_info "Selected: Google Gemini"
+            echo "Get your API key from: https://makersuite.google.com/app/apikey"
+            read -p "Enter Gemini API key: " GEMINI_API_KEY
+            
+            if [ -z "$GEMINI_API_KEY" ]; then
+                log_error "Gemini API key is required"
+                exit 1
+            fi
+            
+            OPENAI_API_KEY=""
+        else
+            EMBEDDING_PROVIDER="openai"
+            echo ""
+            log_info "Selected: OpenAI"
+            echo "You can use either:"
+            echo "  - OpenAI API key (from https://platform.openai.com/api-keys)"
+            echo "  - CustomGPT API key (if it starts with 'sk-')"
+            echo ""
+            read -p "Enter OpenAI API key (or leave blank to use CustomGPT key): " OPENAI_API_KEY
+            GEMINI_API_KEY=""
+        fi
+        
+        echo ""
+        log_info "=== CustomGPT Configuration ==="
+        echo ""
+        echo "CustomGPT is used for generating responses (not embeddings)"
+        echo "Get your API key from: https://app.customgpt.ai"
+        read -p "Enter CustomGPT API key: " CUSTOMGPT_KEY
         
         if [ -z "$CUSTOMGPT_KEY" ]; then
             log_error "CustomGPT API key is required"
             exit 1
         fi
         
-        # Auto-generate JWT secret (secure random)
-        log_info "Generating secure JWT secret..."
-        JWT_SECRET=$(openssl rand -base64 32)
-        log_info "✓ JWT secret generated (32 bytes)"
+        # If OpenAI key not provided and embedding provider is openai, use CustomGPT key
+        if [ "$EMBEDDING_PROVIDER" = "openai" ] && [ -z "$OPENAI_API_KEY" ]; then
+            OPENAI_API_KEY="$CUSTOMGPT_KEY"
+            log_info "Using CustomGPT key for OpenAI embeddings"
+        fi
         
-        # Prompt for database path (optional)
-        read -p "Database path [./data/rag-platform.db]: " DB_PATH
-        DB_PATH=${DB_PATH:-./data/rag-platform.db}
+        read -p "Enter CustomGPT base URL [https://app.customgpt.ai/api/v1]: " CUSTOMGPT_BASE_URL
+        CUSTOMGPT_BASE_URL=${CUSTOMGPT_BASE_URL:-https://app.customgpt.ai/api/v1}
         
-        # Create data directory if needed
-        DB_DIR=$(dirname "$DB_PATH")
-        mkdir -p "$DB_DIR"
-        log_info "✓ Database directory created: $DB_DIR"
+        echo ""
+        log_info "=== Agent Configuration (Optional) ==="
+        echo ""
+        echo "You can configure different CustomGPT agents for different functions."
+        echo "Press Enter to skip any agent configuration."
+        echo ""
+        
+        read -p "Default agent ID (fallback): " DEFAULT_AGENT_ID
+        read -p "Sales agent ID: " SALES_AGENT_ID
+        read -p "Support agent ID: " SUPPORT_AGENT_ID
+        read -p "Technical agent ID: " TECHNICAL_AGENT_ID
+        read -p "General agent ID: " GENERAL_AGENT_ID
+        
+        echo ""
+        log_info "=== Domain Configuration ==="
+        echo ""
+        read -p "Enter your domain [http://localhost:3000]: " APP_URL
+        APP_URL=${APP_URL:-http://localhost:3000}
         
         # Create .env.local
         cat > .env.local << EOF
+# ============================================
+# RAG Platform Configuration
+# Generated: $(date)
+# ============================================
+
 # Backend Configuration
 JWT_SECRET=${JWT_SECRET}
-CUSTOMGPT_API_KEY=${CUSTOMGPT_KEY}
-QDRANT_URL=http://localhost:6333
 DATABASE_PATH=${DB_PATH}
+QDRANT_URL=http://localhost:6333
 
+# ============================================
+# Embedding Provider: ${EMBEDDING_PROVIDER}
+# ============================================
+EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER}
+EOF
+
+        # Add provider-specific keys
+        if [ "$EMBEDDING_PROVIDER" = "gemini" ]; then
+            cat >> .env.local << EOF
+GEMINI_API_KEY=${GEMINI_API_KEY}
+EOF
+        else
+            cat >> .env.local << EOF
+OPENAI_API_KEY=${OPENAI_API_KEY}
+EOF
+        fi
+        
+        # Add CustomGPT configuration
+        cat >> .env.local << EOF
+
+# ============================================
+# CustomGPT Configuration
+# ============================================
+CUSTOMGPT_API_KEY=${CUSTOMGPT_KEY}
+CUSTOMGPT_BASE_URL=${CUSTOMGPT_BASE_URL}
+EOF
+
+        # Add agent IDs if provided
+        if [ -n "$DEFAULT_AGENT_ID" ]; then
+            echo "CUSTOMGPT_DEFAULT_AGENT_ID=${DEFAULT_AGENT_ID}" >> .env.local
+        fi
+        if [ -n "$SALES_AGENT_ID" ]; then
+            echo "CUSTOMGPT_AGENT_SALES=${SALES_AGENT_ID}" >> .env.local
+        fi
+        if [ -n "$SUPPORT_AGENT_ID" ]; then
+            echo "CUSTOMGPT_AGENT_SUPPORT=${SUPPORT_AGENT_ID}" >> .env.local
+        fi
+        if [ -n "$TECHNICAL_AGENT_ID" ]; then
+            echo "CUSTOMGPT_AGENT_TECHNICAL=${TECHNICAL_AGENT_ID}" >> .env.local
+        fi
+        if [ -n "$GENERAL_AGENT_ID" ]; then
+            echo "CUSTOMGPT_AGENT_GENERAL=${GENERAL_AGENT_ID}" >> .env.local
+        fi
+        
+        # Add frontend configuration
+        cat >> .env.local << EOF
+
+# ============================================
 # Frontend Configuration
+# ============================================
 NEXT_PUBLIC_USE_MOCK_API=false
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=${APP_URL}
 EOF
         
         log_info "✓ .env.local created successfully"
         
         echo ""
         log_info "=== Configuration Summary ==="
-        echo "  JWT Secret: ********* (auto-generated)"
-        echo "  CustomGPT API Key: ${CUSTOMGPT_KEY:0:10}..."
-        echo "  Qdrant URL: http://localhost:6333"
+        echo "  Embedding Provider: $EMBEDDING_PROVIDER"
         echo "  Database: $DB_PATH"
+        echo "  CustomGPT: Configured"
+        if [ -n "$DEFAULT_AGENT_ID" ]; then
+            echo "  Default Agent: $DEFAULT_AGENT_ID"
+        fi
+        if [ -n "$SALES_AGENT_ID" ]; then
+            echo "  Sales Agent: $SALES_AGENT_ID"
+        fi
+        if [ -n "$SUPPORT_AGENT_ID" ]; then
+            echo "  Support Agent: $SUPPORT_AGENT_ID"
+        fi
+        if [ -n "$TECHNICAL_AGENT_ID" ]; then
+            echo "  Technical Agent: $TECHNICAL_AGENT_ID"
+        fi
+        echo "  App URL: $APP_URL"
         echo ""
         
     else
@@ -126,215 +216,45 @@ EOF
             
             if [ "$RECREATE" = "y" ] || [ "$RECREATE" = "Y" ]; then
                 rm .env.local
-                setup_env  # Recursive call to recreate
+                setup_env
                 return
             fi
         fi
+        
+        log_info "Using existing .env.local configuration"
     fi
 }
 
-# Install dependencies
-install_deps() {
+# Main deployment steps
+main() {
+    log_info "Starting deployment..."
+    
+    # Setup environment
+    setup_env
+    
+    # Install dependencies
     log_info "Installing dependencies..."
     npm install
-    log_info "✓ Dependencies installed"
-}
-
-# Build application
-build_app() {
+    
+    # Build the application
     log_info "Building application..."
     npm run build
-    log_info "✓ Build complete"
-}
-
-# Configure Nginx
-configure_nginx() {
-    log_info "Configuring Nginx..."
-
-    # Check if running as root/sudo
-    if [ "$EUID" -ne 0 ]; then
-        log_error "Nginx configuration requires sudo privileges"
-        log_info "Please run: sudo ./scripts/deploy.sh"
-        exit 1
-    fi
-
-    # Prompt for domain
-    read -p "Enter your domain name (e.g., agent-01.workoverip.app): " DOMAIN
-
-    if [ -z "$DOMAIN" ]; then
-        log_error "Domain name is required"
-        exit 1
-    fi
-
-    # Check if SSL certificates exist
-    CERT_PATH="/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"
-    KEY_PATH="/etc/letsencrypt/live/${DOMAIN}/privkey.pem"
-
-    if [ ! -f "$CERT_PATH" ]; then
-        log_error "SSL certificate not found at: $CERT_PATH"
-        log_info "Please run: sudo ./scripts/setup-ssl.sh"
-        exit 1
-    fi
-
-    log_info "Found SSL certificates for $DOMAIN"
-
-    # Create Nginx config
-    NGINX_CONFIG="/etc/nginx/sites-available/rag-platform"
-
-    log_info "Creating Nginx configuration..."
-
-    cat > "$NGINX_CONFIG" << 'NGINX_EOF'
-# HTTP -> HTTPS redirect
-server {
-    listen 80;
-    server_name DOMAIN_PLACEHOLDER;
-    return 301 https://$server_name$request_uri;
-}
-
-# HTTPS server
-server {
-    listen 443 ssl http2;
-    server_name DOMAIN_PLACEHOLDER;
-
-    # SSL Configuration
-    ssl_certificate /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/privkey.pem;
-
-    # SSL Security
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    ssl_prefer_server_ciphers on;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
-
-    # Security Headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-
-    # Hide server info
-    server_tokens off;
-
-    # File upload size
-    client_max_body_size 11M;
-
-    # Rate limiting
-    limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
-    limit_req_zone $binary_remote_addr zone=upload:10m rate=1r/m;
-
-    # Main proxy
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # Rate limited endpoints
-    location /api/rag/query {
-        limit_req zone=api burst=20 nodelay;
-        proxy_pass http://localhost:3000;
-        include proxy_params;
-    }
-
-    location /api/rag/upload {
-        limit_req zone=upload burst=2 nodelay;
-        proxy_pass http://localhost:3000;
-        include proxy_params;
-    }
-
-    # Health check (no rate limit)
-    location /api/health {
-        proxy_pass http://localhost:3000;
-        include proxy_params;
-    }
-}
-NGINX_EOF
-
-    # Replace domain placeholder
-    sed -i "s/DOMAIN_PLACEHOLDER/$DOMAIN/g" "$NGINX_CONFIG"
-
-    # Enable site
-    ln -sf "$NGINX_CONFIG" /etc/nginx/sites-enabled/rag-platform
-
-    # Remove default site if exists
-    rm -f /etc/nginx/sites-enabled/default
-
-    # Test Nginx config
-    log_info "Testing Nginx configuration..."
-    if nginx -t; then
-        log_info "Nginx configuration is valid"
-    else
-        log_error "Nginx configuration test failed!"
-        exit 1
-    fi
-
-    # Reload Nginx
-    log_info "Reloading Nginx..."
-    systemctl reload nginx
-
-    log_info "✓ Nginx configured successfully for https://$DOMAIN"
-
-    # Update .env.local with domain
-    if grep -q "NEXT_PUBLIC_APP_URL" .env.local; then
-        sed -i "s|NEXT_PUBLIC_APP_URL=.*|NEXT_PUBLIC_APP_URL=https://$DOMAIN|" .env.local
-    else
-        echo "NEXT_PUBLIC_APP_URL=https://$DOMAIN" >> .env.local
-    fi
-}
-
-# Start application
-start_app() {
-    local mode=$1
-    log_info "Starting application in $mode mode..."
     
-    if [ "$mode" = "development" ]; then
-        npm run dev
+    # Start or restart the application
+    if pm2 list | grep -q "rag-platform"; then
+        log_info "Restarting application..."
+        pm2 restart rag-platform
     else
-        npm run start
+        log_info "Starting application..."
+        pm2 start npm --name "rag-platform" -- start
     fi
+    
+    log_info "Deployment complete!"
+    echo ""
+    echo "Your RAG platform is now running at: ${APP_URL}"
+    echo "Check the logs with: pm2 logs rag-platform"
+    echo ""
 }
 
-# Main function
-main() {
-    log_info "=== Starting Deployment ==="
-
-    check_docker
-    check_qdrant
-    check_node
-    setup_env
-
-    # Ask if user wants to configure Nginx
-    read -p "Configure Nginx with SSL? (y/n): " SETUP_NGINX
-    if [ "$SETUP_NGINX" = "y" ] || [ "$SETUP_NGINX" = "Y" ]; then
-        configure_nginx
-    fi
-
-    install_deps
-    build_app
-
-    # Ask for run mode
-    read -p "Start in [d]evelopment or [p]roduction mode? (d/p): " MODE_CHOICE
-
-    if [ "$MODE_CHOICE" = "d" ]; then
-        start_app development
-    else
-        start_app production
-    fi
-
-    log_info "=== Deployment Complete ==="
-    log_info "Application: http://localhost:3000"
-    if [ "$SETUP_NGINX" = "y" ] || [ "$SETUP_NGINX" = "Y" ]; then
-        log_info "Public URL: https://$DOMAIN"
-    fi
-}
-
-# Run main
+# Run main function
 main
