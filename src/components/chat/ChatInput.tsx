@@ -1,99 +1,98 @@
-import React, { useState, useRef } from 'react';
+import { useState, useCallback, ChangeEvent } from 'react';
 
 interface ChatInputProps {
-  onSendMessage: (text: string) => void;
-  onUploadFile: (file: File) => void;
+  onSend: (message: string) => Promise<void>;
+  onUpload: (text: string, metadata: any) => Promise<any>;
   isLoading: boolean;
   isUploading: boolean;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({
-  onSendMessage,
-  onUploadFile,
+export function ChatInput({
+  onSend,
+  onUpload,
   isLoading,
   isUploading,
-}) => {
+}: ChatInputProps) {
   const [message, setMessage] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (message.trim() && !isLoading) {
-      onSendMessage(message.trim());
-      setMessage('');
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onUploadFile(file);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+  
+  const handleSubmit = useCallback(async () => {
+    if (!message.trim() || isLoading) return;
+    
+    await onSend(message.trim());
+    setMessage('');
+  }, [message, isLoading, onSend]);
+  
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSubmit();
       }
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="flex items-end space-x-2">
-      <div className="flex-1">
-        <div className="relative">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type your message..."
-            disabled={isLoading || isUploading}
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 pr-12 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <div className="absolute right-2 bottom-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              className="hidden"
-              accept=".txt,.pdf,.doc,.docx"
-              disabled={isLoading || isUploading}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading || isUploading}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-      <button
-        type="submit"
-        disabled={!message.trim() || isLoading || isUploading}
-        className={`rounded-lg px-4 py-2 font-medium text-white ${
-          !message.trim() || isLoading || isUploading
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-blue-600 hover:bg-blue-700'
-        }`}
-      >
-        {isLoading ? (
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-        ) : (
-          'Send'
-        )}
-      </button>
-    </form>
+    },
+    [handleSubmit]
   );
-};
+  
+  const handleFileUpload = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = async (event) => {
+      const text = event.target?.result as string;
+      
+      try {
+        await onUpload(text, {
+          filename: file.name,
+          type: file.type,
+          size: file.size,
+        });
+      } catch (error) {
+        console.error('Upload failed:', error);
+      }
+    };
+    
+    reader.readAsText(file);
+  }, [onUpload]);
+  
+  return (
+    <div className="border-t p-4">
+      <div className="flex items-center space-x-4">
+        <input
+          type="file"
+          accept=".txt,.pdf,.doc,.docx"
+          onChange={handleFileUpload}
+          disabled={isUploading}
+          className="hidden"
+          id="file-upload"
+        />
+        <label
+          htmlFor="file-upload"
+          className={`cursor-pointer p-2 rounded hover:bg-gray-100 ${
+            isUploading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          📎
+        </label>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Type a message..."
+          rows={1}
+          disabled={isLoading}
+          className="flex-1 resize-none rounded-lg border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          onClick={handleSubmit}
+          disabled={isLoading || !message.trim()}
+          className={`p-2 rounded bg-blue-500 text-white hover:bg-blue-600 ${
+            isLoading || !message.trim() ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+}

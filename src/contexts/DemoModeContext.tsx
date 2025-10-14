@@ -1,34 +1,17 @@
-'use client';
+import { createContext, useContext } from 'react';
 
-import React, { createContext, useContext } from 'react';
-
-interface DemoModeContextValue {
-  isRuntimeDemoMode: boolean;
-  isAuthenticated: boolean;
+export interface DemoModeContextValue {
+  isDemoMode: boolean;
+  isFreeTrialMode: boolean;
+  setDemoMode: (enabled: boolean) => void;
+  setFreeTrialMode: (enabled: boolean) => void;
 }
 
 export const DemoModeContext = createContext<DemoModeContextValue>({
-  isRuntimeDemoMode: false,
-  isAuthenticated: false,
+  isDemoMode: false,
+  isFreeTrialMode: false,
+  setDemoMode: () => {},
+  setFreeTrialMode: () => {},
 });
 
-export const useDemoModeContext = () => {
-  const context = useContext(DemoModeContext);
-  if (!context) {
-    throw new Error('useDemoModeContext must be used within DemoModeProvider');
-  }
-  return context;
-};
-
-interface DemoModeContextProviderProps {
-  children: React.ReactNode;
-  value: DemoModeContextValue;
-}
-
-export function DemoModeContextProvider({ children, value }: DemoModeContextProviderProps) {
-  return (
-    <DemoModeContext.Provider value={value}>
-      {children}
-    </DemoModeContext.Provider>
-  );
-}
+export const useDemoModeContext = () => useContext(DemoModeContext);

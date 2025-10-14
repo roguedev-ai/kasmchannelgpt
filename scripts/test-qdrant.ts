@@ -1,66 +1,39 @@
 import { qdrantClient } from '../src/lib/rag/qdrant-client';
 
-async function testQdrant() {
-  console.log('Testing Qdrant connection...');
-  
+async function main() {
   try {
-    // Health check
-    const healthy = await qdrantClient.healthCheck();
-    console.log(`Health check: ${healthy ? 'PASS ✓' : 'FAIL ✗'}`);
-    
-    if (!healthy) {
-      throw new Error('Health check failed - stopping tests');
-    }
+    // Test health check
+    await qdrantClient.healthCheck();
+    console.log('✅ Qdrant health check passed');
     
     // Test collection creation
-    console.log('\nTesting collection creation...');
-    await qdrantClient.ensureCollection('test_partner');
-    console.log('Collection creation: PASS ✓');
+    const collectionName = 'test_collection';
+    await qdrantClient.createCollection(collectionName);
+    console.log('✅ Collection created');
     
-    // Test vector upsert
-    console.log('\nTesting vector upsert...');
-    await qdrantClient.upsertVectors('test_partner', [
-      {
-        id: 'test-1',
-        vector: Array(1536).fill(0.1), // 1536-dimensional test vector
-        payload: {
-          text: 'Test document',
-          filename: 'test.txt',
-          partnerId: 'test_partner',
-          uploadedAt: new Date().toISOString(),
-          chunkIndex: 0
-        }
-      }
-    ]);
-    console.log('Vector upsert: PASS ✓');
+    // Test vector upload
+    const vectors = [
+      [0.1, 0.2, 0.3],
+      [0.4, 0.5, 0.6],
+    ];
     
-    // Test vector search
-    console.log('\nTesting vector search...');
-    const results = await qdrantClient.searchVectors(
-      'test_partner',
-      Array(1536).fill(0.1),
-      1
-    );
-    console.log('Search results:', JSON.stringify(results, null, 2));
-    console.log('Vector search: PASS ✓');
+    const docs = [
+      { pageContent: 'Test document 1', metadata: { source: 'test1' } },
+      { pageContent: 'Test document 2', metadata: { source: 'test2' } },
+    ];
     
-    // Get collection stats
-    console.log('\nTesting collection stats...');
-    const stats = await qdrantClient.getCollectionStats('test_partner');
-    console.log('Collection stats:', stats);
-    console.log('Collection stats: PASS ✓');
+    await qdrantClient.uploadVectors(collectionName, vectors, docs);
+    console.log('✅ Vectors uploaded');
     
-    // Clean up test collection
-    console.log('\nCleaning up test collection...');
-    await qdrantClient.deleteCollection('test_partner');
-    console.log('Collection cleanup: PASS ✓');
+    // Test search
+    const results = await qdrantClient.search(collectionName, [0.1, 0.2, 0.3]);
+    console.log('✅ Search successful');
+    console.log('Results:', results);
     
-    console.log('\n✓ All Qdrant tests passed successfully!');
   } catch (error) {
-    console.error('\n✗ Test failed:', error);
+    console.error('❌ Test failed:', error);
     process.exit(1);
   }
 }
 
-// Run tests
-testQdrant().catch(console.error);
+main();

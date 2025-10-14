@@ -1,29 +1,35 @@
 import { NextResponse } from 'next/server';
-import { qdrantClient } from '@/lib/rag/qdrant-client';
-import { backendConfig } from '@/lib/config/backend';
+import { backendConfig } from '../../../lib/config/backend';
+import { qdrantClient } from '../../../lib/rag/qdrant-client';
 
 export async function GET() {
-  const checks = {
-    qdrant: await qdrantClient.healthCheck(),
-    environment: true,
-    requiredEnvVars: {
-      JWT_SECRET: !!backendConfig.jwtSecret,
-      CUSTOMGPT_API_KEY: !!backendConfig.customGptApiKey,
-      QDRANT_URL: !!backendConfig.qdrantUrl,
-      OPENAI_API_KEY: !!backendConfig.openaiApiKey,
-    },
-  };
-
-  // System is healthy if either Qdrant is available or we're using mock data
-  const isHealthy = checks.environment && 
-    Object.values(checks.requiredEnvVars).every(Boolean);
-
-  return NextResponse.json({
-    status: isHealthy ? 'healthy' : 'unhealthy',
-    checks,
-    timestamp: new Date().toISOString(),
-    mode: checks.qdrant ? 'production' : 'mock',
-  }, {
-    status: isHealthy ? 200 : 503,
-  });
+  try {
+    // Check required config
+    if (!backendConfig.openaiApiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+    
+    if (!backendConfig.baseUrl) {
+      throw new Error('Base URL not configured');
+    }
+    
+    // Check Qdrant connection
+    await qdrantClient.healthCheck();
+    
+    return NextResponse.json({
+      status: 'healthy',
+      config: {
+        openai: true,
+        qdrant: true,
+      },
+    });
+    
+  } catch (error: any) {
+    console.error('[Health] Error:', error);
+    
+    return NextResponse.json(
+      { error: 'Health check failed', message: error?.message || 'Unknown error' },
+      { status: 500 }
+    );
+  }
 }

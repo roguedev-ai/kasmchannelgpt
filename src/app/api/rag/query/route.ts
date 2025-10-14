@@ -1,56 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { QueryPipeline } from '@/lib/rag/query-pipeline';
-import { partnerContext } from '@/lib/isolation/partner-context';
-import { AgentFunction } from '@/lib/rag/agent-router';
-
-const queryPipeline = new QueryPipeline();
+import { partnerContext } from '../../../../lib/isolation/partner-context';
+import { queryPipeline } from '../../../../lib/rag/query-pipeline';
+import { QueryRequest } from '../../../../types/backend';
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
     const authHeader = request.headers.get('authorization');
-    const session = partnerContext.extractFromHeader(authHeader);
+    const session = await partnerContext.verifyTokenWithDatabase(
+      authHeader?.replace('Bearer ', '') || ''
+    );
     
-    const body = await request.json();
-    const { query, conversationId, agentFunction } = body;
+    // Get request body
+    const body = await request.json() as QueryRequest;
     
-    if (!query) {
+    // Validate request
+    if (!body.query) {
       return NextResponse.json(
         { error: 'Query is required' },
         { status: 400 }
       );
     }
     
-    // Validate agentFunction if provided
-    if (agentFunction && !['sales', 'support', 'technical', 'general'].includes(agentFunction)) {
-      return NextResponse.json(
-        { error: 'Invalid agent function' },
-        { status: 400 }
-      );
-    }
+    // Search documents
+    const docs = await queryPipeline.query(body.query, session.user.partner_id);
     
-    const queryRequest = {
-      query,
-      partnerId: session.partnerId,
-      conversationId,
-      agentFunction: agentFunction as AgentFunction | undefined,
-    };
+    // Generate answer
+    const answer = docs.length > 0
+      ? `Based on the documents, here's what I found:\n\n${docs[0].pageContent}`
+      : 'I could not find any relevant information in the documents.';
     
-    const result = await queryPipeline.processQuery(queryRequest);
+    // Return response
+    return NextResponse.json({
+      answer,
+      conversationId: body.conversationId || `conv_${Date.now()}`,
+    });
     
-    return NextResponse.json(result, { status: 200 });
-    
-  } catch (error) {
-    console.error('[Query API] Error:', error);
-    
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
-    }
+  } catch (error: any) {
+    console.error('[Query] Error:', error);
     
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to process query', message: error?.message || 'Unknown error' },
       { status: 500 }
     );
   }

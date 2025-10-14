@@ -1,55 +1,30 @@
-import React from 'react';
-import { format } from 'date-fns';
-
-interface Message {
-  id: string;
-  text: string;
-  isUser: boolean;
-  timestamp: string;
-}
+import { ChatMessage } from '@/hooks/useChat';
 
 interface ChatMessagesProps {
-  messages: Message[];
-  isLoading: boolean;
+  messages: ChatMessage[];
 }
 
-export const ChatMessages: React.FC<ChatMessagesProps> = ({
-  messages,
-  isLoading,
-}) => {
+export function ChatMessages({ messages }: ChatMessagesProps) {
   return (
-    <div className="space-y-4">
-      {messages.map((message) => (
+    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {messages.map((message, index) => (
         <div
-          key={message.id}
-          className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+          key={index}
+          className={`flex ${
+            message.role === 'user' ? 'justify-end' : 'justify-start'
+          }`}
         >
           <div
-            className={`max-w-[80%] rounded-lg px-4 py-2 ${
-              message.isUser
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+            className={`max-w-[80%] rounded-lg p-3 ${
+              message.role === 'user'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-900'
             }`}
           >
-            <div className="text-sm">{message.text}</div>
-            <div className="text-xs mt-1 opacity-70">
-              {format(new Date(message.timestamp), 'h:mm a')}
-            </div>
+            {message.content}
           </div>
         </div>
       ))}
-      
-      {isLoading && (
-        <div className="flex justify-start">
-          <div className="max-w-[80%] rounded-lg px-4 py-2 bg-gray-100 dark:bg-gray-800">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" />
-              <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-100" />
-              <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-200" />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
-};
+}
