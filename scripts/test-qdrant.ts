@@ -1,4 +1,5 @@
 import { qdrantClient } from '../src/lib/rag/qdrant-client';
+import { createEmbeddingsClient } from '../src/lib/rag/embeddings-factory';
 
 async function main() {
   try {
@@ -6,15 +7,19 @@ async function main() {
     await qdrantClient.healthCheck();
     console.log('✅ Qdrant health check passed');
     
+    // Get dimensions from embeddings client
+    const embeddings = createEmbeddingsClient();
+    const dimensions = embeddings.getDimensions();
+    
     // Test collection creation
     const collectionName = 'test_collection';
-    await qdrantClient.createCollection(collectionName);
+    await qdrantClient.createCollection(collectionName, dimensions);
     console.log('✅ Collection created');
     
     // Test vector upload
     const vectors = [
-      [0.1, 0.2, 0.3],
-      [0.4, 0.5, 0.6],
+      Array(dimensions).fill(0.1),
+      Array(dimensions).fill(0.2),
     ];
     
     const docs = [
@@ -26,7 +31,7 @@ async function main() {
     console.log('✅ Vectors uploaded');
     
     // Test search
-    const results = await qdrantClient.search(collectionName, [0.1, 0.2, 0.3]);
+    const results = await qdrantClient.search(collectionName, Array(dimensions).fill(0.1));
     console.log('✅ Search successful');
     console.log('Results:', results);
     

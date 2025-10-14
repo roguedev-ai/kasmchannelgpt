@@ -1,13 +1,14 @@
 import { Document } from '@langchain/core/documents';
-import { EmbeddingsFactory } from './embeddings-factory';
+import { createEmbeddingsClient, EmbeddingsClient } from './embeddings-factory';
 import { qdrantClient } from './qdrant-client';
 
 export class QueryPipeline {
-  private embeddings: EmbeddingsFactory;
+  private embeddings: EmbeddingsClient;
   private qdrant = qdrantClient;
   
   constructor() {
-    this.embeddings = new EmbeddingsFactory();
+    this.embeddings = createEmbeddingsClient();
+    console.log(`[Query] Using ${this.embeddings.getProvider()} embeddings`);
   }
   
   async query(text: string, partnerId: string): Promise<Document[]> {

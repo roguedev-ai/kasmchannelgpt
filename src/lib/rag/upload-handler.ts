@@ -1,13 +1,14 @@
 import { Document } from '@langchain/core/documents';
-import { EmbeddingsFactory } from './embeddings-factory';
+import { createEmbeddingsClient, EmbeddingsClient } from './embeddings-factory';
 import { qdrantClient } from './qdrant-client';
 
 export class UploadHandler {
-  private embeddings: EmbeddingsFactory;
+  private embeddings: EmbeddingsClient;
   private qdrant = qdrantClient;
   
   constructor() {
-    this.embeddings = new EmbeddingsFactory();
+    this.embeddings = createEmbeddingsClient();
+    console.log(`[Upload] Using ${this.embeddings.getProvider()} embeddings`);
   }
   
   async processText(text: string, metadata: any, partnerId: string): Promise<void> {
@@ -38,7 +39,7 @@ export class UploadHandler {
   
   private async processDocs(docs: Document[], partnerId: string): Promise<void> {
     // Ensure collection exists
-    await this.qdrant.createCollection(partnerId);
+    await this.qdrant.createCollection(partnerId, this.embeddings.getDimensions());
     
     // Create embeddings
     const texts = docs.map(doc => doc.pageContent);

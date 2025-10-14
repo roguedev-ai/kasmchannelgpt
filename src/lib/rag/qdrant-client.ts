@@ -4,7 +4,6 @@ import { backendConfig } from '../config/backend';
 
 export class QdrantClient {
   private client: Qdrant;
-  private dimensions: number = 1536; // Default to OpenAI dimensions
   
   constructor() {
     this.client = new Qdrant({
@@ -22,19 +21,15 @@ export class QdrantClient {
     }
   }
   
-  async createCollection(name: string, dimensions?: number): Promise<void> {
-    if (dimensions) {
-      this.dimensions = dimensions;
-    }
-    
+  async createCollection(name: string, dimensions: number): Promise<void> {
     try {
       await this.client.getCollection(name);
       console.log(`[Qdrant] Collection ${name} already exists`);
     } catch (error) {
-      console.log(`[Qdrant] Creating collection ${name} (${this.dimensions}d)`);
+      console.log(`[Qdrant] Creating collection ${name} (${dimensions}d)`);
       await this.client.createCollection(name, {
         vectors: {
-          size: this.dimensions,
+          size: dimensions,
           distance: 'Cosine',
         },
       });
