@@ -1,4 +1,3 @@
-import { Document } from '@langchain/core/documents';
 import { uploadHandler } from '../src/lib/rag/upload-handler';
 import { queryPipeline } from '../src/lib/rag/query-pipeline';
 
