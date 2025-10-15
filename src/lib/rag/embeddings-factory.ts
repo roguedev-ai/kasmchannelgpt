@@ -39,7 +39,7 @@ class OpenAIEmbeddingsClient implements EmbeddingsClient {
 
 class GeminiEmbeddingsClient implements EmbeddingsClient {
   private apiKey: string;
-  private model: string = 'models/text-embedding-004';
+  private model: string = 'text-embedding-004';
 
   constructor() {
     if (!backendConfig.geminiApiKey) {
