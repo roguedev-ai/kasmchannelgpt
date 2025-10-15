@@ -12,7 +12,7 @@ export class CustomGPTClient {
 
   constructor() {
     this.apiKey = backendConfig.customGptApiKey || '';
-    this.baseUrl = backendConfig.baseUrl || 'https://app.customgpt.ai/api/v1';
+    this.baseUrl = process.env.CUSTOMGPT_BASE_URL || 'https://app.customgpt.ai/api/v1';
   }
 
   async query(userQuery: string, context: string): Promise<string> {
@@ -33,6 +33,8 @@ export class CustomGPTClient {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[CustomGPT] ${response.status} error:`, errorText);
       throw new Error(`CustomGPT API error: ${response.status}`);
     }
 
