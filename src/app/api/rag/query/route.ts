@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { partnerContext } from '../../../../lib/isolation/partner-context';
 import { queryPipeline } from '../../../../lib/rag/query-pipeline';
 import { QueryRequest } from '../../../../types/backend';
+import { customGPTClient } from '../../../../lib/api/customgpt-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,10 +26,24 @@ export async function POST(request: NextRequest) {
     // Search documents
     const docs = await queryPipeline.query(body.query, session.user.partner_id);
     
-    // Generate answer
-    const answer = docs.length > 0
-      ? `Based on the documents, here's what I found:\n\n${docs[0].pageContent}`
-      : 'I could not find any relevant information in the documents.';
+    // Generate answer using CustomGPT
+    let answer: string;
+
+    if (docs.length > 0) {
+      // Build context from all relevant documents
+      const context = docs.map(doc => doc.pageContent).join('\n\n---\n\n');
+      
+      try {
+        // Call CustomGPT with context
+        answer = await customGPTClient.query(body.query, context);
+      } catch (error) {
+        console.error('[Query] CustomGPT error:', error);
+        // Fallback to simple response
+        answer = `Based on the documents, here's what I found:\n\n${docs[0].pageContent}`;
+      }
+    } else {
+      answer = 'I could not find any relevant information in the documents.';
+    }
     
     // Return response
     return NextResponse.json({
