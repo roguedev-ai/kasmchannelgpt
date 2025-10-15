@@ -27,6 +27,7 @@ export class CustomGPTClient {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        name: `Query_${Date.now()}`,
         prompt: prompt,
         response_source: 'own_content'
       })
