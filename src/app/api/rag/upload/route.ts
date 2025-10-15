@@ -9,29 +9,39 @@ export async function POST(request: NextRequest) {
     const session = await partnerContext.verifyTokenWithDatabase(
       authHeader?.replace('Bearer ', '') || ''
     );
+
+    // Parse FormData
+    const formData = await request.formData();
     
-    // Get request body
-    const body = await request.json();
-    const { text, metadata } = body;
-    
-    // Validate request
-    if (!text) {
+    // Get file from FormData
+    const file = formData.get('file') as File;
+    if (!file) {
       return NextResponse.json(
-        { error: 'Text is required' },
+        { error: 'No file provided' },
         { status: 400 }
       );
     }
+
+    // Read file content
+    const text = await file.text();
     
+    // Get optional metadata
+    const metadataStr = formData.get('metadata') as string;
+    const metadata = metadataStr ? JSON.parse(metadataStr) : {
+      filename: file.name,
+      type: file.type,
+      size: file.size
+    };
+
     // Process document
     await uploadHandler.processText(text, metadata, session.user.partner_id);
-    
+
     return NextResponse.json({
       success: true,
+      filename: file.name
     });
-    
   } catch (error: any) {
     console.error('[Upload] Error:', error);
-    
     return NextResponse.json(
       { error: 'Failed to process upload', message: error?.message || 'Unknown error' },
       { status: 500 }
