@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { QueryResponse } from '@/types/backend';
+import { sessionManager } from '../lib/session/partner-session';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -21,6 +22,12 @@ export function useChat({ partnerId, onError }: UseChatOptions) {
     try {
       setIsLoading(true);
       
+      // Get authentication token
+      const { token } = sessionManager.useSession();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       // Add user message
       setMessages(prev => [...prev, { role: 'user', content: message }]);
       
@@ -29,6 +36,7 @@ export function useChat({ partnerId, onError }: UseChatOptions) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           query: message,
@@ -61,10 +69,17 @@ export function useChat({ partnerId, onError }: UseChatOptions) {
     try {
       setIsUploading(true);
       
+      // Get authentication token
+      const { token } = sessionManager.useSession();
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
       const response = await fetch('/api/rag/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           text,
