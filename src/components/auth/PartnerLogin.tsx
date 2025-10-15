@@ -14,7 +14,6 @@ import { User, Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { mockClient } from '@/lib/api/mock-client';
 import { sessionManager } from '@/lib/session/partner-session';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +30,7 @@ export function PartnerLogin({
 }: PartnerLoginProps) {
   const [partnerId, setPartnerId] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,22 +40,33 @@ export function PartnerLogin({
     setIsLoading(true);
 
     try {
-      // Call mock API
-      const response = await mockClient.mockLogin(partnerId, email);
-      
-      if (response.success && response.data) {
-        // Store session
-        sessionManager.setSession(response.data.token, response.data.partnerId);
+      // Call REAL API
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Invalid credentials');
+      }
+
+      const data = await response.json();
+
+      if (data.token) {
+        // Store real JWT session
+        sessionManager.setSession(data.token, data.partnerId || partnerId);
         
-        // Show success message
         toast.success('Login successful', {
           description: `Welcome back, ${email}`
         });
         
-        // Notify parent
         onLoginSuccess?.();
-      } else {
-        throw new Error('Login failed');
       }
     } catch (err: any) {
       const errorMessage = err.message || 'An error occurred during login';
@@ -104,6 +115,22 @@ export function PartnerLogin({
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="pl-9"
+                required
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
+          {/* Password Input */}
+          <div className="space-y-2">
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="pl-9"
                 required
                 disabled={isLoading}
