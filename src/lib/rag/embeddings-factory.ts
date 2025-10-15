@@ -38,28 +38,59 @@ class OpenAIEmbeddingsClient implements EmbeddingsClient {
 }
 
 class GeminiEmbeddingsClient implements EmbeddingsClient {
+  private apiKey: string;
+  private model: string = 'models/text-embedding-004';
+
   constructor() {
     if (!backendConfig.geminiApiKey) {
       throw new Error('GEMINI_API_KEY is required for Gemini embeddings');
     }
+    this.apiKey = backendConfig.geminiApiKey;
   }
-  
+
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    // TODO: Implement Gemini embeddings
-    throw new Error('Gemini embeddings not yet implemented');
+    const embeddings: number[][] = [];
+    
+    // Process in batches to avoid rate limits
+    for (const text of texts) {
+      const embedding = await this.embedQuery(text);
+      embeddings.push(embedding);
+    }
+    
+    return embeddings;
   }
-  
+
   async embedQuery(text: string): Promise<number[]> {
-    // TODO: Implement Gemini embeddings
-    throw new Error('Gemini embeddings not yet implemented');
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:embedContent?key=${this.apiKey}`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: this.model,
+        content: {
+          parts: [{ text }]
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Gemini API error: ${response.status} - ${error}`);
+    }
+
+    const data = await response.json();
+    return data.embedding.values;
   }
-  
+
   getProvider(): string {
     return 'gemini';
   }
-  
+
   getDimensions(): number {
-    return 768; // Gemini dimensions
+    return 768; // Gemini text-embedding-004 dimensions
   }
 }
 

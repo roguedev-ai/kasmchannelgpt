@@ -10,8 +10,10 @@
     "build:standalone": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:gemini": "NODE_OPTIONS='--experimental-specifier-resolution=node' ts-node --esm scripts/test-gemini.ts"
   },
+  "type": "module",
   "dependencies": {
     "@langchain/community": "^0.3.57",
     "@langchain/core": "^0.3.78",
