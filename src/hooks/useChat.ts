@@ -1,10 +1,17 @@
 import { useState, useCallback } from 'react';
-import { QueryResponse } from '@/types/backend';
 import { sessionManager } from '../lib/session/partner-session';
+
+export interface Source {
+  content: string;
+  source: string;
+  score: number;
+}
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  sources?: Source[];
+  usedRag?: boolean;
 }
 
 interface UseChatOptions {
@@ -17,6 +24,7 @@ export function useChat({ partnerId, onError }: UseChatOptions) {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [conversationId, setConversationId] = useState<string>();
+  const [useRag, setUseRag] = useState(true);
   
   const sendMessage = useCallback(async (message: string) => {
     try {
@@ -31,17 +39,18 @@ export function useChat({ partnerId, onError }: UseChatOptions) {
       // Add user message
       setMessages(prev => [...prev, { role: 'user', content: message }]);
       
-      // Send query
-      const response = await fetch('/api/rag/query', {
+      // Send to chat endpoint
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          query: message,
+          message,
           partnerId,
           conversationId,
+          useRag,
         }),
       });
       
@@ -49,10 +58,15 @@ export function useChat({ partnerId, onError }: UseChatOptions) {
         throw new Error('Failed to send message');
       }
       
-      const data: QueryResponse = await response.json();
+      const data = await response.json();
       
-      // Add assistant message
-      setMessages(prev => [...prev, { role: 'assistant', content: data.answer }]);
+      // Add assistant message with sources if available
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: data.response,
+        sources: data.sources,
+        usedRag: data.usedRag,
+      }]);
       
       // Update conversation ID
       setConversationId(data.conversationId);
@@ -60,10 +74,16 @@ export function useChat({ partnerId, onError }: UseChatOptions) {
     } catch (error) {
       console.error('[Chat] Error:', error);
       onError?.(error as Error);
+      
+      // Add error message
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error processing your message.',
+      }]);
     } finally {
       setIsLoading(false);
     }
-  }, [partnerId, conversationId, onError]);
+  }, [partnerId, conversationId, useRag, onError]);
   
   const uploadFile = useCallback(async (text: string, metadata: any) => {
     try {
@@ -109,12 +129,18 @@ export function useChat({ partnerId, onError }: UseChatOptions) {
     setConversationId(undefined);
   }, []);
   
+  const toggleRag = useCallback(() => {
+    setUseRag(prev => !prev);
+  }, []);
+  
   return {
     messages,
     isLoading,
     isUploading,
+    useRag,
     sendMessage,
     uploadFile,
     clearMessages,
+    toggleRag,
   };
 }
