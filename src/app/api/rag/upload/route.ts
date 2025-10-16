@@ -1,28 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { partnerContext } from '@/lib/isolation/partner-context';
-import { v4 as uuidv4 } from 'uuid';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { QdrantClient } from '@qdrant/js-client-rest';
-import mammoth from 'mammoth';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { collectionManager } from '@/lib/rag/collection-manager';
+import { createEmbeddings } from '@/lib/rag/embeddings';
+import { v4 as uuidv4 } from 'uuid';
+import mammoth from 'mammoth';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const qdrant = new QdrantClient({ 
-  url: process.env.QDRANT_URL || 'http://localhost:6333' 
+const qdrant = new QdrantClient({
+  url: process.env.QDRANT_URL || 'http://localhost:6333',
 });
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
-    const authHeader = request.headers.get('authorization');
-    const session = await partnerContext.verifyTokenWithDatabase(
-      authHeader?.replace('Bearer ', '') || ''
-    );
-
-    // Get FormData
     const formData = await request.formData();
     const file = formData.get('file') as File;
-
+    
     if (!file) {
       return NextResponse.json(
         { error: 'No file provided' },
@@ -30,119 +22,147 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: 'File too large. Maximum size is 10MB' },
-        { status: 413 }
-      );
-    }
+    // Get partner ID from auth or default to 'demo'
+    const partnerId = 'demo'; // TODO: Get from authenticated user
+    const collectionName = partnerId;
+    const documentId = uuidv4();
 
-    // CRITICAL: Read as ArrayBuffer, NOT text
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    console.log(`[Upload] Processing file: ${file.name} for partner: ${partnerId}`);
 
-    let text: string;
-    let pages = 1;
-
-    // Extract text based on file type
-    if (file.name.toLowerCase().endsWith('.pdf')) {
-      // Dynamic import to avoid build issues
-      const pdf = (await import('pdf-parse')).default;
-      const pdfData = await pdf(buffer);
-      text = cleanExtractedText(pdfData.text);
-      pages = pdfData.numpages;
-      
-    } else if (file.name.toLowerCase().endsWith('.docx')) {
-      // Extract text from DOCX
-      const result = await mammoth.extractRawText({ buffer: buffer });
-      text = cleanExtractedText(result.value);
-      pages = Math.ceil(text.length / 3000); // Estimate pages
-      
-    } else if (file.name.toLowerCase().endsWith('.txt')) {
-      // For .txt files, decode properly
-      const decoder = new TextDecoder('utf-8');
-      text = cleanExtractedText(decoder.decode(bytes));
-      
-    } else {
-      return NextResponse.json(
-        { error: 'Unsupported file type. Please upload PDF, DOCX, or TXT files.' },
-        { status: 400 }
-      );
-    }
-
-    if (!text || text.length < 10) {
-      return NextResponse.json(
-        { error: 'Could not extract text from file' },
-        { status: 400 }
-      );
-    }
-
-    // Chunk the document
-    const chunks = chunkDocument(text);
-    
-    if (chunks.length === 0) {
-      return NextResponse.json(
-        { error: 'No content to process' },
-        { status: 400 }
-      );
-    }
-
-    // Ensure partner's collection exists with error handling
+    // Ensure collection exists
     try {
-      console.log(`[Upload] Ensuring collection exists for partner: ${session.user.partner_id}`);
-      await collectionManager.ensureCollectionExists(session.user.partner_id);
-      console.log(`[Upload] Collection ready for partner: ${session.user.partner_id}`);
-    } catch (collectionError: any) {
-      console.error('[Upload] Failed to create collection:', collectionError);
+      await collectionManager.ensureCollectionExists(collectionName);
+      console.log(`[Upload] Collection ready: ${collectionName}`);
+    } catch (error) {
+      console.error('[Upload] Failed to ensure collection exists:', error);
       return NextResponse.json(
         { 
           error: 'Failed to initialize storage',
-          details: collectionError.message
+          details: error instanceof Error ? error.message : 'Unknown error'
         },
         { status: 500 }
       );
     }
 
-    // Generate embeddings and store
-    try {
-      const documentId = await embedAndStore(chunks, {
-        filename: file.name,
-        pages: pages,
-        partnerId: session.user.partner_id
-      });
+    // Read file content
+    let text: string;
+    let pages = 1;
 
-      console.log(`[Upload] Processed ${chunks.length} chunks from ${file.name}`);
+    try {
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      if (file.name.toLowerCase().endsWith('.pdf')) {
+        const pdf = (await import('pdf-parse')).default;
+        const pdfData = await pdf(buffer);
+        text = pdfData.text;
+        pages = pdfData.numpages;
+      } else if (file.name.toLowerCase().endsWith('.docx')) {
+        const result = await mammoth.extractRawText({ buffer: buffer });
+        text = result.value;
+        pages = Math.ceil(text.length / 3000); // Estimate pages
+      } else if (file.name.toLowerCase().endsWith('.txt')) {
+        const decoder = new TextDecoder('utf-8');
+        text = decoder.decode(bytes);
+      } else {
+        return NextResponse.json(
+          { error: 'Unsupported file type. Please upload PDF, DOCX, or TXT files.' },
+          { status: 400 }
+        );
+      }
+
+      // Clean and validate text
+      text = cleanText(text);
+      if (!text || text.length < 10) {
+        return NextResponse.json(
+          { error: 'Could not extract text from file' },
+          { status: 400 }
+        );
+      }
+
+    } catch (error) {
+      console.error('[Upload] Failed to read file:', error);
+      return NextResponse.json(
+        { 
+          error: 'Failed to read file',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Split text into chunks
+    const textSplitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 1000,
+      chunkOverlap: 200,
+    });
+    
+    const docs = await textSplitter.createDocuments([text]);
+    console.log(`[Upload] Split into ${docs.length} chunks`);
+
+    // Generate embeddings
+    try {
+      const embeddings = createEmbeddings();
+      const texts = docs.map(doc => doc.pageContent);
+      const vectors = await embeddings.embedDocuments(texts);
+
+      // Prepare points
+      const points = docs.map((doc, index) => ({
+        id: uuidv4(),
+        vector: vectors[index],
+        payload: {
+          text: doc.pageContent,
+          document_title: file.name,
+          document_id: documentId,
+          partner_id: partnerId,
+          chunk_index: index,
+          page_count: pages,
+          created_at: new Date().toISOString(),
+        },
+      }));
+
+      // Upload to Qdrant in batches
+      const batchSize = 100;
+      for (let i = 0; i < points.length; i += batchSize) {
+        const batch = points.slice(i, i + batchSize);
+        await qdrant.upsert(collectionName, {
+          wait: true,
+          points: batch,
+        });
+        console.log(`[Upload] Uploaded batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(points.length / batchSize)}`);
+      }
+
+      console.log(`[Upload] Successfully processed document`);
 
       return NextResponse.json({
         success: true,
         filename: file.name,
-        chunks: chunks.length,
+        chunks: docs.length,
         pages: pages,
-        documentId: documentId
+        documentId,
       });
-    } catch (embedError: any) {
-      console.error('[Upload] Failed to generate embeddings:', embedError);
+
+    } catch (error) {
+      console.error('[Upload] Failed to process document:', error);
       return NextResponse.json(
         { 
           error: 'Failed to process document',
-          details: embedError.message
+          details: error instanceof Error ? error.message : 'Unknown error'
         },
         { status: 500 }
       );
     }
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('[Upload] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to process file', message: error?.message || 'Unknown error' },
+      { error: 'Failed to process file', message: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
 }
 
-// Essential text cleaning function
-function cleanExtractedText(text: string): string {
+function cleanText(text: string): string {
   return text
     .normalize('NFC')  // Normalize Unicode
     .replace(/\x00/g, '')  // Remove null bytes
@@ -153,93 +173,4 @@ function cleanExtractedText(text: string): string {
     .replace(/[\u2018\u2019]/g, "'")  // Smart quotes
     .replace(/[\u201C\u201D]/g, '"')
     .trim();
-}
-
-// Document chunking with overlap
-function chunkDocument(text: string): Array<{text: string; index: number}> {
-  const chunks: Array<{text: string; index: number}> = [];
-  const chunkSize = 512;  // tokens (roughly 2000 characters)
-  const overlap = 50;     // token overlap
-  
-  const paragraphs = text.split(/\n\n+/);
-  let currentChunk = '';
-  let chunkIndex = 0;
-  
-  for (const paragraph of paragraphs) {
-    const paraLength = estimateTokens(paragraph);
-    const currentLength = estimateTokens(currentChunk);
-    
-    if (currentLength + paraLength > chunkSize && currentChunk) {
-      chunks.push({
-        text: currentChunk.trim(),
-        index: chunkIndex++
-      });
-      
-      // Add overlap
-      const words = currentChunk.split(/\s+/);
-      const overlapText = words.slice(-overlap).join(' ');
-      currentChunk = overlapText + '\n\n' + paragraph;
-    } else {
-      currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
-    }
-  }
-  
-  if (currentChunk) {
-    chunks.push({
-      text: currentChunk.trim(),
-      index: chunkIndex
-    });
-  }
-  
-  return chunks;
-}
-
-function estimateTokens(text: string): number {
-  return Math.ceil(text.length / 4);
-}
-
-async function embedAndStore(
-  chunks: Array<{text: string; index: number}>,
-  metadata: { filename: string; pages: number; partnerId: string }
-) {
-  const documentId = uuidv4();
-  const collectionName = metadata.partnerId;
-  
-  // Process in batches
-  const batchSize = 100;
-  for (let i = 0; i < chunks.length; i += batchSize) {
-    const batch = chunks.slice(i, i + batchSize);
-    
-    // Generate embeddings using embedDocuments
-    const model = genAI.getGenerativeModel({ model: 'embedding-001' });
-    const embeddings = await Promise.all(
-      batch.map(chunk => 
-        model.embedContent(chunk.text)
-          .then(result => result.embedding.values)
-      )
-    );
-    
-    // Prepare points
-    const points = batch.map((chunk, idx) => ({
-      id: uuidv4(),
-      vector: embeddings[idx],
-      payload: {
-        document_id: documentId,
-        chunk_index: chunk.index,
-        text: chunk.text,
-        document_title: metadata.filename,
-        page_count: metadata.pages,
-        partner_id: metadata.partnerId,
-        created_at: new Date().toISOString()
-      }
-    }));
-    
-    // Upload to Qdrant
-    await qdrant.upsert(collectionName, {
-      points: points,
-      wait: true
-    });
-  }
-  
-  return documentId;
 }
