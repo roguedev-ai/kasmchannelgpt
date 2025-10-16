@@ -17,6 +17,8 @@ export class CustomGPTClient {
 
   async query(userQuery: string, context: string): Promise<string> {
     try {
+      console.log(`[CustomGPT] Query length: ${userQuery.length}, Context length: ${context.length}`);
+      
       // Step 1: Create a conversation
       const conversationUrl = `${this.baseUrl}/projects/${this.projectId}/conversations`;
       const conversationResponse = await fetch(conversationUrl, {
@@ -54,6 +56,8 @@ INSTRUCTIONS:
 - Be specific and cite sources
 
 USER QUESTION: ${userQuery}`;
+
+      console.log(`[CustomGPT] Total prompt length: ${prompt.length}`);
 
       const messageUrl = `${this.baseUrl}/projects/${this.projectId}/conversations/${conversationId}/messages`;
       

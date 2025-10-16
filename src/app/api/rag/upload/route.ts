@@ -3,6 +3,7 @@ import { partnerContext } from '../../../../lib/isolation/partner-context';
 import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { QdrantClient } from '@qdrant/js-client-rest';
+import mammoth from 'mammoth';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const qdrant = new QdrantClient({ 
@@ -44,16 +45,29 @@ export async function POST(request: NextRequest) {
     let pages = 1;
 
     // Extract text based on file type
-    if (file.name.endsWith('.pdf')) {
+    if (file.name.toLowerCase().endsWith('.pdf')) {
       // Dynamic import to avoid build issues
       const pdf = (await import('pdf-parse')).default;
       const pdfData = await pdf(buffer);
       text = cleanExtractedText(pdfData.text);
       pages = pdfData.numpages;
-    } else {
+      
+    } else if (file.name.toLowerCase().endsWith('.docx')) {
+      // Extract text from DOCX
+      const result = await mammoth.extractRawText({ buffer: buffer });
+      text = cleanExtractedText(result.value);
+      pages = Math.ceil(text.length / 3000); // Estimate pages
+      
+    } else if (file.name.toLowerCase().endsWith('.txt')) {
       // For .txt files, decode properly
       const decoder = new TextDecoder('utf-8');
       text = cleanExtractedText(decoder.decode(bytes));
+      
+    } else {
+      return NextResponse.json(
+        { error: 'Unsupported file type. Please upload PDF, DOCX, or TXT files.' },
+        { status: 400 }
+      );
     }
 
     if (!text || text.length < 10) {
