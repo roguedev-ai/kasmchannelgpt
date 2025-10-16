@@ -28,12 +28,21 @@ export class CustomGPTClient {
     this.projectId = projectId;
   }
 
-  async query(question: string, context?: string): Promise<CustomGPTResponse> {
+  async query(
+    question: string, 
+    context?: string,
+    conversationName?: string
+  ): Promise<CustomGPTResponse> {
     const prompt = context 
       ? `Context from uploaded document:\n${context}\n\nQuestion: ${question}`
       : question;
 
+    // Generate a meaningful conversation name
+    const name = conversationName || 
+      `RAG Query ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
+
     console.log('[CustomGPT] Sending query to project:', this.projectId);
+    console.log('[CustomGPT] Conversation name:', name);
     
     const response = await fetch(`${this.baseUrl}/projects/${this.projectId}/conversations`, {
       method: 'POST',
@@ -42,6 +51,7 @@ export class CustomGPTClient {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        name,
         prompt,
         response_source: 'all',
         stream: false
@@ -55,7 +65,7 @@ export class CustomGPTClient {
     }
 
     const result = await response.json();
-    console.log('[CustomGPT] Response received');
+    console.log('[CustomGPT] Response received, conversation_id:', result.data?.conversation_id);
     return result;
   }
 }

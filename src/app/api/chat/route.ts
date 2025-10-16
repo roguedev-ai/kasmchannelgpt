@@ -80,9 +80,12 @@ export async function POST(request: NextRequest) {
         ? relevantDocs.map(doc => `Source: ${doc.source}\n${doc.content}`).join('\n\n')
         : undefined;
 
+      // Generate conversation name based on first few words of question
+      const conversationName = `${message.slice(0, 50)}${message.length > 50 ? '...' : ''} - ${new Date().toLocaleString()}`;
+
       console.log('[Chat] Sending to CustomGPT with', relevantDocs.length, 'context sources');
       
-      const result = await customGPT.query(message, ragContext);
+      const result = await customGPT.query(message, ragContext, conversationName);
 
       return NextResponse.json({
         response: result.data.openai_response,
