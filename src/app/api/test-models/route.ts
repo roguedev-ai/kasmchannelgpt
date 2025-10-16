@@ -3,14 +3,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const TEST_PROMPT = 'Hello, this is a test message. Please respond with a short greeting.';
 
-const MODELS = [
-  'gemini-pro',
-  'gemini-1.5-pro',
-  'gemini-1.5-pro-latest',
-  'gemini-1.5-flash',
-  'models/gemini-1.5-pro'
-];
-
 const MODEL_CONFIG = {
   temperature: 0.7,
   topP: 0.8,
@@ -20,62 +12,59 @@ const MODEL_CONFIG = {
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('[Test] Testing Gemini models...');
+    console.log('[Test] Testing Gemini 2.0 Flash model...');
     
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-    const results = [];
     
-    for (const modelName of MODELS) {
-      console.log(`[Test] Trying model: ${modelName}`);
+    try {
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-2.0-flash',
+        generationConfig: MODEL_CONFIG,
+      });
       
-      try {
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          generationConfig: MODEL_CONFIG,
-        });
-        
-        const result = await model.generateContent(TEST_PROMPT);
-        const response = result.response;
-        const text = response.text();
-        
-        console.log(`[Test] Success with model: ${modelName}`);
-        results.push({
-          model: modelName,
-          status: 'works',
-          response: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
-          config: MODEL_CONFIG,
-        });
-      } catch (error: any) {
-        console.error(`[Test] Failed with model: ${modelName}`, error);
-        results.push({
-          model: modelName,
-          status: 'failed',
-          error: error.message,
-          details: error.toString(),
-        });
+      const result = await model.generateContent(TEST_PROMPT);
+      const response = result.response;
+      const text = response.text();
+      
+      console.log('[Test] Success with Gemini 2.0 Flash');
+      
+      return NextResponse.json({
+        status: 'success',
+        model: 'gemini-2.0-flash',
+        response: text,
+        config: MODEL_CONFIG,
+        apiKeyValid: true,
+        timestamp: new Date().toISOString(),
+      });
+
+    } catch (error: any) {
+      console.error('[Test] Failed with Gemini 2.0 Flash:', error);
+      
+      let errorType = 'unknown';
+      if (error.message?.includes('API key')) {
+        errorType = 'invalid_key';
+      } else if (error.message?.includes('quota')) {
+        errorType = 'quota_exceeded';
+      } else if (error.message?.includes('404') || error.message?.includes('not found')) {
+        errorType = 'model_not_found';
       }
-      
-      // Add delay between tests to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      return NextResponse.json({
+        status: 'error',
+        model: 'gemini-2.0-flash',
+        error: error.message,
+        errorType,
+        apiKeyValid: !error.message?.includes('API key'),
+        timestamp: new Date().toISOString(),
+      });
     }
     
-    // Find working models
-    const workingModels = results.filter(r => r.status === 'works');
-    console.log(`[Test] Found ${workingModels.length} working models`);
-    
-    return NextResponse.json({
-      results,
-      workingModels: workingModels.map(m => m.model),
-      recommendedModel: workingModels[0]?.model || null,
-      apiKeyValid: results.some(r => !r.error?.includes('API key')),
-      timestamp: new Date().toISOString(),
-    });
-    
   } catch (error) {
-    console.error('[Test] Error testing models:', error);
+    console.error('[Test] Error testing model:', error);
     return NextResponse.json(
       {
-        error: 'Failed to test models',
+        status: 'error',
+        error: 'Failed to test model',
         details: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString(),
       },

@@ -12,34 +12,11 @@ const MODEL_CONFIG = {
   maxOutputTokens: 2048,
 };
 
-// Try different model names until one works
-let model: GenerativeModel;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
-try {
-  // Option 1: Try gemini-1.5-pro-latest first
-  model = genAI.getGenerativeModel({ 
-    model: 'gemini-1.5-pro-latest',
-    generationConfig: MODEL_CONFIG,
-  });
-  console.log('[Chat] Using model: gemini-1.5-pro-latest');
-} catch (e) {
-  try {
-    // Option 2: Fallback to gemini-pro
-    model = genAI.getGenerativeModel({ 
-      model: 'gemini-pro',
-      generationConfig: MODEL_CONFIG,
-    });
-    console.log('[Chat] Using model: gemini-pro');
-  } catch (e2) {
-    // Option 3: Try with models/ prefix
-    model = genAI.getGenerativeModel({ 
-      model: 'models/gemini-1.5-pro',
-      generationConfig: MODEL_CONFIG,
-    });
-    console.log('[Chat] Using model: models/gemini-1.5-pro');
-  }
-}
+const model = genAI.getGenerativeModel({ 
+  model: 'gemini-2.0-flash',
+  generationConfig: MODEL_CONFIG,
+});
 
 const qdrant = new QdrantClient({
   url: process.env.QDRANT_URL || 'http://localhost:6333',
@@ -150,7 +127,7 @@ USER QUESTION: ${userPrompt}
 
 Please provide a helpful, detailed response:`;
 
-    console.log('[Chat] Generating AI response...');
+    console.log('[Chat] Generating AI response with Gemini 2.0 Flash...');
     console.log(`[Chat] Using ${sources.length > 0 ? sources.length + ' document sources' : 'general knowledge only'}`);
 
     // Generate response with better error handling
