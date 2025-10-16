@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { QueryPipeline } from '@/lib/rag/query-pipeline';
 import { createEmbeddings } from '@/lib/rag/embeddings';
 import { partnerContext } from '@/lib/isolation/partner-context';
+import { CustomGPTClient } from '@/lib/customgpt';
 
-const MODEL_CONFIG = {
-  temperature: 0.7,
-  topP: 0.8,
-  topK: 40,
-  maxOutputTokens: 2048,
-};
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ 
-  model: 'gemini-2.0-flash',
-  generationConfig: MODEL_CONFIG,
-});
+// Initialize CustomGPT client
+const customGPT = new CustomGPTClient(
+  process.env.CUSTOMGPT_API_KEY || '',
+  process.env.CUSTOMGPT_PROJECT_ID || ''
+);
 
 const qdrant = new QdrantClient({
   url: process.env.QDRANT_URL || 'http://localhost:6333',
@@ -73,11 +66,9 @@ export async function POST(request: NextRequest) {
           context = results
             .map((result, idx) => {
               const sourceName = result.metadata.source || 'Unknown';
-              return `--- Document Excerpt ${idx + 1} (from: ${sourceName}, relevance: ${(result.score * 100).toFixed(0)}%) ---
-${result.content}
----`;
+              return `[Source ${idx + 1}] ${result.content}\nFrom: ${sourceName} (Relevance: ${(result.score * 100).toFixed(0)}%)\n`;
             })
-            .join('\n\n');
+            .join('\n');
           
           sources = results.map(r => ({
             content: r.content.substring(0, 300) + (r.content.length > 300 ? '...' : ''),
@@ -92,100 +83,66 @@ ${result.content}
         }
       } catch (error) {
         console.error('[Chat] RAG retrieval error:', error);
-        // Continue without RAG context - will use general knowledge
+        // Continue without RAG context
       }
     }
 
-    // Build the prompt
-    let systemPrompt = `You are a helpful AI assistant that answers questions based on provided documents and your general knowledge.`;
-    
-    let userPrompt = message;
+    console.log('[Chat] Sending to CustomGPT...');
 
-    if (context) {
-      systemPrompt += `
-
-IMPORTANT INSTRUCTIONS:
-1. Use the document excerpts below to answer the user's question
-2. When information comes from the documents, cite them (e.g., "According to the uploaded document..." or "Based on the provided documentation...")
-3. If the documents don't fully answer the question, supplement with your general knowledge but clearly distinguish between document content and general knowledge
-4. Be specific and detailed when information is available in the documents
-5. If multiple documents are relevant, synthesize information from all of them
-
-DOCUMENT EXCERPTS FROM UPLOADED FILES:
-${context}
-
----`;
-    } else {
-      systemPrompt += `
-
-Note: No relevant documents were found in the knowledge base for this query. I'll provide the best answer I can based on general knowledge.`;
-    }
-
-    const fullPrompt = `${systemPrompt}
-
-USER QUESTION: ${userPrompt}
-
-Please provide a helpful, detailed response:`;
-
-    console.log('[Chat] Generating AI response with Gemini 2.0 Flash...');
-    console.log(`[Chat] Using ${sources.length > 0 ? sources.length + ' document sources' : 'general knowledge only'}`);
-
-    // Generate response with better error handling
-    let text = '';
+    // Generate response using CustomGPT
     try {
-      const result = await model.generateContent(fullPrompt);
-      const response = result.response;
-      text = response.text();
-    } catch (modelError: any) {
-      console.error('[Chat] Model generation error:', modelError);
+      const result = await customGPT.query(message, context);
+
+      console.log('[Chat] Response received from CustomGPT');
+
+      return NextResponse.json({
+        response: result.data.openai_response,
+        conversationId: result.data.conversation_id,
+        sources: sources.length > 0 ? sources : undefined,
+        usedRag: sources.length > 0,
+        documentsFound: sources.length,
+      });
+
+    } catch (error) {
+      console.error('[Chat] CustomGPT error:', error);
       
-      // If model fails, provide a helpful error message
-      if (modelError.message?.includes('404') || modelError.message?.includes('not found')) {
-        throw new Error('AI model configuration error. Please check GEMINI_API_KEY and model availability.');
+      // Provide detailed error messages
+      let errorMessage = 'Failed to process message';
+      let statusCode = 500;
+      
+      if (error instanceof Error) {
+        if (error.message.includes('API key')) {
+          errorMessage = 'CustomGPT API key is not configured or invalid';
+          statusCode = 503;
+        } else if (error.message.includes('project')) {
+          errorMessage = 'CustomGPT project not found';
+          statusCode = 503;
+        } else if (error.message.includes('rate limit')) {
+          errorMessage = 'CustomGPT API rate limit exceeded';
+          statusCode = 429;
+        } else {
+          errorMessage = error.message;
+        }
       }
-      throw modelError;
+
+      return NextResponse.json(
+        { 
+          error: errorMessage,
+          details: error instanceof Error ? error.message : 'Unknown error',
+          hint: statusCode === 503 ? 'Check CustomGPT configuration' : undefined
+        },
+        { status: statusCode }
+      );
     }
-
-    console.log('[Chat] Response generated successfully');
-    console.log(`[Chat] Response length: ${text.length} characters`);
-
-    return NextResponse.json({
-      response: text,
-      conversationId: conversationId || null,
-      sources: sources.length > 0 ? sources : undefined,
-      usedRag: sources.length > 0,
-      documentsFound: sources.length,
-    });
 
   } catch (error) {
     console.error('[Chat] Error:', error);
-    
-    // Provide detailed error messages
-    let errorMessage = 'Failed to process message';
-    let statusCode = 500;
-    
-    if (error instanceof Error) {
-      if (error.message.includes('API key')) {
-        errorMessage = 'AI API key is not configured or invalid';
-        statusCode = 503;
-      } else if (error.message.includes('quota')) {
-        errorMessage = 'AI API quota exceeded - please try again later';
-        statusCode = 429;
-      } else if (error.message.includes('404') || error.message.includes('not found')) {
-        errorMessage = 'AI model not available - configuration issue';
-        statusCode = 503;
-      } else {
-        errorMessage = error.message;
-      }
-    }
-
     return NextResponse.json(
       { 
-        error: errorMessage,
-        details: error instanceof Error ? error.message : 'Unknown error',
-        hint: statusCode === 503 ? 'Check that GEMINI_API_KEY is set correctly' : undefined
+        error: 'Failed to process message',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
-      { status: statusCode }
+      { status: 500 }
     );
   }
 }
