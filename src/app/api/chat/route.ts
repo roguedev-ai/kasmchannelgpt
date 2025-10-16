@@ -3,7 +3,7 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 import { QueryPipeline } from '@/lib/rag/query-pipeline';
 import { createEmbeddings } from '@/lib/rag/embeddings';
 import { partnerContext } from '@/lib/isolation/partner-context';
-import { getCustomGPTClient } from '@/lib/customgpt';
+import { getCustomGPTClient, ResponseSource } from '@/lib/customgpt';
 
 const qdrant = new QdrantClient({
   url: process.env.QDRANT_URL || 'http://localhost:6333',
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     );
 
     const body = await request.json();
-    const { message, conversationId, useRag = true } = body;
+    const { message, conversationId, useRag = true, responseSource = 'default' } = body;
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
@@ -27,10 +27,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate response source
+    if (!['default', 'own_content', 'openai_content'].includes(responseSource)) {
+      return NextResponse.json(
+        { error: 'Invalid response_source. Must be one of: default, own_content, openai_content' },
+        { status: 400 }
+      );
+    }
+
     const partnerId = session.user.partner_id;
     console.log(`[Chat] Processing message for partner: ${partnerId}`);
     console.log(`[Chat] Message: "${message.substring(0, 100)}..."`);
     console.log(`[Chat] RAG enabled: ${useRag}`);
+    console.log(`[Chat] Response source: ${responseSource}`);
 
     let relevantDocs: Array<{
       content: string;
@@ -85,7 +94,12 @@ export async function POST(request: NextRequest) {
 
       console.log('[Chat] Sending to CustomGPT with', relevantDocs.length, 'context sources');
       
-      const result = await customGPT.query(message, ragContext, conversationName);
+      const result = await customGPT.query(
+        message, 
+        ragContext, 
+        conversationName,
+        responseSource as ResponseSource
+      );
 
       return NextResponse.json({
         response: result.data.openai_response,
@@ -93,7 +107,8 @@ export async function POST(request: NextRequest) {
         sources: relevantDocs,
         citations: result.citations,
         usedRag: relevantDocs.length > 0,
-        documentsFound: relevantDocs.length
+        documentsFound: relevantDocs.length,
+        responseSource
       });
     } catch (error) {
       console.error('[Chat] CustomGPT Error:', error);

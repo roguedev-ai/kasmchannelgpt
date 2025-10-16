@@ -11,6 +11,8 @@ export interface CustomGPTResponse {
   }>;
 }
 
+export type ResponseSource = 'default' | 'own_content' | 'openai_content';
+
 export class CustomGPTClient {
   private apiKey: string;
   private projectId: string;
@@ -33,7 +35,12 @@ export class CustomGPTClient {
    * 1. Create a conversation
    * 2. Send a message to that conversation
    */
-  async query(question: string, context?: string, conversationName?: string): Promise<CustomGPTResponse> {
+  async query(
+    question: string, 
+    context?: string, 
+    conversationName?: string,
+    responseSource: ResponseSource = 'default'
+  ): Promise<CustomGPTResponse> {
     // Step 1: Create conversation
     const name = conversationName || 
       `Chat ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
@@ -74,6 +81,7 @@ export class CustomGPTClient {
       : question;
 
     console.log('[CustomGPT] Step 2: Sending message to conversation');
+    console.log('[CustomGPT] Response source:', responseSource);
 
     const messageResponse = await fetch(
       `${this.baseUrl}/projects/${this.projectId}/conversations/${conversationId}/messages`,
@@ -85,7 +93,7 @@ export class CustomGPTClient {
         },
         body: JSON.stringify({
           prompt,
-          response_source: 'all',
+          response_source: responseSource,
           stream: false
         })
       }
