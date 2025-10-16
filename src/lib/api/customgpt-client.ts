@@ -16,31 +16,62 @@ export class CustomGPTClient {
   }
 
   async query(userQuery: string, context: string): Promise<string> {
-    const url = `${this.baseUrl}/projects/${this.projectId}/conversations`;
-    
-    const prompt = `Context from our knowledge base:\n\n${context}\n\nUser question: ${userQuery}\n\nPlease answer based on the context provided above.`;
+    try {
+      // Step 1: Create a conversation
+      const conversationUrl = `${this.baseUrl}/projects/${this.projectId}/conversations`;
+      const conversationResponse = await fetch(conversationUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: `Query_${Date.now()}`
+        })
+      });
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: `Query_${Date.now()}`,
-        prompt: prompt,
-        response_source: 'own_content'
-      })
-    });
+      if (!conversationResponse.ok) {
+        const errorText = await conversationResponse.text();
+        console.error(`[CustomGPT] Conversation creation error ${conversationResponse.status}:`, errorText);
+        throw new Error(`CustomGPT API error: ${conversationResponse.status}`);
+      }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[CustomGPT] ${response.status} error:`, errorText);
-      throw new Error(`CustomGPT API error: ${response.status}`);
+      const conversationData = await conversationResponse.json();
+      const conversationId = conversationData.data?.id;
+
+      if (!conversationId) {
+        throw new Error('Failed to get conversation ID from CustomGPT');
+      }
+
+      // Step 2: Send message with context to get AI response
+      const prompt = `Context:\n\n${context}\n\nQuestion: ${userQuery}\n\nAnswer based on the context.`;
+      const messageUrl = `${this.baseUrl}/projects/${this.projectId}/conversations/${conversationId}/messages`;
+      
+      const messageResponse = await fetch(messageUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: prompt,
+          response_source: 'own_content'
+        })
+      });
+
+      if (!messageResponse.ok) {
+        const errorText = await messageResponse.text();
+        console.error(`[CustomGPT] Message error ${messageResponse.status}:`, errorText);
+        throw new Error(`CustomGPT API error: ${messageResponse.status}`);
+      }
+
+      const messageData = await messageResponse.json();
+      return messageData.data?.openai_response || 'I could not generate an answer.';
+
+    } catch (error) {
+      console.error('[CustomGPT] Query error:', error);
+      throw error;
     }
-
-    const data = await response.json();
-    return data.data?.openai_response || 'I could not generate an answer.';
   }
 }
 
