@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { partnerContext } from '../../../../lib/isolation/partner-context';
-import pdf from 'pdf-parse';
 import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { QdrantClient } from '@qdrant/js-client-rest';
@@ -46,6 +45,8 @@ export async function POST(request: NextRequest) {
 
     // Extract text based on file type
     if (file.name.endsWith('.pdf')) {
+      // Dynamic import to avoid build issues
+      const pdf = (await import('pdf-parse')).default;
       const pdfData = await pdf(buffer);
       text = cleanExtractedText(pdfData.text);
       pages = pdfData.numpages;
