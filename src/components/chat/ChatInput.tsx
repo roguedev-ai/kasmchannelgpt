@@ -1,4 +1,6 @@
 import { useState, useCallback, ChangeEvent } from 'react';
+import { toast } from 'sonner';
+import { sessionManager } from '@/lib/session/partner-session';
 
 interface ChatInputProps {
   onSend: (message: string) => Promise<void>;
@@ -36,23 +38,43 @@ export function ChatInput({
     if (!e.target.files?.length) return;
     
     const file = e.target.files[0];
-    const reader = new FileReader();
     
-    reader.onload = async (event) => {
-      const text = event.target?.result as string;
+    try {
+      // Create FormData with the actual file
+      const formData = new FormData();
+      formData.append('file', file);
       
-      try {
-        await onUpload(text, {
+      // Get auth token
+      const token = sessionManager.getToken();
+      
+      // Upload using FormData
+      const response = await fetch('/api/rag/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload file');
+      }
+      
+      const result = await response.json();
+      toast.success(`Uploaded ${file.name}`);
+      
+      if (onUpload) {
+        onUpload(result.filename, {
           filename: file.name,
           type: file.type,
-          size: file.size,
+          size: file.size
         });
-      } catch (error) {
-        console.error('Upload failed:', error);
       }
-    };
-    
-    reader.readAsText(file);
+      
+    } catch (error) {
+      console.error('[Chat] Upload error:', error);
+      toast.error('Upload failed: ' + (error as Error).message);
+    }
   }, [onUpload]);
   
   return (
