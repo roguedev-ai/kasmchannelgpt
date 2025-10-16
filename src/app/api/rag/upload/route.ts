@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import mammoth from 'mammoth';
+import { ensureCollectionExists } from '../../../../lib/rag/collection-manager';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const qdrant = new QdrantClient({ 
@@ -86,6 +87,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Ensure partner's collection exists
+    await ensureCollectionExists(session.user.partner_id);
 
     // Generate embeddings and store
     const documentId = await embedAndStore(chunks, {

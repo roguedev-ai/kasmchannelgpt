@@ -3,6 +3,7 @@ import { partnerContext } from '../../../../lib/isolation/partner-context';
 import { queryPipeline } from '../../../../lib/rag/query-pipeline';
 import { QueryRequest } from '../../../../types/backend';
 import { customGPTClient } from '../../../../lib/api/customgpt-client';
+import { ensureCollectionExists } from '../../../../lib/rag/collection-manager';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,6 +24,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Ensure collection exists (in case it's a new partner)
+    await ensureCollectionExists(session.user.partner_id);
+
     // Search documents
     const docs = await queryPipeline.query(body.query, session.user.partner_id);
     
