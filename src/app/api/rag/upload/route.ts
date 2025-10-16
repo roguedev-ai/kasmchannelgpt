@@ -88,25 +88,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Ensure partner's collection exists
-    await ensureCollectionExists(session.user.partner_id);
+    // Ensure partner's collection exists with error handling
+    try {
+      console.log(`[Upload] Ensuring collection exists for partner: ${session.user.partner_id}`);
+      await ensureCollectionExists(session.user.partner_id);
+      console.log(`[Upload] Collection ready for partner: ${session.user.partner_id}`);
+    } catch (collectionError: any) {
+      console.error('[Upload] Failed to create collection:', collectionError);
+      return NextResponse.json(
+        { 
+          error: 'Failed to initialize storage',
+          details: collectionError.message
+        },
+        { status: 500 }
+      );
+    }
 
     // Generate embeddings and store
-    const documentId = await embedAndStore(chunks, {
-      filename: file.name,
-      pages: pages,
-      partnerId: session.user.partner_id
-    });
+    try {
+      const documentId = await embedAndStore(chunks, {
+        filename: file.name,
+        pages: pages,
+        partnerId: session.user.partner_id
+      });
 
-    console.log(`[Upload] Processed ${chunks.length} chunks from ${file.name}`);
+      console.log(`[Upload] Processed ${chunks.length} chunks from ${file.name}`);
 
-    return NextResponse.json({
-      success: true,
-      filename: file.name,
-      chunks: chunks.length,
-      pages: pages,
-      documentId: documentId
-    });
+      return NextResponse.json({
+        success: true,
+        filename: file.name,
+        chunks: chunks.length,
+        pages: pages,
+        documentId: documentId
+      });
+    } catch (embedError: any) {
+      console.error('[Upload] Failed to generate embeddings:', embedError);
+      return NextResponse.json(
+        { 
+          error: 'Failed to process document',
+          details: embedError.message
+        },
+        { status: 500 }
+      );
+    }
 
   } catch (error: any) {
     console.error('[Upload] Error:', error);
@@ -186,7 +210,7 @@ async function embedAndStore(
   for (let i = 0; i < chunks.length; i += batchSize) {
     const batch = chunks.slice(i, i + batchSize);
     
-    // Generate embeddings
+    // Generate embeddings using embedDocuments
     const model = genAI.getGenerativeModel({ model: 'embedding-001' });
     const embeddings = await Promise.all(
       batch.map(chunk => 

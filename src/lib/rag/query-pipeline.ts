@@ -52,13 +52,14 @@ export class QueryPipeline {
     try {
       console.log('[Query] Using gemini embeddings');
       
-      // Generate query embedding
-      const embedding = await this.embeddings.embedQuery(query);
+      // Generate query embedding using embedDocuments
+      const embeddings = await this.embeddings.embedDocuments([query]);
+      const queryEmbedding = embeddings[0]; // Get first embedding
       
       // Search in partner's collection
       try {
         const searchResults = await this.qdrant.search(partnerId, {
-          vector: embedding,
+          vector: queryEmbedding,
           limit: 5,
           with_payload: true
         }) as QdrantSearchResult[];
