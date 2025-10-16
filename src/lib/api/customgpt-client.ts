@@ -44,7 +44,17 @@ export class CustomGPTClient {
       }
 
       // Step 2: Send message with context to get AI response
-      const prompt = `Context:\n\n${context}\n\nQuestion: ${userQuery}\n\nAnswer based on the context.`;
+      const prompt = `CONTEXT FROM DOCUMENTS:
+${context}
+
+INSTRUCTIONS:
+- Answer using ONLY the context above
+- Do not use general knowledge
+- If the answer isn't in the context, say so
+- Be specific and cite sources
+
+USER QUESTION: ${userQuery}`;
+
       const messageUrl = `${this.baseUrl}/projects/${this.projectId}/conversations/${conversationId}/messages`;
       
       const messageResponse = await fetch(messageUrl, {

@@ -45,35 +45,43 @@ export function ChatInput({
       formData.append('file', file);
       
       // Get auth token
-      const token = sessionManager.getToken();
+      const session = sessionManager.useSession();
       
-      // Upload using FormData
+      // Upload
       const response = await fetch('/api/rag/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${session?.token}`
         },
         body: formData
       });
       
       if (!response.ok) {
-        throw new Error('Failed to upload file');
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
       }
       
       const result = await response.json();
-      toast.success(`Uploaded ${file.name}`);
+      
+      toast.success(`Uploaded ${file.name}`, {
+        description: `Processed ${result.chunks} chunks from ${result.pages} pages`
+      });
       
       if (onUpload) {
         onUpload(result.filename, {
           filename: file.name,
           type: file.type,
-          size: file.size
+          size: file.size,
+          pages: result.pages,
+          chunks: result.chunks
         });
       }
       
     } catch (error) {
       console.error('[Chat] Upload error:', error);
       toast.error('Upload failed: ' + (error as Error).message);
+    } finally {
+      e.target.value = ''; // Reset input
     }
   }, [onUpload]);
   
@@ -94,7 +102,7 @@ export function ChatInput({
             isUploading ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
-          📎
+          {isUploading ? '⏳' : '📎'}
         </label>
         <textarea
           value={message}
@@ -112,7 +120,7 @@ export function ChatInput({
             isLoading || !message.trim() ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
-          Send
+          {isLoading ? 'Sending...' : 'Send'}
         </button>
       </div>
     </div>

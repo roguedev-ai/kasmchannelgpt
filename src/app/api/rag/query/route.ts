@@ -30,19 +30,37 @@ export async function POST(request: NextRequest) {
     let answer: string;
 
     if (docs.length > 0) {
-      // Build context from all relevant documents
-      const context = docs.map(doc => doc.pageContent).join('\n\n---\n\n');
+      // Format context with source attribution
+      const context = docs
+        .map((doc, i) => `[Document ${i + 1}]\n${doc.pageContent}`)
+        .join('\n\n---\n\n');
+      
+      // Build prompt that REQUIRES using the context
+      const prompt = `You are a helpful assistant that answers questions based ONLY on the provided documents.
+
+CONTEXT FROM UPLOADED DOCUMENTS:
+${context}
+
+CRITICAL INSTRUCTIONS:
+- Answer using ONLY the information above
+- If the answer is not in the context, say "I don't have information about that in the uploaded documents"
+- Cite which document number you're referencing
+- Do NOT use general knowledge
+
+USER QUESTION: ${body.query}
+
+ANSWER:`;
       
       try {
         // Call CustomGPT with context
-        answer = await customGPTClient.query(body.query, context);
+        answer = await customGPTClient.query(body.query, prompt);
       } catch (error) {
         console.error('[Query] CustomGPT error:', error);
         // Fallback to simple response
-        answer = `Based on the documents, here's what I found:\n\n${docs[0].pageContent}`;
+        answer = `Based on the uploaded documents:\n\n${docs[0].pageContent}`;
       }
     } else {
-      answer = 'I could not find any relevant information in the documents.';
+      answer = 'I could not find any relevant information in the uploaded documents.';
     }
     
     // Return response
