@@ -1,34 +1,66 @@
 import { NextResponse } from 'next/server';
 import { backendConfig } from '../../../lib/config/backend';
-import { qdrantClient } from '../../../lib/rag/qdrant-client';
+import { collectionManager } from '../../../lib/rag/collection-manager';
 
 export async function GET() {
+  const health = {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    services: {
+      openai: false,
+      qdrant: false,
+      gemini: false
+    },
+    collections: [] as Array<{
+      name: string;
+      vectorCount: number;
+      vectorSize: number;
+    }>,
+    config: {
+      baseUrl: backendConfig.baseUrl || '',
+      qdrantUrl: backendConfig.qdrantUrl || '',
+    }
+  };
+
   try {
-    // Check required config
-    if (!backendConfig.openaiApiKey) {
-      throw new Error('OpenAI API key not configured');
+    // Check OpenAI configuration
+    if (backendConfig.openaiApiKey) {
+      health.services.openai = true;
     }
-    
-    if (!backendConfig.baseUrl) {
-      throw new Error('Base URL not configured');
+
+    // Check Gemini configuration
+    if (process.env.GEMINI_API_KEY) {
+      health.services.gemini = true;
     }
-    
-    // Check Qdrant connection
-    await qdrantClient.healthCheck();
-    
-    return NextResponse.json({
-      status: 'healthy',
-      config: {
-        openai: true,
-        qdrant: true,
-      },
-    });
-    
+
+    // Check Qdrant and list collections
+    try {
+      const collections = await collectionManager.listCollections();
+      health.collections = collections;
+      health.services.qdrant = true;
+    } catch (qdrantError: any) {
+      console.error('[Health] Qdrant check failed:', qdrantError);
+      health.status = 'degraded';
+      health.services.qdrant = false;
+    }
+
+    // Overall health status
+    if (!health.services.gemini || !health.services.qdrant) {
+      health.status = 'degraded';
+    }
+
+    return NextResponse.json(health);
+
   } catch (error: any) {
     console.error('[Health] Error:', error);
     
     return NextResponse.json(
-      { error: 'Health check failed', message: error?.message || 'Unknown error' },
+      {
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        error: error.message || 'Unknown error',
+        services: health.services
+      },
       { status: 500 }
     );
   }

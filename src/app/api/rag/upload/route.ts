@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { partnerContext } from '../../../../lib/isolation/partner-context';
+import { partnerContext } from '@/lib/isolation/partner-context';
 import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import mammoth from 'mammoth';
-import { ensureCollectionExists } from '../../../../lib/rag/collection-manager';
+import { collectionManager } from '@/lib/rag/collection-manager';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const qdrant = new QdrantClient({ 
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     // Ensure partner's collection exists with error handling
     try {
       console.log(`[Upload] Ensuring collection exists for partner: ${session.user.partner_id}`);
-      await ensureCollectionExists(session.user.partner_id);
+      await collectionManager.ensureCollectionExists(session.user.partner_id);
       console.log(`[Upload] Collection ready for partner: ${session.user.partner_id}`);
     } catch (collectionError: any) {
       console.error('[Upload] Failed to create collection:', collectionError);
