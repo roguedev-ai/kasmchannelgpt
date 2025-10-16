@@ -28,44 +28,86 @@ export class CustomGPTClient {
     this.projectId = projectId;
   }
 
-  async query(
-    question: string, 
-    context?: string,
-    conversationName?: string
-  ): Promise<CustomGPTResponse> {
-    const prompt = context 
-      ? `Context from uploaded document:\n${context}\n\nQuestion: ${question}`
-      : question;
-
-    // Generate a meaningful conversation name
+  /**
+   * Two-step process to get a response from CustomGPT:
+   * 1. Create a conversation
+   * 2. Send a message to that conversation
+   */
+  async query(question: string, context?: string, conversationName?: string): Promise<CustomGPTResponse> {
+    // Step 1: Create conversation
     const name = conversationName || 
-      `RAG Query ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
+      `Chat ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
 
-    console.log('[CustomGPT] Sending query to project:', this.projectId);
-    console.log('[CustomGPT] Conversation name:', name);
+    console.log('[CustomGPT] Step 1: Creating conversation:', name);
     
-    const response = await fetch(`${this.baseUrl}/projects/${this.projectId}/conversations`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name,
-        prompt,
-        response_source: 'all',
-        stream: false
-      })
-    });
+    const createResponse = await fetch(
+      `${this.baseUrl}/projects/${this.projectId}/conversations`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name })
+      }
+    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[CustomGPT] API Error:', response.status, errorText);
-      throw new Error(`CustomGPT API error: ${response.status} ${errorText}`);
+    if (!createResponse.ok) {
+      const errorText = await createResponse.text();
+      console.error('[CustomGPT] Conversation creation error:', createResponse.status, errorText);
+      throw new Error(`Failed to create conversation: ${createResponse.status} ${errorText}`);
     }
 
-    const result = await response.json();
-    console.log('[CustomGPT] Response received, conversation_id:', result.data?.conversation_id);
+    const conversationData = await createResponse.json();
+    const conversationId = conversationData.data?.id;
+
+    if (!conversationId) {
+      console.error('[CustomGPT] No conversation ID in response:', conversationData);
+      throw new Error('Failed to get conversation ID from CustomGPT');
+    }
+
+    console.log('[CustomGPT] Conversation created:', conversationId);
+
+    // Step 2: Send message to conversation
+    const prompt = context 
+      ? `Context from uploaded document:\n\n${context}\n\n---\n\nQuestion: ${question}`
+      : question;
+
+    console.log('[CustomGPT] Step 2: Sending message to conversation');
+
+    const messageResponse = await fetch(
+      `${this.baseUrl}/projects/${this.projectId}/conversations/${conversationId}/messages`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          response_source: 'all',
+          stream: false
+        })
+      }
+    );
+
+    if (!messageResponse.ok) {
+      const errorText = await messageResponse.text();
+      console.error('[CustomGPT] Message send error:', messageResponse.status, errorText);
+      throw new Error(`Failed to send message: ${messageResponse.status} ${errorText}`);
+    }
+
+    const result = await messageResponse.json();
+    
+    console.log('[CustomGPT] Response received');
+    console.log('[CustomGPT] Conversation ID:', conversationId);
+    console.log('[CustomGPT] Response length:', result.data?.openai_response?.length || 0);
+
+    // Add conversation_id to response if not present
+    if (result.data && !result.data.conversation_id) {
+      result.data.conversation_id = conversationId;
+    }
+
     return result;
   }
 }
