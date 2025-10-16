@@ -3,13 +3,7 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 import { QueryPipeline } from '@/lib/rag/query-pipeline';
 import { createEmbeddings } from '@/lib/rag/embeddings';
 import { partnerContext } from '@/lib/isolation/partner-context';
-import { CustomGPTClient } from '@/lib/customgpt';
-
-// Initialize CustomGPT client
-const customGPT = new CustomGPTClient(
-  process.env.CUSTOMGPT_API_KEY || '',
-  process.env.CUSTOMGPT_PROJECT_ID || ''
-);
+import { getCustomGPTClient } from '@/lib/customgpt';
 
 const qdrant = new QdrantClient({
   url: process.env.QDRANT_URL || 'http://localhost:6333',
@@ -38,8 +32,7 @@ export async function POST(request: NextRequest) {
     console.log(`[Chat] Message: "${message.substring(0, 100)}..."`);
     console.log(`[Chat] RAG enabled: ${useRag}`);
 
-    let context = '';
-    let sources: Array<{
+    let relevantDocs: Array<{
       content: string;
       source: string;
       score: number;
@@ -62,22 +55,14 @@ export async function POST(request: NextRequest) {
         if (results.length > 0) {
           console.log(`[Chat] Found ${results.length} relevant chunks from documents`);
           
-          // Build context with clear source attribution
-          context = results
-            .map((result, idx) => {
-              const sourceName = result.metadata.source || 'Unknown';
-              return `[Source ${idx + 1}] ${result.content}\nFrom: ${sourceName} (Relevance: ${(result.score * 100).toFixed(0)}%)\n`;
-            })
-            .join('\n');
-          
-          sources = results.map(r => ({
-            content: r.content.substring(0, 300) + (r.content.length > 300 ? '...' : ''),
+          relevantDocs = results.map(r => ({
+            content: r.content,
             source: r.metadata.source || 'Unknown',
             score: r.score,
             documentId: r.metadata.documentId || '',
           }));
 
-          console.log('[Chat] Context built from sources:', sources.map(s => s.source));
+          console.log('[Chat] Context built from sources:', relevantDocs.map(d => d.source));
         } else {
           console.log('[Chat] No relevant documents found for this query');
         }
@@ -87,27 +72,31 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('[Chat] Sending to CustomGPT...');
-
-    // Generate response using CustomGPT
     try {
-      const result = await customGPT.query(message, context);
+      const customGPT = getCustomGPTClient();
+      
+      // Build context from RAG results
+      const ragContext = relevantDocs.length > 0 
+        ? relevantDocs.map(doc => `Source: ${doc.source}\n${doc.content}`).join('\n\n')
+        : undefined;
 
-      console.log('[Chat] Response received from CustomGPT');
+      console.log('[Chat] Sending to CustomGPT with', relevantDocs.length, 'context sources');
+      
+      const result = await customGPT.query(message, ragContext);
 
       return NextResponse.json({
         response: result.data.openai_response,
         conversationId: result.data.conversation_id,
-        sources: sources.length > 0 ? sources : undefined,
-        usedRag: sources.length > 0,
-        documentsFound: sources.length,
+        sources: relevantDocs,
+        citations: result.citations,
+        usedRag: relevantDocs.length > 0,
+        documentsFound: relevantDocs.length
       });
-
     } catch (error) {
-      console.error('[Chat] CustomGPT error:', error);
+      console.error('[Chat] CustomGPT Error:', error);
       
       // Provide detailed error messages
-      let errorMessage = 'Failed to process message';
+      let errorMessage = 'Failed to generate response';
       let statusCode = 500;
       
       if (error instanceof Error) {
