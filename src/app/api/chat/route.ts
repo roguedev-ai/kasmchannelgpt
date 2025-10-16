@@ -6,7 +6,7 @@ import { createEmbeddings } from '@/lib/rag/embeddings';
 import { partnerContext } from '@/lib/isolation/partner-context';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 const qdrant = new QdrantClient({
   url: process.env.QDRANT_URL || 'http://localhost:6333',
