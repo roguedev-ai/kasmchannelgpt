@@ -1,214 +1,125 @@
-# CustomGPT RAG Platform
+# KasmChannelGPT
 
-A secure, multi-tenant RAG (Retrieval Augmented Generation) platform built with Next.js, SQLite, and Qdrant.
+A Next.js application for managing partner access and document collections with RAG capabilities.
 
 ## Features
 
-### Authentication & Authorization
-- User management with SQLite
-- JWT-based authentication
-- Role-based access (admin/partner)
-- Partner isolation
-- Audit logging
+- Partner Management
+  - Create and manage partner accounts
+  - Role-based access control (admin/partner)
+  - Partner statistics and monitoring
 
-### RAG Pipeline
-- Document processing
-- Vector embeddings (OpenAI)
-- Semantic search (Qdrant)
-- Context retrieval
-- CustomGPT integration
+- Collection Management
+  - Multiple collections per partner
+  - Document upload and processing
+  - Configurable search strategies
 
-### Security
-- Password hashing (bcrypt)
-- Partner data isolation
-- Rate limiting
-- SSL/TLS support
-- Audit trail
+- Security
+  - Authentication with NextAuth.js
+  - Password hashing with bcrypt
+  - Rate limiting and request validation
+  - Automatic database backups
+
+- Health Monitoring
+  - System health checks
+  - Database connection monitoring
+  - Resource usage tracking
 
 ## Quick Start
 
-### 1. Clone Repository
+1. Clone the repository:
 ```bash
-git clone https://github.com/your-org/customgpt-starter-kit.git
-cd customgpt-starter-kit
+git clone https://github.com/roguedev-ai/kasmchannelgpt.git
+cd kasmchannelgpt
 ```
 
-### 2. Install Dependencies
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-### 3. Configure Environment
+3. Set up environment variables:
 ```bash
-cp .env.example .env.local
-
-# Edit .env.local:
-OPENAI_API_KEY=your-key
-CUSTOMGPT_API_KEY=your-key
-JWT_SECRET=min-32-chars-secret
+cp .env.example .env
 ```
 
-### 4. Start Qdrant
+Edit `.env` and configure:
+- `DATABASE_URL`
+- `NEXTAUTH_URL`
+- `NEXTAUTH_SECRET`
+- Admin credentials
+
+4. Initialize the database:
 ```bash
-docker run -d -p 6333:6333 qdrant/qdrant
+npm run migrate
 ```
 
-### 5. Run Development Server
+5. Start the development server:
 ```bash
 npm run dev
 ```
 
-### 6. Initialize Database
-The system will automatically:
-- Create SQLite database
-- Initialize schema
-- Create default admin:
-  * Email: admin@rag-platform.local
-  * Password: admin123
-  * ⚠️ Change these in production!
+Visit `http://localhost:3000` to access the application.
 
-### 7. Test Setup
-```bash
-# Test database
-npx ts-node scripts/test-database.ts
+## Project Structure
 
-# Test authentication
-npx ts-node scripts/test-auth.ts
-
-# Test RAG pipeline
-npx ts-node scripts/test-query.ts
+```
+kasmchannelgpt/
+├── src/
+│   ├── app/              # Next.js app router
+│   ├── components/       # React components
+│   ├── lib/             # Utilities and helpers
+│   └── types/           # TypeScript types
+├── scripts/             # Maintenance scripts
+├── docs/               # Documentation
+└── public/             # Static assets
 ```
 
-## Production Deployment
+## Key Components
 
-### 1. SSL Setup
-```bash
-# Install certbot
-sudo apt install certbot python3-certbot-nginx
-
-# Get certificate
-sudo ./scripts/setup-ssl.sh
-
-# Configure Nginx
-sudo ./scripts/deploy.sh
-# Choose 'y' when asked about Nginx
-```
-
-### 2. Security Checklist
-- [ ] Change default admin password
-- [ ] Configure SSL certificates
-- [ ] Set secure file permissions
-- [ ] Configure environment variables
-- [ ] Set up monitoring
-
-### 3. Start Server
-```bash
-npm run build
-npm run start
-```
-
-## API Endpoints
-
-### Authentication
-```typescript
-// Login
-POST /api/auth/login
-{
-  "email": "user@partner.com",
-  "password": "secure123"
-}
-
-// Response
-{
-  "token": "jwt.token.here",
-  "partnerId": "partner1",
-  "namespace": "partner_partner1",
-  "role": "partner"
-}
-```
-
-### Admin Operations
-```typescript
-// List partners
-GET /api/admin/partners
-Authorization: Bearer <admin-token>
-
-// Create partner
-POST /api/admin/partners
-Authorization: Bearer <admin-token>
-{
-  "partnerId": "partner2",
-  "email": "user@partner2.com",
-  "password": "secure456"
-}
-```
-
-### RAG Operations
-```typescript
-// Upload document
-POST /api/rag/upload
-Authorization: Bearer <token>
-Content-Type: multipart/form-data
-file: <document>
-
-// Query
-POST /api/rag/query
-Authorization: Bearer <token>
-{
-  "query": "What is RAG?",
-  "conversationId": "optional-id"
-}
-```
-
-## Documentation
-
-- [Architecture Guide](docs/ARCHITECTURE.md)
-- [Security Guide](docs/SECURITY.md)
-- [Testing Guide](docs/TESTING.md)
+- `PartnerList`: Partner management interface
+- `CreatePartnerModal`: New partner creation
+- `PartnerDetailsModal`: Partner statistics and details
+- Database schema with relations for:
+  - Partners
+  - Collections
+  - Documents
+  - Collection Settings
 
 ## Development
 
-### Directory Structure
-```
-src/
-  ├── app/              # Next.js app router
-  ├── components/       # React components
-  ├── lib/             # Core libraries
-  │   ├── database/    # SQLite client
-  │   ├── isolation/   # Partner isolation
-  │   └── rag/         # RAG pipeline
-  └── types/           # TypeScript types
+- Run tests: `npm test`
+- Lint code: `npm run lint`
+- Format code: `npm run format`
+- Build for production: `npm run build`
 
-scripts/               # Utility scripts
-docs/                 # Documentation
-```
+## Deployment
 
-### Testing
-```bash
-# Unit tests
-npm run test
+See [DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) for detailed deployment instructions.
 
-# Integration tests
-npm run test:integration
+## Backup and Recovery
 
-# E2E tests
-npm run test:e2e
-```
+- Create backup: `npm run backup`
+- List backups: `npm run list-backups`
+- Restore backup: `npm run restore <backup-file>`
 
-### Scripts
-- `deploy.sh`: Production deployment
-- `setup-ssl.sh`: SSL certificate setup
-- `test-database.ts`: Database tests
-- `test-auth.ts`: Authentication tests
-- `test-query.ts`: RAG pipeline tests
+## Health Checks
+
+- Check system health: `npm run health-check`
+- View logs: `npm run logs`
+
+## Environment Variables
+
+See [.env.example](./.env.example) for all available configuration options.
 
 ## Contributing
 
-1. Fork repository
-2. Create feature branch
-3. Commit changes
-4. Create pull request
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
+This project is proprietary software. All rights reserved.

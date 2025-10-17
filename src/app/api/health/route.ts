@@ -1,67 +1,50 @@
-import { NextResponse } from 'next/server';
-import { backendConfig } from '../../../lib/config/backend';
-import { collectionManager } from '../../../lib/rag/collection-manager';
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/database';
+import { sql } from 'drizzle-orm';
 
-export async function GET() {
-  const health = {
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    services: {
-      openai: false,
-      qdrant: false,
-      gemini: false
-    },
-    collections: [] as Array<{
-      name: string;
-      vectorCount: number;
-      vectorSize: number;
-    }>,
-    config: {
-      baseUrl: backendConfig.baseUrl || '',
-      qdrantUrl: backendConfig.qdrantUrl || '',
-    }
-  };
-
+export async function GET(request: NextRequest) {
   try {
-    // Check OpenAI configuration
-    if (backendConfig.openaiApiKey) {
-      health.services.openai = true;
-    }
-
-    // Check Gemini configuration
-    if (process.env.GEMINI_API_KEY) {
-      health.services.gemini = true;
-    }
-
-    // Check Qdrant and list collections
-    try {
-      const collections = await collectionManager.listCollections();
-      health.collections = collections;
-      health.services.qdrant = true;
-    } catch (qdrantError: any) {
-      console.error('[Health] Qdrant check failed:', qdrantError);
-      health.status = 'degraded';
-      health.services.qdrant = false;
-    }
-
-    // Overall health status
-    if (!health.services.gemini || !health.services.qdrant) {
-      health.status = 'degraded';
-    }
-
-    return NextResponse.json(health);
-
-  } catch (error: any) {
-    console.error('[Health] Error:', error);
+    // Check database connection
+    const dbResult = await db.run(sql`SELECT 1 as connected`);
     
-    return NextResponse.json(
-      {
-        status: 'unhealthy',
+    // Check system status
+    const status = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      database: {
+        connected: !!dbResult,
         timestamp: new Date().toISOString(),
-        error: error.message || 'Unknown error',
-        services: health.services
       },
-      { status: 500 }
-    );
+      environment: {
+        node_env: process.env.NODE_ENV,
+        nextauth_url: process.env.NEXTAUTH_URL,
+      },
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+    };
+
+    return NextResponse.json(status, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
+  } catch (error) {
+    console.error('[Health Check] Error:', error);
+    
+    return NextResponse.json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }, {
+      status: 503,
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   }
 }
