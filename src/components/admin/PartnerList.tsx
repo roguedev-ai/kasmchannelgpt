@@ -1,184 +1,133 @@
-import { useState } from 'react';
-import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getFilteredRowModel,
-  createColumnHelper,
-  flexRender,
-  type SortingState,
-} from '@tanstack/react-table';
-import { useQuery } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import type { PartnerWithStats } from '@/lib/database';
-
-type Partner = {
-  id: string;
-  email: string;
-  role: 'admin' | 'partner';
-  status: 'active' | 'inactive';
-  name: string | null;
-  collectionsCount: number;
-  documentsCount: number;
-  createdAt: string;
-  updatedAt: string;
-};
-
-const columnHelper = createColumnHelper<Partner>();
-
-const columns = [
-  columnHelper.accessor(row => row.id, {
-    id: 'id',
-    header: 'Partner ID',
-    cell: info => info.getValue(),
-  }),
-  columnHelper.accessor(row => row.email, {
-    id: 'email',
-    header: 'Email',
-    cell: info => info.getValue(),
-  }),
-  columnHelper.accessor(row => row.role, {
-    id: 'role',
-    header: 'Role',
-    cell: info => <span className="capitalize">{info.getValue()}</span>,
-  }),
-  columnHelper.accessor(row => row.collectionsCount, {
-    id: 'collectionsCount',
-    header: 'Collections',
-    cell: info => info.getValue(),
-  }),
-  columnHelper.accessor(row => row.documentsCount, {
-    id: 'documentsCount',
-    header: 'Documents',
-    cell: info => info.getValue(),
-  }),
-  columnHelper.accessor(row => row.createdAt, {
-    id: 'createdAt',
-    header: 'Created',
-    cell: info => new Date(info.getValue()).toLocaleDateString(),
-  }),
-  columnHelper.accessor(row => row.status, {
-    id: 'status',
-    header: 'Status',
-    cell: info => (
-      <span className={`capitalize ${info.getValue() === 'active' ? 'text-green-600' : 'text-red-600'}`}>
-        {info.getValue()}
-      </span>
-    ),
-  }),
-  columnHelper.display({
-    id: 'actions',
-    header: 'Actions',
-    cell: info => (
-      <div className="flex space-x-2">
-        <button
-          onClick={() => {/* TODO: View details */}}
-          className="text-blue-600 hover:text-blue-800"
-        >
-          View
-        </button>
-        <button
-          onClick={() => {/* TODO: Edit partner */}}
-          className="text-gray-600 hover:text-gray-800"
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => {/* TODO: Delete partner */}}
-          className="text-red-600 hover:text-red-800"
-        >
-          Delete
-        </button>
-      </div>
-    ),
-  }),
-];
+import { CreatePartnerModal } from './CreatePartnerModal';
 
 export function PartnerList() {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
+  const router = useRouter();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [partners, setPartners] = useState<PartnerWithStats[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data: partners = [], isLoading, error } = useQuery<Partner[]>({
-    queryKey: ['partners'],
-    queryFn: async () => {
+  // Fetch partners on component mount
+  useEffect(() => {
+    fetchPartners();
+  }, []);
+
+  const fetchPartners = async () => {
+    try {
       const response = await fetch('/api/admin/partners');
       if (!response.ok) {
         throw new Error('Failed to fetch partners');
       }
-      return response.json();
-    },
-  });
+      const data = await response.json();
+      setPartners(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const table = useReactTable({
-    data: partners,
-    columns,
-    state: {
-      sorting,
-      globalFilter,
-    },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  });
+  const handleCreatePartner = async (data: { id: string; email: string; password: string }) => {
+    try {
+      const response = await fetch('/api/admin/partners', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create partner');
+      }
+
+      // Refresh the partner list
+      await fetchPartners();
+      setIsCreateModalOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create partner');
+    }
+  };
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
 
-  if (error instanceof Error) {
-    return <div>Error: {error.message}</div>;
+  if (error) {
+    return <div className="text-red-500">Error: {error}</div>;
   }
 
   return (
-    <div className="space-y-4">
-      <Toaster position="top-right" />
-      
-      <div className="flex justify-between items-center">
-        <input
-          type="text"
-          value={globalFilter ?? ''}
-          onChange={e => setGlobalFilter(e.target.value)}
-          placeholder="Search partners..."
-          className="px-4 py-2 border rounded-lg"
-        />
+    <div>
+      <div className="mb-4">
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Create Partner
+        </button>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <th
-                    key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                    {{
-                      asc: ' 🔼',
-                      desc: ' 🔽',
-                    }[header.column.getIsSorted() as string] ?? null}
-                  </th>
-                ))}
-              </tr>
-            ))}
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Partner ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Collections
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Documents
+              </th>
+            </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.map(row => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+            {partners.map((partner) => (
+              <tr key={partner.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {partner.id}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {partner.email}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    partner.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {partner.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {partner.collectionsCount}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {partner.documentsCount}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <CreatePartnerModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreate={handleCreatePartner}
+      />
     </div>
   );
 }
