@@ -1,0 +1,105 @@
+# Production Docker Compose Configuration
+# Optimized for: 2 vCPU, 8GB RAM, Ubuntu 22.04
+# Server: 146.235.215.36
+# Domain: kasmpartners.workoverip.app
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Main Application (Next.js)
+  # ============================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: standalone
+    container_name: kasmchannelgpt-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    env_file:
+      - .env.production
+    volumes:
+      - app-data:/app/data
+      - app-logs:/app/logs
+      - app-backups:/app/backups
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - kasmchannelgpt-network
+    labels:
+      - "com.kasmchannelgpt.service=main-app"
+      - "com.kasmchannelgpt.environment=production"
+
+  # ============================================
+  # Qdrant Vector Database
+  # ============================================
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    container_name: kasmchannelgpt-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-storage:/qdrant/storage
+      - qdrant-snapshots:/qdrant/snapshots
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+      - QDRANT__LOG_LEVEL=INFO
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 3G
+        reservations:
+          cpus: '0.25'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - kasmchannelgpt-network
+    labels:
+      - "com.kasmchannelgpt.service=qdrant"
+      - "com.kasmchannelgpt.environment=production"
+
+networks:
+  kasmchannelgpt-network:
+    driver: bridge
+    name: kasmchannelgpt-network
+
+volumes:
+  app-data:
+    name: kasmchannelgpt-app-data
+  app-logs:
+    name: kasmchannelgpt-app-logs
+  app-backups:
+    name: kasmchannelgpt-app-backups
+  qdrant-storage:
+    name: kasmchannelgpt-qdrant-storage
+  qdrant-snapshots:
+    name: kasmchannelgpt-qdrant-snapshots

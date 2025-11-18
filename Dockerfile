@@ -33,9 +33,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build all targets
-RUN npm run type-check
-RUN npm run build:all
+# Build the application
+RUN npm run build
 
 # ============================================
 # Stage 3: Standalone App (Full Next.js App)
