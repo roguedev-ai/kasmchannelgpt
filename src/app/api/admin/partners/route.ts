@@ -112,7 +112,29 @@ export async function POST(request: NextRequest) {
       updatedAt: sql`CURRENT_TIMESTAMP`,
     });
 
-    return NextResponse.json({ success: true }, { status: 201 });
+    // Create default "General" collection for the new partner
+    const collectionId = `col_${id}_${Date.now()}`;
+    const qdrantCollectionName = `${id}_general`;
+
+    try {
+      await db.insert(collections).values({
+        id: collectionId,
+        partnerId: id,
+        name: 'General',
+        description: 'Default collection',
+        qdrantCollection: qdrantCollectionName,
+        useRagByDefault: true,
+        createdAt: sql`CURRENT_TIMESTAMP`,
+        updatedAt: sql`CURRENT_TIMESTAMP`,
+      });
+
+      console.log(`[Admin] Created default collection for partner: ${id}`);
+    } catch (collectionError) {
+      console.error('[Admin] Failed to create default collection:', collectionError);
+      // Don't fail the whole request if collection creation fails
+    }
+
+    return NextResponse.json({ success: true, partnerId: id }, { status: 201 });
   } catch (error) {
     console.error('[Admin] POST partner error:', error);
     return NextResponse.json(

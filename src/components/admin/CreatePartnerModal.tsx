@@ -13,8 +13,32 @@ export function CreatePartnerModal({ isOpen, onClose, onCreate }: CreatePartnerM
   const [id, setId] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [autoGenerate, setAutoGenerate] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const generatePassword = () => {
+    const length = 16;
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+  };
+
+  const handleAutoGenerateToggle = (checked: boolean) => {
+    setAutoGenerate(checked);
+    if (checked) {
+      const newPassword = generatePassword();
+      setPassword(newPassword);
+      setGeneratedPassword(newPassword);
+    } else {
+      setPassword('');
+      setGeneratedPassword('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +98,27 @@ export function CreatePartnerModal({ isOpen, onClose, onCreate }: CreatePartnerM
             </div>
 
             <div>
+              <label className="flex items-center space-x-2 mb-2">
+                <input
+                  type="checkbox"
+                  checked={autoGenerate}
+                  onChange={(e) => handleAutoGenerateToggle(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Auto-generate secure password
+                </span>
+              </label>
+              
+              {generatedPassword && (
+                <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-xs text-gray-600 mb-1">Generated Password (save this!):</p>
+                  <p className="text-sm font-mono font-bold text-gray-900 break-all">
+                    {generatedPassword}
+                  </p>
+                </div>
+              )}
+
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
@@ -85,6 +130,7 @@ export function CreatePartnerModal({ isOpen, onClose, onCreate }: CreatePartnerM
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 required
                 minLength={8}
+                disabled={autoGenerate}
               />
             </div>
 

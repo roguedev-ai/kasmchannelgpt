@@ -11,6 +11,8 @@ export function PartnerList() {
   const [partners, setPartners] = useState<PartnerWithStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch partners on component mount
   useEffect(() => {
@@ -55,6 +57,49 @@ export function PartnerList() {
     }
   };
 
+  const handleToggleStatus = async (partnerId: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      const response = await fetch(`/api/admin/partners/${partnerId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update partner status');
+      }
+
+      // Refresh the partner list
+      await fetchPartners();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update partner');
+    }
+  };
+
+  const handleDeletePartner = async (partnerId: string) => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/admin/partners/${partnerId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete partner');
+      }
+
+      // Refresh the partner list
+      await fetchPartners();
+      setDeleteConfirm(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete partner');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -93,6 +138,9 @@ export function PartnerList() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Documents
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -117,6 +165,22 @@ export function PartnerList() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {partner.documentsCount}
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                  <button
+                    onClick={() => handleToggleStatus(partner.id, partner.status)}
+                    className={`${
+                      partner.status === 'active' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
+                    }`}
+                  >
+                    {partner.status === 'active' ? 'Disable' : 'Enable'}
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirm(partner.id)}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -128,6 +192,37 @@ export function PartnerList() {
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreatePartner}
       />
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Confirm Delete
+            </h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Are you sure you want to delete partner <strong>{deleteConfirm}</strong>? 
+              This will also delete all their collections and documents. This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeletePartner(deleteConfirm)}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Partner'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
