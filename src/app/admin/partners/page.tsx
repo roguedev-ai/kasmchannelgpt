@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/auth-options';
 import { PartnerList } from '@/components/admin/PartnerList';
 
 export default async function PartnersPage() {

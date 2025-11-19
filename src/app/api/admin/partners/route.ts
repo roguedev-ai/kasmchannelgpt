@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
       name: partner.name,
       collectionsCount: partner.collections?.length || 0,
       documentsCount: partner.documents?.length || 0,
-      createdAt: partner.createdAt,
-      updatedAt: partner.updatedAt,
+      createdAt: new Date(partner.createdAt).toISOString(),
+      updatedAt: new Date(partner.updatedAt).toISOString(),
     }));
 
     return NextResponse.json(partnersWithStats);

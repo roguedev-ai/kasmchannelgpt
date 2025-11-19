@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { eq, and, sql } from 'drizzle-orm';
 import { db } from '@/lib/database';
 import { collections, collectionSettings } from '@/lib/database/schema';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/auth-options';
 import { qdrantClient } from '@/lib/rag/qdrant-client';
 
 interface RouteContext {
