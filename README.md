@@ -27,39 +27,47 @@ A Next.js application for managing partner access and document collections with 
 
 ## Quick Start
 
-1. Clone the repository:
+1. **Clone and Install**
 ```bash
 git clone https://github.com/roguedev-ai/kasmchannelgpt.git
 cd kasmchannelgpt
-```
-
-2. Install dependencies:
-```bash
 npm install
 ```
 
-3. Set up environment variables:
+2. **Configure Environment**
 ```bash
 cp .env.example .env
+# Edit .env with your values (see docs/DEPLOYMENT.md)
 ```
 
-Edit `.env` and configure:
-- `DATABASE_URL`
-- `NEXTAUTH_URL`
-- `NEXTAUTH_SECRET`
-- Admin credentials
+Required variables:
+- `NEXTAUTH_SECRET` - Generate: `openssl rand -base64 32`
+- `JWT_SECRET` - Generate: `openssl rand -base64 32`
+- `GEMINI_API_KEY` or `OPENAI_API_KEY`
 
-4. Initialize the database:
+3. **Initialize Database**
 ```bash
-npm run migrate
+npm run db:setup
 ```
 
-5. Start the development server:
+4. **Create Admin User**
+```bash
+npm run create:admin
+```
+
+5. **Start Qdrant**
+```bash
+docker-compose up -d qdrant
+```
+
+6. **Start Development Server**
 ```bash
 npm run dev
 ```
 
-Visit `http://localhost:3000` to access the application.
+Visit http://localhost:3000 and login with your admin credentials.
+
+For production deployment, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Project Structure
 

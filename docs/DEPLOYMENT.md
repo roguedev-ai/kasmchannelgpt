@@ -1,277 +1,142 @@
 # Deployment Guide
 
-This guide covers deploying the RAG Platform to a production server.
-
 ## Prerequisites
 
-- Ubuntu 20.04+ or similar Linux distribution
-- Docker installed and running
-- Qdrant container running on port 6333
-- Node.js 18+ installed
-- Nginx installed (for production HTTPS)
-- Domain name with SSL certificate (Let's Encrypt)
+- Node.js 20+ and npm 10+
+- Docker and Docker Compose
+- Domain name with DNS access (for production)
 
-## Quick Deployment
+## Local Development Setup
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/your-org/your-repo.git
-cd your-repo
-
-# 2. Run deployment script
-chmod +x scripts/deploy.sh
-./scripts/deploy.sh
-```
-
-The script will prompt you for:
-- Embedding Provider: OpenAI or Gemini
-- API Keys: Based on your embedding choice
-- CustomGPT Configuration: API key and optional agent IDs
-- Domain: Your application URL
-
-## Configuration Options
-
-### Embedding Providers
-
-#### OpenAI (Default)
-- **Model**: text-embedding-3-small
-- **Dimensions**: 1536
-- **Pros**: Excellent quality, widely tested
-- **Cons**: Costs $0.00002 per 1K tokens
-- **API Key**: From https://platform.openai.com/api-keys
-- **Note**: Can use CustomGPT key if it starts with sk-
-
-#### Google Gemini
-- **Model**: text-embedding-004
-- **Dimensions**: 768
-- **Pros**: Free tier (15K requests/day), good quality
-- **Cons**: Lower dimensions (768 vs 1536)
-- **API Key**: From https://makersuite.google.com/app/apikey
-
-### Agent Configuration
-
-You can configure different agents for different functions:
-
-- **Default Agent**: Fallback for all queries
-- **Sales Agent**: Handles pricing, purchases, billing
-- **Support Agent**: Handles troubleshooting, issues
-- **Technical Agent**: Handles API, integration questions
-- **General Agent**: Handles general information
-
-Leave blank to use a single agent for all queries.
-
-## Manual Configuration
-
-If you prefer to configure manually:
-
-1. Copy example environment file:
-```bash
-cp .env.example .env.local
-```
-
-2. Edit required variables:
-```bash
-# Required
-JWT_SECRET=<32+ character secret>
-CUSTOMGPT_API_KEY=<your-key>
-
-# Embedding Provider (choose one)
-EMBEDDING_PROVIDER=openai
-OPENAI_API_KEY=<your-key>
-# OR
-EMBEDDING_PROVIDER=gemini
-GEMINI_API_KEY=<your-key>
-
-# Optional Agent Configuration
-CUSTOMGPT_DEFAULT_AGENT_ID=<default-id>
-CUSTOMGPT_AGENT_SALES=<sales-id>
-CUSTOMGPT_AGENT_SUPPORT=<support-id>
-CUSTOMGPT_AGENT_TECHNICAL=<technical-id>
-CUSTOMGPT_AGENT_GENERAL=<general-id>
-```
-
-## Production Setup
-
-### 1. SSL Configuration
+### 1. Clone and Install
 
 ```bash
-# Install Certbot
-sudo apt install certbot python3-certbot-nginx
-
-# Get certificate
-sudo certbot --nginx -d your-domain.com
-
-# Test renewal
-sudo certbot renew --dry-run
+git clone https://github.com/roguedev-ai/kasmchannelgpt.git
+cd kasmchannelgpt
+npm install
 ```
 
-### 2. Nginx Configuration
-
-```nginx
-server {
-    listen 443 ssl;
-    server_name your-domain.com;
-
-    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-### 3. Process Management
-
-The deployment script uses PM2 to manage the Node.js process:
+### 2. Configure Environment
 
 ```bash
-# Install PM2
-npm install -g pm2
-
-# Start application
-pm2 start npm --name "rag-platform" -- start
-
-# View logs
-pm2 logs rag-platform
-
-# Monitor status
-pm2 monit
+cp .env.example .env
 ```
 
-### 4. Database Backup
+Edit `.env` and set required variables:
+- `NEXTAUTH_SECRET` - Generate with: `openssl rand -base64 32`
+- `JWT_SECRET` - Generate with: `openssl rand -base64 32`
+- `GEMINI_API_KEY` or `OPENAI_API_KEY` - Your API key
 
-Set up regular backups of:
-- SQLite database (DATABASE_PATH)
-- Qdrant collections (/var/lib/qdrant/storage)
-
-Example backup script:
-```bash
-#!/bin/bash
-BACKUP_DIR="/path/to/backups"
-DATE=$(date +%Y%m%d)
-
-# Backup SQLite
-cp ./data/rag-platform.db "$BACKUP_DIR/db-$DATE.sqlite"
-
-# Backup Qdrant (if using Docker)
-docker exec qdrant-container tar czf - /qdrant/storage > "$BACKUP_DIR/qdrant-$DATE.tar.gz"
-```
-
-## Monitoring
-
-### 1. Application Logs
+### 3. Initialize Database
 
 ```bash
-# View application logs
-pm2 logs rag-platform
-
-# View error logs only
-pm2 logs rag-platform --err
+npm run db:setup
 ```
 
-### 2. Debug Mode
+### 4. Create Admin User
 
-Enable debug logging in .env.local:
-```env
-DEBUG=true
-```
-
-This will show:
-- API requests and responses
-- Embedding operations
-- Agent selection
-- Vector operations
-
-### 3. Health Checks
-
-The platform provides a health check endpoint:
 ```bash
-curl https://your-domain.com/api/health
+npm run create:admin
 ```
+
+Follow the prompts to create your admin account.
+
+### 5. Start Qdrant (Vector Database)
+
+```bash
+docker-compose up -d qdrant
+```
+
+### 6. Start Development Server
+
+```bash
+npm run dev
+```
+
+Visit http://localhost:3000 and login with your admin credentials.
+
+## Production Deployment
+
+### Quick Start
+
+1. Set up environment variables
+2. Run database setup
+3. Start Qdrant: `docker-compose up -d qdrant`
+4. Build app: `npm run build`
+5. Start app: `npm start` (or use PM2)
+
+### Detailed Production Setup
+
+For complete production deployment including:
+- Nginx reverse proxy configuration
+- SSL certificate setup (DNS challenge method)
+- Firewall configuration (especially for Oracle Cloud)
+- PM2 process management
+
+See: `deployment/README.md`
+
+## Environment Variables
+
+### Required Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NEXTAUTH_URL` | Your application URL | `https://yourdomain.com` |
+| `NEXTAUTH_SECRET` | NextAuth secret key | Generate with openssl |
+| `JWT_SECRET` | JWT signing secret | Generate with openssl |
+| `DATABASE_URL` | SQLite database path | `file:./data/app.db` |
+| `QDRANT_URL` | Qdrant server URL | `http://localhost:6333` |
+| `EMBEDDING_PROVIDER` | Embedding service | `gemini` or `openai` |
+| `GEMINI_API_KEY` | Google Gemini API key | Your API key |
+
+### Optional Variables
+
+| Variable | Description |
+|----------|-------------|
+| `OPENAI_API_KEY` | OpenAI API key (if using OpenAI embeddings) |
+| `CUSTOMGPT_API_KEY` | CustomGPT integration |
+| `CUSTOMGPT_PROJECT_ID` | CustomGPT project ID |
 
 ## Troubleshooting
 
-### 1. Embedding Issues
+### Build Errors
 
-If embeddings fail:
-- Check API key validity
-- Verify provider selection in .env.local
-- Check rate limits (especially for Gemini free tier)
+**Error: Cannot find module**
+- Run `npm install` to ensure all dependencies are installed
+- Check Node version: `node --version` (must be 20+)
 
-### 2. Agent Routing Issues
+**TypeScript errors**
+- Run `npm run build` to see detailed errors
+- Ensure all environment variables are set
 
-If agent routing isn't working:
-- Verify agent IDs in .env.local
-- Check CustomGPT API key permissions
-- Enable DEBUG mode to see routing decisions
+### Runtime Errors
 
-### 3. Vector Store Issues
+**Database errors**
+- Ensure `npm run db:setup` was run
+- Check DATABASE_URL path exists and is writable
 
-If Qdrant operations fail:
-- Check Qdrant container status
-- Verify collection dimensions match provider
-- Check disk space for vector storage
+**Qdrant connection failed**
+- Verify Qdrant is running: `docker ps | grep qdrant`
+- Check QDRANT_URL in environment
 
-## Security Considerations
+**Authentication errors**
+- Verify NEXTAUTH_SECRET and JWT_SECRET are set
+- Check admin user exists: `sqlite3 data/app.db "SELECT * FROM partners;"`
 
-1. **API Keys**:
-   - Use different keys for development/production
-   - Rotate keys regularly
-   - Monitor usage for unusual patterns
+## Oracle Cloud Specific Notes
 
-2. **JWT Secret**:
-   - Use a strong, unique secret
-   - Rotate periodically
-   - Monitor token usage
+If deploying to Oracle Cloud Infrastructure (OCI):
 
-3. **Rate Limiting**:
-   - Configure Nginx rate limiting
-   - Monitor API usage
-   - Set up alerts for abuse
+1. **Firewall Configuration**: OCI uses both cloud security lists AND iptables
+   ```bash
+   # Open ports in iptables (BEFORE the REJECT rule)
+   sudo iptables -I INPUT 5 -p tcp --dport 443 -j ACCEPT
+   sudo iptables -I INPUT 5 -p tcp --dport 80 -j ACCEPT
+   sudo netfilter-persistent save
+   ```
 
-4. **Data Isolation**:
-   - Verify partner isolation
-   - Monitor cross-partner access attempts
-   - Regular security audits
-
-## Maintenance
-
-1. **Regular Updates**:
-```bash
-# Update dependencies
-npm update
-
-# Check for security issues
-npm audit
-
-# Update system packages
-sudo apt update && sudo apt upgrade
-```
-
-2. **Backup Schedule**:
-```bash
-# Add to crontab
-0 2 * * * /path/to/backup-script.sh
-```
-
-3. **Log Rotation**:
-```bash
-# Configure PM2 log rotation
-pm2 install pm2-logrotate
-pm2 set pm2-logrotate:max_size 10M
-pm2 set pm2-logrotate:retain 7
-```
+2. **Security Lists**: Also open ports 80 and 443 in OCI console security lists
 
 ## Support
 
-For issues or questions:
-1. Check the logs: `pm2 logs rag-platform`
-2. Enable debug mode in .env.local
-3. Review documentation in /docs
-4. Open an issue on GitHub
+For issues or questions, please open a GitHub issue.
